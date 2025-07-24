@@ -1,11 +1,11 @@
+// Basic user interface for Auth0 integration
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-  linkedinId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  sub: string; // Auth0 user ID
+  name?: string;
+  email?: string;
+  picture?: string;
+  email_verified?: boolean;
+  [key: string]: unknown; // Auth0 can have additional claims
 }
 
 export interface AuthState {
