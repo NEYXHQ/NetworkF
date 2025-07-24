@@ -1,16 +1,16 @@
 interface Config {
-  apiUrl: string;
-  linkedinClientId: string;
-  linkedinRedirectUri: string;
+  auth0Domain: string;
+  auth0ClientId: string;
+  auth0RedirectUri: string;
   appName: string;
   isDevelopment: boolean;
   isProduction: boolean;
 }
 
 const config: Config = {
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
-  linkedinClientId: import.meta.env.VITE_LINKEDIN_CLIENT_ID || '',
-  linkedinRedirectUri: import.meta.env.VITE_LINKEDIN_REDIRECT_URI || 'http://localhost:5173/auth/linkedin/callback',
+  auth0Domain: import.meta.env.VITE_AUTH0_DOMAIN || '',
+  auth0ClientId: import.meta.env.VITE_AUTH0_CLIENT_ID || '',
+  auth0RedirectUri: import.meta.env.VITE_AUTH0_REDIRECT_URI || window.location.origin,
   appName: import.meta.env.VITE_APP_NAME || 'NetworkF2',
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,

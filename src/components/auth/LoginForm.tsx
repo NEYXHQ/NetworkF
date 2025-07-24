@@ -1,89 +1,56 @@
-import { useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Button } from '../ui/Button';
-import { Linkedin } from 'lucide-react';
+import { Linkedin, AlertCircle } from 'lucide-react';
 
-interface LoginFormProps {
-  onLogin: (credentials: { email: string; password: string }) => void;
-  onLinkedInLogin: () => void;
-  loading: boolean;
-  error: string | null;
-}
+export const LoginForm = () => {
+  const { loginWithRedirect, isLoading, error } = useAuth0();
 
-export const LoginForm = ({ onLogin, onLinkedInLogin, loading, error }: LoginFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onLogin({ email, password });
+  const handleLinkedInLogin = () => {
+    loginWithRedirect({
+      authorizationParams: {
+        connection: 'linkedin',
+        screen_hint: 'signin',
+      },
+    });
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your email"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your password"
-          />
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Welcome to NetworkF2
+          </h2>
+          <p className="text-gray-600">
+            Connect with founders and entrepreneurs
+          </p>
         </div>
 
         {error && (
-          <div className="text-red-600 text-sm">{error}</div>
+          <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-md">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{error.message}</span>
+          </div>
         )}
 
         <Button
-          type="submit"
-          className="w-full"
-          loading={loading}
-          disabled={loading}
-        >
-          Sign In
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        <Button
           type="button"
-          variant="outline"
           className="w-full"
-          onClick={onLinkedInLogin}
-          disabled={loading}
+          onClick={handleLinkedInLogin}
+          loading={isLoading}
+          disabled={isLoading}
         >
           <Linkedin className="mr-2 h-4 w-4" />
           Sign in with LinkedIn
         </Button>
-      </form>
+
+        <div className="text-center text-xs text-gray-500">
+          <p>
+            By signing in, you agree to our terms and privacy policy.
+            Access is limited to verified founders and entrepreneurs.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }; 
