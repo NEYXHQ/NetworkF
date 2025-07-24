@@ -1,18 +1,18 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useWeb3Auth } from '../hooks/useWeb3Auth';
 import { useEffect } from 'react';
 import { LoginForm } from '../components/auth/LoginForm';
 
 export const LoginPage = () => {
-  const { isAuthenticated } = useAuth0();
+  const { isConnected } = useWeb3Auth();
 
   useEffect(() => {
-    // Redirect to home if already authenticated
-    if (isAuthenticated) {
+    // Redirect to home if already connected
+    if (isConnected) {
       window.location.href = '/';
     }
-  }, [isAuthenticated]);
+  }, [isConnected]);
 
-  if (isAuthenticated) {
+  if (isConnected) {
     return null; // Will redirect
   }
 
@@ -26,7 +26,8 @@ export const LoginPage = () => {
           Join the Network
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Connect with verified founders and entrepreneurs
+          Connect with verified founders and entrepreneurs.<br/>
+          Your crypto wallet will be created automatically.
         </p>
       </div>
 

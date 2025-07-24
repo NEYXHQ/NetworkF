@@ -1,20 +1,20 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useWeb3Auth } from '../hooks/useWeb3Auth';
 import { Button } from '../components/ui/Button';
 import { ArrowRight, Users, Zap, Shield, CheckCircle } from 'lucide-react';
 
 export const HomePage = () => {
-  const { isAuthenticated, user, loginWithRedirect } = useAuth0();
+  const { isConnected, user, login } = useWeb3Auth();
 
-  const handleGetStarted = () => {
-    if (isAuthenticated) {
+  const handleGetStarted = async () => {
+    if (isConnected) {
       // Navigate to dashboard or main app
       console.log('Navigate to dashboard');
     } else {
-      loginWithRedirect({
-        authorizationParams: {
-          connection: 'linkedin',
-        },
-      });
+      try {
+        await login();
+      } catch (error) {
+        console.error('Login error:', error);
+      }
     }
   };
 
@@ -24,10 +24,10 @@ export const HomePage = () => {
       <section className="pt-20 pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            {isAuthenticated && user && (
+            {isConnected && user && (
               <div className="mb-6 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
                 <CheckCircle className="mr-2 h-4 w-4" />
-                Welcome back, {user.name || user.email}!
+                Welcome back, {user.name || user.email || 'Founder'}!
               </div>
             )}
             
@@ -37,10 +37,11 @@ export const HomePage = () => {
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               The exclusive network for verified founders and entrepreneurs. 
               Connect, collaborate, and grow your business with like-minded professionals.
+              <strong> Plus get your own crypto wallet automatically!</strong>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-lg px-8 py-4" onClick={handleGetStarted}>
-                {isAuthenticated ? 'Go to Dashboard' : 'Join the Network'}
+                {isConnected ? 'Go to Dashboard' : 'Join the Network'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-4">
@@ -59,7 +60,7 @@ export const HomePage = () => {
               Why Choose NetworkF2?
             </h2>
             <p className="text-xl text-gray-600">
-              Built for serious entrepreneurs who value authentic connections
+              Built for serious entrepreneurs who value authentic connections and Web3 innovation
             </p>
           </div>
 
@@ -81,10 +82,10 @@ export const HomePage = () => {
                 <Zap className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Lightning Fast
+                Web3 Ready
               </h3>
               <p className="text-gray-600">
-                Modern tech stack with Auth0 integration ensures secure, fast authentication via LinkedIn
+                Automatic crypto wallet creation with Web3Auth integration. No seed phrases to remember!
               </p>
             </div>
 
@@ -93,10 +94,10 @@ export const HomePage = () => {
                 <Shield className="h-8 w-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Privacy First
+                Enterprise Security
               </h3>
               <p className="text-gray-600">
-                Enterprise-grade security with Auth0 and LinkedIn OAuth. Your data is always protected
+                Multi-party computation ensures your keys are secure and recoverable. No single point of failure.
               </p>
             </div>
           </div>
@@ -107,10 +108,10 @@ export const HomePage = () => {
       <section className="py-20 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to join the network?
+            Ready to join the Web3 founder network?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Connect with verified founders and entrepreneurs today
+            Connect with verified entrepreneurs and get your crypto wallet today
           </p>
           <Button 
             size="lg" 
@@ -118,7 +119,7 @@ export const HomePage = () => {
             className="text-lg px-8 py-4"
             onClick={handleGetStarted}
           >
-            {isAuthenticated ? 'Access Dashboard' : 'Apply Now'}
+            {isConnected ? 'Access Dashboard' : 'Apply Now'}
           </Button>
         </div>
       </section>

@@ -1,15 +1,17 @@
-# NetworkF2 - Modern Static Web App with Auth0
+# NetworkF2 - Modern Static Web3 App with Plug-and-Play Auth
 
-A modern, fully static web application built with **Vite**, **React**, **TypeScript**, **Tailwind CSS 4.1**, and **Auth0** for authentication. Perfect for founders and entrepreneurs network with LinkedIn-only authentication.
+A modern, fully static web application built with **Vite**, **React**, **TypeScript**, **Tailwind CSS 4.1**, and **Web3Auth Plug-and-Play** for seamless social authentication + automatic wallet creation. Perfect for founders and entrepreneurs who want the simplest possible Web3 onboarding.
 
 ## 🚀 Features
 
 - ⚡ **Vite** - Lightning fast development and build tool
-- ⚛️ **React 18** with TypeScript for type-safe development
+- ⚛️ **React 18** with TypeScript for type-safe development  
 - 🎨 **Tailwind CSS 4.1** - Modern utility-first CSS framework
-- 🔐 **Auth0 Integration** - Enterprise-grade authentication with LinkedIn
-- 📱 **Responsive Design** - Mobile-first approach with beautiful UI components
-- 🏗️ **Static Deployment** - Deploy anywhere (Vercel, Netlify, AWS S3, etc.)
+- 🔐 **Web3Auth Plug-and-Play** - Social login + automatic wallet creation
+- 💰 **Automatic Wallet Creation** - Users get crypto wallets without seed phrases
+- 🔒 **Multi-Party Computation (MPC)** - Enterprise-grade key security
+- 📱 **Responsive Design** - Mobile-first approach with beautiful UI
+- 🏗️ **100% Static** - Deploy anywhere (Vercel, Netlify, AWS S3, etc.)
 - 🔧 **Developer Experience** - ESLint, TypeScript, and Hot Module Replacement
 
 ## 📁 Project Structure
@@ -17,14 +19,13 @@ A modern, fully static web application built with **Vite**, **React**, **TypeScr
 ```
 src/
 ├── components/           # Reusable UI components
-│   ├── auth/            # Authentication components
+│   ├── auth/            # Authentication components  
 │   ├── layout/          # Layout components (Header, Footer, etc.)
 │   └── ui/              # Basic UI components (Button, Input, etc.)
-├── contexts/            # React contexts (Auth0 wrapper)
+├── contexts/            # Web3Auth context and provider
+├── hooks/               # Custom React hooks (useWeb3Auth)
 ├── pages/               # Page components
-├── services/            # Utility services (Email service for future use)
 ├── types/               # TypeScript type definitions
-├── utils/               # Utility functions
 └── config/              # Configuration files
 ```
 
@@ -34,7 +35,7 @@ src/
 
 - Node.js 18+ installed on your machine
 - npm or yarn package manager
-- Auth0 account (free tier available)
+- Web3Auth account (free tier available)
 
 ### Installation
 
@@ -48,10 +49,9 @@ src/
    cp .env.example .env
    ```
    
-   Update the `.env` file with your Auth0 values:
+   Update the `.env` file with your Web3Auth Client ID:
    ```env
-   VITE_AUTH0_DOMAIN=your-domain.auth0.com
-   VITE_AUTH0_CLIENT_ID=your_auth0_client_id
+   VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
    ```
 
 3. **Start the development server:**
@@ -62,36 +62,62 @@ src/
 4. **Open your browser:**
    Navigate to `http://localhost:5173`
 
-## 🔐 Auth0 + LinkedIn Setup
+## 🔐 Web3Auth Setup (5 minutes)
 
-### Step 1: Create Auth0 Account and Application
+### Step 1: Create Web3Auth Account
 
-1. **Sign up at [auth0.com](https://auth0.com)** (free tier available)
-2. **Create a new Single Page Application**
-3. **Configure Application Settings:**
-   - Allowed Callback URLs: `http://localhost:5173, https://your-domain.com`
-   - Allowed Logout URLs: `http://localhost:5173, https://your-domain.com`
-   - Allowed Web Origins: `http://localhost:5173, https://your-domain.com`
+1. **Sign up at [web3auth.io](https://web3auth.io)** (free tier available)
+2. **Go to the Dashboard** and create a new project
+3. **Select "Plug and Play"** - this gives you the modal with social logins
+4. **Copy your Client ID** from the project settings
 
-### Step 2: Enable LinkedIn Social Connection
+### Step 2: Configure Your Project
 
-1. **Go to Authentication → Social** in Auth0 dashboard
-2. **Enable LinkedIn** connection
-3. **Configure LinkedIn:**
-   - Create a LinkedIn app at [LinkedIn Developers](https://www.linkedin.com/developers/)
-   - Add your LinkedIn Client ID and Secret to Auth0
-   - Set authorized redirect URL: `https://your-auth0-domain.auth0.com/login/callback`
+1. **Add your domain to Web3Auth dashboard:**
+   - Development: `http://localhost:5173`
+   - Production: `https://your-domain.com`
 
-### Step 3: Update Environment Variables
+2. **Update your `.env` file:**
+   ```env
+   VITE_WEB3AUTH_CLIENT_ID=BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiX0_dABC80_wr6y6VJMR7yD4S5---------your-client-id
+   ```
 
-```env
-VITE_AUTH0_DOMAIN=your-domain.auth0.com
-VITE_AUTH0_CLIENT_ID=your_auth0_client_id
+### Step 3: Test the Integration
+
+```bash
+npm run dev
 ```
 
-## 🚀 Deployment (100% Static)
+Click "Sign in with Web3Auth" and you'll see social login options (Google, GitHub, LinkedIn, etc.). After login:
+- ✅ User gets authenticated  
+- ✅ Crypto wallet is automatically created  
+- ✅ No seed phrases to remember  
+- ✅ Keys secured with multi-party computation
 
-This app is completely static and can be deployed anywhere:
+## 🎯 What Makes This Special
+
+### 🔐 **Zero-Friction Web3 Onboarding**
+- Users sign in with familiar social accounts (Google, LinkedIn, etc.)
+- Crypto wallet created automatically in the background
+- No seed phrases, private keys, or crypto knowledge required
+
+### 🏗️ **100% Static Deployment**
+- Web3Auth handles all the complex OAuth flows
+- No backend servers to maintain or scale
+- Deploy as static files to any CDN
+
+### 🔒 **Enterprise-Grade Security**
+- Multi-party computation splits private keys
+- No single point of failure
+- Keys reconstructed only when user authenticates
+- SOC 2 Type II certified infrastructure
+
+### ⚡ **Lightning Fast Development**
+- Plug-and-Play: 4 lines of code to add Web3 auth
+- Pre-built UI components and flows
+- TypeScript support out of the box
+
+## 🚀 Deployment (Static Sites)
 
 ### Vercel (Recommended)
 ```bash
@@ -102,7 +128,7 @@ npx vercel --prod
 ### Netlify
 ```bash
 npm run build
-# Upload dist/ folder to Netlify or use CLI
+# Upload dist/ folder to Netlify
 ```
 
 ### AWS S3 + CloudFront
@@ -117,84 +143,98 @@ npm run build
 # Deploy dist/ folder to gh-pages branch
 ```
 
-## ✨ What Makes This Special
+**Important:** Don't forget to add your production domain to the Web3Auth dashboard!
 
-### 🏗️ **Zero Backend Required**
-- Auth0 handles all authentication complexity
-- No server to maintain or scale
-- Deploy as static files anywhere
+## 🎮 User Experience Flow
 
-### 🔒 **Enterprise Security**
-- Auth0's SOC 2 Type II certified infrastructure
-- LinkedIn OAuth for professional verification
-- JWT tokens with automatic refresh
+1. **User clicks "Sign in with Web3Auth"**
+2. **Modal appears with social login options** (Google, LinkedIn, GitHub, etc.)
+3. **User chooses their preferred social account**
+4. **OAuth flow completes automatically**
+5. **Wallet is created silently using MPC**
+6. **User is logged in with both auth + wallet ready**
 
-### ⚡ **Lightning Fast**
-- Static deployment means instant loading
-- CDN-friendly for global performance
-- No database queries or server processing
-
-### 🎯 **Founder-Focused**
-- LinkedIn-only authentication ensures professional users
-- Clean, modern UI designed for networking
-- Ready for manual verification workflows
+No crypto knowledge required! 🎉
 
 ## 🔧 Customization
 
-### Changing Authentication Providers
+### Adding More Social Providers
 
-Want to add more than LinkedIn? Update the Auth0Provider:
+Web3Auth supports 15+ social providers out of the box:
+- Google, Facebook, Twitter
+- GitHub, LinkedIn, Discord  
+- Apple, Line, Kakao
+- Auth0, AWS Cognito, Firebase
+- And more...
 
-```tsx
-authorizationParams={{
-  // Remove the connection parameter to show all enabled connections
-  scope: 'openid profile email',
-}}
+Just enable them in your Web3Auth dashboard.
+
+### Changing Blockchain Networks
+
+The default is Ethereum, but you can easily switch:
+
+```typescript
+// In src/contexts/Web3AuthProvider.tsx
+const web3authInstance = new Web3Auth({
+  clientId: config.web3AuthClientId,
+  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+  // Add chain config for other networks
+});
 ```
+
+Supported: Ethereum, Polygon, Solana, Avalanche, BSC, and 50+ more.
 
 ### Styling
 
-All components use Tailwind CSS classes and are easily customizable:
+All components use Tailwind CSS and are easily customizable:
 
 ```tsx
 // Example: Change primary color from blue to purple
 className="bg-purple-600 hover:bg-purple-700"
 ```
 
-### Adding Features
-
-Since this is a static app, additional features can be added as:
-- Client-side only functionality
-- Third-party service integrations (Stripe, SendGrid, etc.)
-- Serverless functions for specific needs
-
 ## 📝 Available Scripts
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run build` - Build for production (outputs to `dist/`)
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 
-## 🔍 User Verification Workflow
+## 🔍 For Founder Verification
 
-For your founders/entrepreneurs verification:
+Since you're building for verified founders/entrepreneurs:
 
-1. **User signs in with LinkedIn** (handled by Auth0)
-2. **You receive user data** including LinkedIn profile
-3. **Manual verification process** (implement as needed)
-4. **Grant access to features** based on verification status
+1. **User authenticates** with Web3Auth (social login)
+2. **You get their profile data** from the social provider
+3. **Implement your verification process** (manual review, criteria checking, etc.)
+4. **Grant access** to verified users only
+
+The wallet is created immediately, but you control access to your app's features.
 
 ## 🆘 Troubleshooting
 
-### Auth0 Configuration Issues
-- Verify callback URLs include your domain
-- Check Auth0 domain and client ID in environment variables
-- Ensure LinkedIn connection is properly configured
+### Web3Auth Issues
+- Verify your Client ID is correct
+- Check that your domain is added to Web3Auth dashboard
+- Ensure you're using the Plug-and-Play Web3Auth type
+
+### Build Issues
+- Large bundle size is normal (Web3Auth includes crypto libraries)
+- Use dynamic imports if you need to optimize further
 
 ### Deployment Issues
-- Run `npm run build` locally to test production build
-- Check that environment variables are set in deployment platform
-- Verify Auth0 URLs include your production domain
+- Add production domain to Web3Auth dashboard
+- Check environment variables are set in deployment platform
+
+## ✨ What's Included
+
+- **🔐 Social Authentication** - Google, LinkedIn, GitHub, etc.
+- **💰 Automatic Wallets** - Ethereum-compatible wallets for all users
+- **🎨 Beautiful UI** - Professional design with Tailwind CSS
+- **📱 Mobile Responsive** - Works perfectly on all devices
+- **⚡ Fast Loading** - Optimized static site with CDN-friendly assets
+- **🔒 Secure** - Enterprise-grade key management with MPC
+- **🛠️ Developer Friendly** - TypeScript, hot reload, modern tooling
 
 ## 📄 License
 
@@ -202,11 +242,12 @@ This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-For support and questions:
-- Check Auth0 documentation for authentication issues
-- Review the example implementations in the code
-- Create an issue for bugs or feature requests
+- [Web3Auth Documentation](https://web3auth.io/docs/)
+- [Web3Auth Community](https://web3auth.io/community/)
+- [GitHub Issues](https://github.com/your-repo/issues)
 
 ---
+
+**Ready to onboard the next generation of Web3 founders?** 🚀
 
 Built with ❤️ for the entrepreneurial community. **Simple. Secure. Static.**

@@ -1,24 +1,35 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { Button } from '../ui/Button';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, Wallet } from 'lucide-react';
 
 export const Header = () => {
-  const { user, isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
+  const { user, isConnected, isLoading, login, logout, getAccounts } = useWeb3Auth();
 
-  const handleLogin = () => {
-    loginWithRedirect({
-      authorizationParams: {
-        connection: 'linkedin',
-      },
-    });
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
-  const handleLogout = () => {
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const showWalletInfo = async () => {
+    try {
+      const accounts = await getAccounts();
+      if (accounts.length > 0) {
+        alert(`Wallet Address: ${accounts[0]}`);
+      }
+    } catch (error) {
+      console.error('Error getting accounts:', error);
+    }
   };
 
   return (
@@ -47,10 +58,15 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             {isLoading ? (
               <div className="animate-pulse bg-gray-200 rounded-full h-8 w-20"></div>
-            ) : isAuthenticated && user ? (
+            ) : isConnected && user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-gray-700">Welcome, {user.name || user.email}</span>
+                <span className="text-gray-700">
+                  Welcome, {user.name || user.email || 'User'}
+                </span>
                 <div className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" onClick={showWalletInfo}>
+                    <Wallet className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm">
                     <Settings className="h-4 w-4" />
                   </Button>
