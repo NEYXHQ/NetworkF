@@ -1,5 +1,6 @@
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { Button } from '../ui/Button';
+import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { User, LogOut, Settings, Wallet } from 'lucide-react';
 
 export const Header = () => {
@@ -41,18 +42,21 @@ export const Header = () => {
             <h1 className="text-2xl font-bold text-blue-600">NetworkF2</h1>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Home
-            </a>
-            <a href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
-              About
-            </a>
-            <a href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Contact
-            </a>
-          </nav>
+                           {/* Navigation & Network Indicator */}
+                 <div className="flex items-center space-x-6">
+                   <nav className="hidden md:flex space-x-8">
+                     <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
+                       Home
+                     </a>
+                     <a href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
+                       About
+                     </a>
+                     <a href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
+                       Contact
+                     </a>
+                   </nav>
+                   <NetworkIndicator />
+                 </div>
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">

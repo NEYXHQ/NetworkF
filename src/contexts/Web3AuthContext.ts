@@ -12,6 +12,11 @@ export interface UserInfo {
   typeOfLogin?: string;
 }
 
+export interface TokenBalance {
+  neyxt: string;
+  native: string; // ETH or POL
+}
+
 export interface Web3AuthContextType {
   web3auth: Web3Auth | null;
   provider: IProvider | null;
@@ -22,6 +27,15 @@ export interface Web3AuthContextType {
   logout: () => Promise<void>;
   getUserInfo: () => Promise<UserInfo | null>;
   getAccounts: () => Promise<string[]>;
+  // Token operations
+  getChainId: () => Promise<string>;
+  getTokenBalances: () => Promise<TokenBalance>;
+  getNEYXTBalance: () => Promise<string>;
+  getNativeBalance: () => Promise<string>;
+  sendNEYXT: (recipient: string, amount: string) => Promise<string | Error>;
+  sendNative: (recipient: string, amount: string) => Promise<string | Error>;
+  signMessage: () => Promise<string>;
+  ensureTokenApproval: (spenderAddress: string, amount: string) => Promise<boolean>;
 }
 
 export const Web3AuthContext = createContext<Web3AuthContextType>({
@@ -34,4 +48,13 @@ export const Web3AuthContext = createContext<Web3AuthContextType>({
   logout: async () => {},
   getUserInfo: async () => null,
   getAccounts: async () => [],
+  // Token operations defaults
+  getChainId: async () => '',
+  getTokenBalances: async () => ({ neyxt: '0', native: '0' }),
+  getNEYXTBalance: async () => '0',
+  getNativeBalance: async () => '0',
+  sendNEYXT: async () => '',
+  sendNative: async () => '',
+  signMessage: async () => '',
+  ensureTokenApproval: async () => false,
 }); 

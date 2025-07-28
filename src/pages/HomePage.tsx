@@ -1,5 +1,6 @@
 import { useWeb3Auth } from '../hooks/useWeb3Auth';
 import { Button } from '../components/ui/Button';
+import { TokenBalance } from '../components/wallet/TokenBalance';
 import { ArrowRight, Users, Zap, Shield, CheckCircle } from 'lucide-react';
 
 export const HomePage = () => {
@@ -104,25 +105,37 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-blue-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to join the Web3 founder network?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Connect with verified entrepreneurs and get your crypto wallet today
-          </p>
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="text-lg px-8 py-4"
-            onClick={handleGetStarted}
-          >
-            {isConnected ? 'Access Dashboard' : 'Apply Now'}
-          </Button>
-        </div>
-      </section>
+                  {/* Token Balance Section - Only show if connected */}
+            {isConnected && (
+              <section className="py-20 bg-gray-50">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+                    Your Wallet & NEYXT Tokens
+                  </h2>
+                  <TokenBalance />
+                </div>
+              </section>
+            )}
+
+            {/* CTA Section */}
+            <section className="py-20 bg-blue-600">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Ready to join the Web3 founder network?
+                </h2>
+                <p className="text-xl text-blue-100 mb-8">
+                  Connect with verified entrepreneurs and get your crypto wallet today
+                </p>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="text-lg px-8 py-4"
+                  onClick={handleGetStarted}
+                >
+                  {isConnected ? 'Access Dashboard' : 'Apply Now'}
+                </Button>
+              </div>
+            </section>
     </div>
   );
 }; 
