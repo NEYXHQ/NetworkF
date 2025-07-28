@@ -26,7 +26,7 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
 
         const web3authInstance = new Web3Auth({
           clientId: config.web3AuthClientId,
-          web3AuthNetwork: config.network === 'testnet' 
+          web3AuthNetwork: config.network.features.isTestnet
             ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
             : WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
         });

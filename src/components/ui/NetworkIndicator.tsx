@@ -2,7 +2,7 @@ import config from '../../config/env';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export const NetworkIndicator = () => {
-  const isTestnet = config.network === 'testnet';
+  const isTestnet = config.network.features.isTestnet;
 
   return (
     <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -15,9 +15,9 @@ export const NetworkIndicator = () => {
       ) : (
         <CheckCircle className="w-3 h-3 mr-1" />
       )}
-      {isTestnet ? 'Testnet Mode' : 'Mainnet Mode'}
+      {config.network.displayName}
       <span className="ml-1 opacity-75">
-        (Chain {config.chainId})
+        ({config.network.nativeCurrency.symbol})
       </span>
     </div>
   );

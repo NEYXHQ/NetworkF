@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { useTokenService } from '../../hooks/useTokenService';
 import { Button } from '../ui/Button';
-import { Wallet, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { FaucetLinks } from './FaucetLinks';
+import { BalanceDebugger } from '../debug/BalanceDebugger';
+import { NetworkMismatchWarning } from './NetworkMismatchWarning';
+import config from '../../config/env';
+import { Wallet, RefreshCw, Eye, EyeOff, ExternalLink } from 'lucide-react';
 
 export const TokenBalance = () => {
   const { isConnected, user } = useWeb3Auth();
-  const { getTokenBalances, formatBalance, getChainId } = useTokenService();
+  const { getTokenBalances, formatBalance, formatNativeBalance } = useTokenService();
   
   const [balances, setBalances] = useState({ neyxt: '0', native: '0' });
-  const [chainId, setChainId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,13 +25,8 @@ export const TokenBalance = () => {
       setError(null);
       
       try {
-        const [tokenBalances, networkChainId] = await Promise.all([
-          getTokenBalances(),
-          getChainId(),
-        ]);
-        
+        const tokenBalances = await getTokenBalances();
         setBalances(tokenBalances);
-        setChainId(networkChainId);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load balances');
         console.error('Error loading balances:', err);
@@ -47,13 +45,8 @@ export const TokenBalance = () => {
     setError(null);
     
     try {
-      const [tokenBalances, networkChainId] = await Promise.all([
-        getTokenBalances(),
-        getChainId(),
-      ]);
-      
+      const tokenBalances = await getTokenBalances();
       setBalances(tokenBalances);
-      setChainId(networkChainId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load balances');
       console.error('Error loading balances:', err);
@@ -62,32 +55,11 @@ export const TokenBalance = () => {
     }
   };
 
-  const getNetworkName = (chainId: string): string => {
-    switch (chainId) {
-      case '1':
-        return 'Ethereum Mainnet';
-      case '137':
-        return 'Polygon';
-      case '11155111':
-        return 'Sepolia Testnet';
-      case '80002':
-        return 'Polygon Amoy Testnet';
-      default:
-        return `Chain ${chainId}`;
-    }
-  };
-
-  const getCurrencySymbol = (chainId: string): string => {
-    switch (chainId) {
-      case '1':
-      case '11155111':
-        return 'ETH';
-      case '137':
-      case '80002':
-        return 'POL';
-      default:
-        return 'Native';
-    }
+  const openBlockExplorer = (address?: string) => {
+    if (!address || !config.network.blockExplorerUrls[0]) return;
+    
+    const url = `${config.network.blockExplorerUrls[0]}/address/${address}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (!isConnected) {
@@ -103,6 +75,9 @@ export const TokenBalance = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
+      {/* Network Mismatch Warning */}
+      <NetworkMismatchWarning />
+      
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Wallet className="h-5 w-5 text-blue-600" />
@@ -132,11 +107,9 @@ export const TokenBalance = () => {
         <p className="text-sm text-gray-600">
           <span className="font-medium">Account:</span> {user?.name || user?.email || 'Connected User'}
         </p>
-        {chainId && (
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Network:</span> {getNetworkName(chainId)}
-          </p>
-        )}
+        <p className="text-sm text-gray-600">
+          <span className="font-medium">Network:</span> {config.network.displayName}
+        </p>
       </div>
 
       {/* Error Display */}
@@ -177,11 +150,11 @@ export const TokenBalance = () => {
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">
-                {getCurrencySymbol(chainId)[0]}
+                {config.network.nativeCurrency.symbol[0]}
               </span>
             </div>
             <div>
-              <p className="font-medium text-gray-900">{getCurrencySymbol(chainId)}</p>
+              <p className="font-medium text-gray-900">{config.network.nativeCurrency.symbol}</p>
               <p className="text-sm text-gray-500">Native Token</p>
             </div>
           </div>
@@ -190,7 +163,7 @@ export const TokenBalance = () => {
               <div className="animate-pulse bg-gray-200 rounded h-4 w-16"></div>
             ) : showBalances ? (
               <p className="font-semibold text-gray-900">
-                {formatBalance(balances.native)} {getCurrencySymbol(chainId)}
+                {formatNativeBalance(balances.native)} {config.network.nativeCurrency.symbol}
               </p>
             ) : (
               <p className="font-semibold text-gray-900">••••</p>
@@ -215,20 +188,40 @@ export const TokenBalance = () => {
           className="flex-1"
           disabled={!showBalances || parseFloat(balances.native) === 0}
         >
-          Send {getCurrencySymbol(chainId)}
+          Send {config.network.nativeCurrency.symbol}
         </Button>
       </div>
 
-      {/* Network Info */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <p className="text-xs text-blue-800">
-          <strong>Network:</strong> You're currently on{' '}
-          {chainId === '80002' ? 'Polygon Amoy Testnet' : 
-           chainId === '137' ? 'Polygon Mainnet' : 
-           `Chain ${chainId}`}
-          {' '}(auto-detected based on environment)
-        </p>
-      </div>
-    </div>
-  );
-}; 
+             {/* Network Info */}
+       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+         <div className="flex items-center justify-between">
+           <div>
+             <p className="text-xs text-blue-800">
+               <strong>Network:</strong> {config.network.displayName} (auto-detected)
+             </p>
+             <p className="text-xs text-blue-600 mt-1">
+               Chain ID: {config.network.chainId} • {config.network.nativeCurrency.symbol} network
+             </p>
+           </div>
+           <button
+             onClick={() => openBlockExplorer()}
+             className="text-blue-600 hover:text-blue-800 transition-colors"
+             title="View on block explorer"
+           >
+             <ExternalLink className="w-3 h-3" />
+           </button>
+                  </div>
+       </div>
+
+       {/* Faucet Links for Testnet */}
+       <div className="mt-4">
+         <FaucetLinks />
+       </div>
+
+       {/* Debug Section */}
+       <div className="mt-4">
+         <BalanceDebugger />
+       </div>
+     </div>
+   );
+ }; 
