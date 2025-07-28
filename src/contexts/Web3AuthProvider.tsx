@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Web3Auth } from '@web3auth/modal';
 import { WEB3AUTH_NETWORK, type IProvider } from '@web3auth/base';
 import config from '../config/env';
-import { Web3AuthContext, type UserInfo, type Web3AuthContextType } from './Web3AuthContext';
+import { Web3AuthContext, type UserInfo, type Web3AuthContextType, type TokenBalance } from './Web3AuthContext';
+import ethersRPC from '../hooks/ethersRPC';
 
 interface Web3AuthProviderProps {
   children: ReactNode;
@@ -25,8 +26,9 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
 
         const web3authInstance = new Web3Auth({
           clientId: config.web3AuthClientId,
-          // web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
-          web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+          web3AuthNetwork: config.network === 'testnet' 
+            ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
+            : WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
         });
 
         await web3authInstance.init();
@@ -91,6 +93,102 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     }
   };
 
+  // Token operations implementation
+  const getChainId = async (): Promise<string> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      return await ethersRPC.getChainId(provider);
+    } catch (error) {
+      console.error('Error getting chain ID:', error);
+      return '';
+    }
+  };
+
+  const getNEYXTBalance = async (): Promise<string> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      return await ethersRPC.getNEYXTBalance(provider);
+    } catch (error) {
+      console.error('Error getting NEYXT balance:', error);
+      return '0';
+    }
+  };
+
+  const getNativeBalance = async (): Promise<string> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      return await ethersRPC.getNetworkBalance(provider);
+    } catch (error) {
+      console.error('Error getting native balance:', error);
+      return '0';
+    }
+  };
+
+  const getTokenBalances = async (): Promise<TokenBalance> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      const [neyxt, native] = await Promise.all([
+        getNEYXTBalance(),
+        getNativeBalance(),
+      ]);
+      return { neyxt, native };
+    } catch (error) {
+      console.error('Error getting token balances:', error);
+      return { neyxt: '0', native: '0' };
+    }
+  };
+
+  const sendNEYXT = async (recipient: string, amount: string): Promise<string | Error> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      const result = await ethersRPC.sendToken(provider, recipient, amount);
+      return result.hash || 'Transaction submitted';
+    } catch (error) {
+      console.error('Error sending NEYXT:', error);
+      return error as Error;
+    }
+  };
+
+  const sendNative = async (recipient: string, amount: string): Promise<string | Error> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      const result = await ethersRPC.sendTransaction(provider, recipient, amount);
+      return result.hash || 'Transaction submitted';
+    } catch (error) {
+      console.error('Error sending native tokens:', error);
+      return error as Error;
+    }
+  };
+
+  const signMessage = async (): Promise<string> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      return await ethersRPC.signMessage(provider);
+    } catch (error) {
+      console.error('Error signing message:', error);
+      return '';
+    }
+  };
+
+  const ensureTokenApproval = async (spenderAddress: string, amount: string): Promise<boolean> => {
+    if (!provider) throw new Error('Provider not available');
+    try {
+      const accounts = await ethersRPC.getAccounts(provider);
+      const userAddress = accounts;
+      
+      // Convert ethers provider for the ensureApproval function
+      const { BrowserProvider, parseUnits } = await import('ethers');
+      const ethersProvider = new BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+      
+      const amountBigInt = parseUnits(amount, 18);
+      return await ethersRPC.ensureApproval(signer, userAddress, spenderAddress, amountBigInt);
+    } catch (error) {
+      console.error('Error ensuring token approval:', error);
+      return false;
+    }
+  };
+
   const value: Web3AuthContextType = {
     web3auth,
     provider,
@@ -101,6 +199,15 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     logout,
     getUserInfo,
     getAccounts,
+    // Token operations
+    getChainId,
+    getTokenBalances,
+    getNEYXTBalance,
+    getNativeBalance,
+    sendNEYXT,
+    sendNative,
+    signMessage,
+    ensureTokenApproval,
   };
 
   if (!config.web3AuthClientId) {
