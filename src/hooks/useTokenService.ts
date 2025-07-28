@@ -126,6 +126,10 @@ export const useTokenService = () => {
     return num.toFixed(decimals);
   };
 
+  const formatNativeBalance = (balance: string): string => {
+    return formatBalance(balance, 4); // Always 4 decimals for POL
+  };
+
   const isValidAddress = (address: string): boolean => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
   };
@@ -148,6 +152,7 @@ export const useTokenService = () => {
     
     // Utility functions
     formatBalance,
+    formatNativeBalance,
     isValidAddress,
     isValidAmount,
     
