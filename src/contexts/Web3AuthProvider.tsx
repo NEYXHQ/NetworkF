@@ -38,6 +38,9 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           setProvider(web3authInstance.provider);
           const user = await web3authInstance.getUserInfo();
           setUser(user);
+          
+          // Auto-switch network on reconnection too
+          await autoSwitchNetwork(web3authInstance.provider);
         }
       } catch (error) {
         console.error('Web3Auth initialization error:', error);
@@ -58,6 +61,65 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     setProvider(web3authProvider);
     const user = await web3auth.getUserInfo();
     setUser(user);
+    
+    // Automatically switch to the correct network after login
+    await autoSwitchNetwork(web3authProvider);
+  };
+
+  const autoSwitchNetwork = async (provider: IProvider | null) => {
+    if (!provider) {
+      console.warn('⚠️ No provider available for network switching');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Checking and switching to correct network...');
+      
+      // Check current network
+      const ethers = await import('ethers');
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const network = await ethersProvider.getNetwork();
+      const currentChainId = network.chainId.toString();
+      
+      console.log(`Current network: ${currentChainId}, Expected: ${config.network.chainId}`);
+      
+      if (currentChainId !== config.network.chainId) {
+        console.log(`🔄 Auto-switching from Chain ${currentChainId} to ${config.network.displayName}...`);
+        
+        try {
+          // Try to switch to the correct network
+          await provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: config.network.chainIdHex }],
+          });
+          console.log('✅ Network switched successfully!');
+        } catch (switchError: unknown) {
+          // If the network doesn't exist, add it first
+          if (switchError && typeof switchError === 'object' && 'code' in switchError && switchError.code === 4902) {
+            console.log('📝 Network not found, adding it...');
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: config.network.chainIdHex,
+                chainName: config.network.displayName,
+                nativeCurrency: config.network.nativeCurrency,
+                rpcUrls: config.network.rpcUrls.default,
+                blockExplorerUrls: config.network.blockExplorerUrls,
+              }],
+            });
+            console.log('✅ Network added and switched successfully!');
+          } else {
+            console.warn('⚠️ Could not switch network automatically:', switchError);
+          }
+        }
+        console.log('🏁 Auto-switch process completed');
+      } else {
+        console.log('✅ Already on correct network!');
+      }
+      console.log('🏁 Network check completed');
+    } catch (error) {
+      console.warn('⚠️ Error during automatic network switching:', error);
+    }
   };
 
   const logout = async () => {

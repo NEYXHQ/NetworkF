@@ -37,26 +37,21 @@ export const Header = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo/Home Button */}
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-blue-600">NetworkF2</h1>
+            <a 
+              href="/" 
+              className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+              title="Go to Home"
+            >
+              NetworkF2
+            </a>
           </div>
 
-                           {/* Navigation & Network Indicator */}
-                 <div className="flex items-center space-x-6">
-                   <nav className="hidden md:flex space-x-8">
-                     <a href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
-                       Home
-                     </a>
-                     <a href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
-                       About
-                     </a>
-                     <a href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-                       Contact
-                     </a>
-                   </nav>
-                   <NetworkIndicator />
-                 </div>
+          {/* Network Indicator */}
+          <div className="flex items-center">
+            <NetworkIndicator />
+          </div>
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
