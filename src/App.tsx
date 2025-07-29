@@ -3,7 +3,6 @@ import { useWeb3Auth } from './hooks/useWeb3Auth';
 import { Web3AuthProvider } from './contexts/Web3AuthProvider';
 import { Header } from './components/layout/Header';
 import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
 
 const AppContent = () => {
   const { isLoading } = useWeb3Auth();
@@ -26,9 +25,6 @@ const AppContent = () => {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/about" element={<div className="p-8">About Page</div>} />
-            <Route path="/contact" element={<div className="p-8">Contact Page</div>} />
           </Routes>
         </main>
       </div>

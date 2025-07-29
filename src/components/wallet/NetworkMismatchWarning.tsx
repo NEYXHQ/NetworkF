@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { Button } from '../ui/Button';
 import config from '../../config/env';
@@ -9,7 +9,7 @@ export const NetworkMismatchWarning = () => {
   const [detectedChainId, setDetectedChainId] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
-  const checkNetwork = async () => {
+  const checkNetwork = useCallback(async () => {
     if (!provider || !isConnected) return;
     
     setIsChecking(true);
@@ -24,13 +24,42 @@ export const NetworkMismatchWarning = () => {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [provider, isConnected]);
 
   useEffect(() => {
-    if (isConnected) {
+    if (!isConnected || !provider) return;
+
+    // Initial check with a delay to allow auto-switching to complete
+    const initialCheck = setTimeout(() => {
       checkNetwork();
+    }, 1000);
+
+    // Set up network change listener
+    const handleNetworkChange = () => {
+      console.log('🔄 Network change detected, rechecking...');
+      // Small delay to allow network switch to stabilize
+      setTimeout(checkNetwork, 500);
+    };
+
+    // Listen for network changes
+    if (provider.on) {
+      provider.on('chainChanged', handleNetworkChange);
+      provider.on('accountsChanged', handleNetworkChange);
     }
-  }, [isConnected]);
+
+    // Periodic check as fallback (every 5 seconds, less aggressive)
+    const interval = setInterval(checkNetwork, 5000);
+
+    // Cleanup
+    return () => {
+      clearTimeout(initialCheck);
+      if (provider.off) {
+        provider.off('chainChanged', handleNetworkChange);
+        provider.off('accountsChanged', handleNetworkChange);
+      }
+      clearInterval(interval);
+    };
+  }, [isConnected, provider, checkNetwork]);
 
   const isWrongNetwork = detectedChainId && detectedChainId !== config.network.chainId;
 
