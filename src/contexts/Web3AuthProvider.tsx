@@ -23,12 +23,13 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           setIsLoading(false);
           return;
         }
+// TODO: Change to mainnet
 
         const web3authInstance = new Web3Auth({
           clientId: config.web3AuthClientId,
           web3AuthNetwork: config.network.features.isTestnet
             ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
-            : WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+            : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
         });
 
         await web3authInstance.init();
