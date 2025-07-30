@@ -3,7 +3,8 @@ import { ExternalLink, Droplets } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const FaucetLinks = () => {
-  if (!config.network.features.isTestnet || !config.network.faucets?.length) {
+  // Only show in development mode and if it's a testnet
+  if (!config.isDevelopment || !config.network.features.isTestnet || !config.network.faucets?.length) {
     return null;
   }
 

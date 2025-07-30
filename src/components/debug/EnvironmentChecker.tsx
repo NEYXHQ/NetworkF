@@ -1,20 +1,24 @@
-import config from '../../config/env'
-import { NetworkIndicator } from '../ui/NetworkIndicator'
-import { Server } from 'lucide-react'
+import config from '../../config/env';
+import { NetworkIndicator } from '../ui/NetworkIndicator';
+import { BalanceDebugger } from './BalanceDebugger';
+import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
+import { FaucetLinks } from '../wallet/FaucetLinks';
+import { Server } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
   if (!config.isDevelopment) {
-    return null // Only show in development
+    return null; // Only show in development
   }
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-xs">
-      <div className="flex items-center space-x-2 mb-2">
+    <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-xs max-w-sm">
+      <div className="flex items-center space-x-2 mb-4">
         <Server className="w-4 h-4 text-blue-600" />
-        <span className="font-medium">Environment Debug</span>
+        <span className="font-medium">Development Debug</span>
       </div>
       
-      <div className="space-y-1">
+      {/* Environment Info */}
+      <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between">
           <span className="text-gray-600">Environment:</span>
           <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -49,8 +53,23 @@ export const EnvironmentChecker = () => {
           </span>
         </div>
       </div>
-    </div>
-  )
-}
 
-export default EnvironmentChecker 
+      {/* Network Mismatch Warning */}
+      <div className="mb-4">
+        <NetworkMismatchWarning />
+      </div>
+
+      {/* Faucet Links */}
+      <div className="mb-4">
+        <FaucetLinks />
+      </div>
+
+      {/* Balance Debugger */}
+      <div>
+        <BalanceDebugger />
+      </div>
+    </div>
+  );
+};
+
+export default EnvironmentChecker; 

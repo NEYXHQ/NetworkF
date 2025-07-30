@@ -18,12 +18,22 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
   useEffect(() => {
     const init = async () => {
       try {
+        // Log environment information
+        console.log('🚀 NetworkF2 Application Starting...');
+        console.log('📊 Environment Information:');
+        console.log(`   Environment: ${config.isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'}`);
+        console.log(`   Network: ${config.network.displayName}`);
+        console.log(`   Chain ID: ${config.network.chainId}`);
+        console.log(`   Web3Auth Network: ${config.web3AuthNetwork}`);
+        console.log(`   Database Project ID: ${config.supabase.projectId ? config.supabase.projectId.slice(-8) : 'N/A'}`);
+        console.log(`   NEYXT Contract: ${config.neyxtContractAddress.slice(0, 10)}...${config.neyxtContractAddress.slice(-8)}`);
+        console.log('');
+
         if (!config.web3AuthClientId) {
-          console.error('Web3Auth Client ID not found');
+          console.error('❌ Web3Auth Client ID not found');
           setIsLoading(false);
           return;
         }
-// TODO: Change to mainnet
 
         const web3authInstance = new Web3Auth({
           clientId: config.web3AuthClientId,
@@ -40,11 +50,24 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           const user = await web3authInstance.getUserInfo();
           setUser(user);
           
+          // Log wallet information
+          console.log('👤 User Connected:');
+          console.log(`   Name: ${user.name || 'N/A'}`);
+          console.log(`   Email: ${user.email || 'N/A'}`);
+          console.log(`   Verifier ID: ${(user as UserInfo).verifierId || 'N/A'}`);
+          console.log(`   Profile Image: ${user.profileImage ? 'Available' : 'Not available'}`);
+          console.log('');
+          
           // Auto-switch network on reconnection too
-          await autoSwitchNetwork(web3authInstance.provider);
+          if (web3authInstance.provider) {
+            await autoSwitchNetwork(web3authInstance.provider);
+          }
+        } else {
+          console.log('🔐 Web3Auth initialized - User not connected');
+          console.log('');
         }
       } catch (error) {
-        console.error('Web3Auth initialization error:', error);
+        console.error('❌ Web3Auth initialization error:', error);
       } finally {
         setIsLoading(false);
       }
@@ -55,16 +78,43 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
 
   const login = async () => {
     if (!web3auth) {
-      console.log('Web3Auth not initialized yet');
+      console.log('❌ Web3Auth not initialized yet');
       return;
     }
+    
+    console.log('🔗 Connecting to Web3Auth...');
     const web3authProvider = await web3auth.connect();
     setProvider(web3authProvider);
     const user = await web3auth.getUserInfo();
     setUser(user);
     
+    // Log wallet information
+    console.log('✅ User Login Successful:');
+    console.log(`   Name: ${user.name || 'N/A'}`);
+    console.log(`   Email: ${user.email || 'N/A'}`);
+    console.log(`   Verifier ID: ${(user as UserInfo).verifierId || 'N/A'}`);
+    console.log(`   Profile Image: ${user.profileImage ? 'Available' : 'Not available'}`);
+    
+    // Get and log wallet address
+    try {
+      const ethers = await import('ethers');
+      if (!web3authProvider) {
+        console.log('   Wallet Address: Unable to retrieve - No provider');
+        return;
+      }
+      const ethersProvider = new ethers.BrowserProvider(web3authProvider);
+      const accounts = await ethersProvider.listAccounts();
+      if (accounts.length > 0) {
+        console.log(`   Wallet Address: ${accounts[0].address}`);
+        console.log(`   Network: ${config.network.displayName} (Chain ID: ${config.network.chainId})`);
+      }
+    } catch {
+      console.log('   Wallet Address: Unable to retrieve');
+    }
+    console.log('');
+    
     // Automatically switch to the correct network after login
-    await autoSwitchNetwork(web3authProvider);
+    await autoSwitchNetwork(web3authProvider as IProvider | null);
   };
 
   const autoSwitchNetwork = async (provider: IProvider | null) => {
@@ -78,6 +128,10 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
       
       // Check current network
       const ethers = await import('ethers');
+      if (!provider) {
+        console.warn('⚠️ No provider available for network switching');
+        return;
+      }
       const ethersProvider = new ethers.BrowserProvider(provider);
       const network = await ethersProvider.getNetwork();
       const currentChainId = network.chainId.toString();
