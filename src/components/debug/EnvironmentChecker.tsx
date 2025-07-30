@@ -1,6 +1,6 @@
 import config from '../../config/env'
 import { NetworkIndicator } from '../ui/NetworkIndicator'
-import { Database, Server } from 'lucide-react'
+import { Server } from 'lucide-react'
 
 export const EnvironmentChecker = () => {
   if (!config.isDevelopment) {
