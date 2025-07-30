@@ -3,6 +3,7 @@ import { useWeb3Auth } from './hooks/useWeb3Auth';
 import { Web3AuthProvider } from './contexts/Web3AuthProvider';
 import { Header } from './components/layout/Header';
 import { HomePage } from './pages/HomePage';
+import { EnvironmentChecker } from './components/debug/EnvironmentChecker';
 
 const AppContent = () => {
   const { isLoading } = useWeb3Auth();
@@ -35,6 +36,7 @@ const AppContent = () => {
 function App() {
   return (
     <Web3AuthProvider>
+      <EnvironmentChecker />
       <AppContent />
     </Web3AuthProvider>
   );
