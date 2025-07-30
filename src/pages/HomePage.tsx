@@ -1,6 +1,7 @@
 import { useWeb3Auth } from '../hooks/useWeb3Auth';
 import { Button } from '../components/ui/Button';
 import { TokenBalance } from '../components/wallet/TokenBalance';
+import { UserProfile } from '../components/user/UserProfile';
 import { ArrowRight, Users, Zap, Shield, CheckCircle } from 'lucide-react';
 
 export const HomePage = () => {
@@ -107,14 +108,26 @@ export const HomePage = () => {
 
                   {/* Token Balance Section - Only show if connected */}
             {isConnected && (
-              <section className="py-20 bg-gray-50">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-                    Your Wallet & NEYXT Tokens
-                  </h2>
-                  <TokenBalance />
-                </div>
-              </section>
+              <>
+                <section className="py-20 bg-gray-50">
+                  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+                      Your Wallet & NEYXT Tokens
+                    </h2>
+                    <TokenBalance />
+                  </div>
+                </section>
+
+                {/* User Profile Section */}
+                <section className="py-20 bg-white">
+                  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+                      Your Profile
+                    </h2>
+                    <UserProfile />
+                  </div>
+                </section>
+              </>
             )}
 
             {/* CTA Section */}
