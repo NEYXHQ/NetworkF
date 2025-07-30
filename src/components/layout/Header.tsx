@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
+import { useAdmin } from '../../hooks/useAdmin';
 import { Button } from '../ui/Button';
 import config from '../../config/env';
 import { EnvironmentChecker } from '../debug/EnvironmentChecker';
-import { User, LogOut, Settings, Wallet, ChevronDown, Bug } from 'lucide-react';
+import { User, LogOut, Settings, Wallet, ChevronDown, Bug, Shield } from 'lucide-react';
 
 export const Header = () => {
   const { user, isConnected, isLoading, login, logout, getAccounts } = useWeb3Auth();
+  const { isAdmin } = useAdmin();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showEnvironmentDebugger, setShowEnvironmentDebugger] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -136,6 +138,28 @@ export const Header = () => {
                           <Bug className="w-4 h-4" />
                           <span>{showEnvironmentDebugger ? 'Hide' : 'Show'} Debug Panel</span>
                         </button>
+                      )}
+                      
+                      {/* Admin-only Admin Link */}
+                      {isAdmin && (
+                        <a
+                          href="/admin"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Admin Dashboard</span>
+                        </a>
+                      )}
+                      
+                      {/* Admin Login Link for non-admin users */}
+                      {!isAdmin && (
+                        <a
+                          href="/admin/login"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Admin Access</span>
+                        </a>
                       )}
                       
                       <div className="border-t border-gray-100 my-1"></div>
