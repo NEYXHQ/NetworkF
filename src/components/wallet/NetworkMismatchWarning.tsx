@@ -5,6 +5,11 @@ import config from '../../config/env';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const NetworkMismatchWarning = () => {
+  // Only show in development mode
+  if (!config.isDevelopment) {
+    return null;
+  }
+
   const { provider, isConnected } = useWeb3Auth();
   const [detectedChainId, setDetectedChainId] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);

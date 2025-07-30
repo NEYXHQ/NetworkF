@@ -2,6 +2,11 @@ import config from '../../config/env';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export const NetworkIndicator = () => {
+  // Only show in development mode
+  if (!config.isDevelopment) {
+    return null;
+  }
+
   const isTestnet = config.network.features.isTestnet;
 
   return (
