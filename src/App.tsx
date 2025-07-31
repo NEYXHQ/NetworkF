@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useWeb3Auth } from './hooks/useWeb3Auth';
 import { Web3AuthProvider } from './contexts/Web3AuthProvider';
-import { Header } from './components/layout/Header';
 import { HomePage } from './pages/HomePage';
 import { AdminPage } from './pages/AdminPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
