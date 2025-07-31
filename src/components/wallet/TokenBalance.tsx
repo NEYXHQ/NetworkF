@@ -151,20 +151,22 @@ export const TokenBalance = () => {
 
       {/* Actions */}
       <div className="mt-6 flex space-x-3">
+        {/* TODO: Implement send buttons
         <Button
-          onClick={() => {/* TODO: Implement send NEYXT */}}
+          onClick={() => handleSendNEYXT()}
           className="flex-1"
           disabled={isLoading}
         >
           Send NEYXT
         </Button>
         <Button
-          onClick={() => {/* TODO: Implement send native */}}
+          onClick={() => handleSendPOL()}
           className="flex-1"
           disabled={isLoading}
         >
           Send POL
         </Button>
+        */}
       </div>
     </div>
   );
