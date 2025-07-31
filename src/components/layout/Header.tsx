@@ -6,8 +6,13 @@ import config from '../../config/env';
 import { EnvironmentChecker } from '../debug/EnvironmentChecker';
 import { User, LogOut, Settings, Wallet, ChevronDown, Bug, Shield } from 'lucide-react';
 
-export const Header = () => {
-  const { user, isConnected, isLoading, login, logout, getAccounts } = useWeb3Auth();
+interface HeaderProps {
+  showWallet?: boolean;
+  onToggleWallet?: () => void;
+}
+
+export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
+  const { user, isConnected, isLoading, login, logout } = useWeb3Auth();
   const { isAdmin } = useAdmin();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showEnvironmentDebugger, setShowEnvironmentDebugger] = useState(false);
@@ -42,17 +47,7 @@ export const Header = () => {
     }
   };
 
-  const showWalletInfo = async () => {
-    try {
-      const accounts = await getAccounts();
-      if (accounts.length > 0) {
-        alert(`Wallet Address: ${accounts[0]}`);
-      }
-    } catch (error) {
-      console.error('Error getting accounts:', error);
-    }
-    setIsMenuOpen(false);
-  };
+
 
   const toggleEnvironmentDebugger = () => {
     setShowEnvironmentDebugger(!showEnvironmentDebugger);
@@ -61,31 +56,32 @@ export const Header = () => {
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b">
+      <header style={{ backgroundColor: '#023047', borderBottom: '1px solid rgba(142, 202, 230, 0.2)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 md:h-16">
             {/* Logo/Home Button */}
             <div className="flex items-center">
               <a 
                 href="/" 
-                className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+                className="text-xl md:text-2xl font-bold hover:opacity-80 transition-opacity cursor-pointer"
+                style={{ color: '#f78c01' }}
                 title="Go to Home"
               >
-                NetworkF2
+                WFounders
               </a>
             </div>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4">
               {isLoading ? (
-                <div className="animate-pulse bg-gray-200 rounded-full h-8 w-20"></div>
+                <div className="animate-pulse rounded-full h-7 w-16 md:h-8 md:w-20" style={{ backgroundColor: 'rgba(142, 202, 230, 0.2)' }}></div>
               ) : isConnected && user ? (
                 <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-2 p-1.5 md:p-2 rounded-full hover:bg-white/10 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: 'rgba(142, 202, 230, 0.2)' }}>
                       {user.profileImage ? (
                         <img 
                           src={user.profileImage} 
@@ -93,39 +89,44 @@ export const Header = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-4 h-4 text-blue-600" />
+                        <User className="w-3 h-3 md:w-4 md:h-4" style={{ color: '#8ecae6' }} />
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-white hidden sm:block">
                       {user.name || user.email || 'User'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 text-white/70 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown Menu */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900">
+                    <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 z-50" style={{ backgroundColor: '#023047', border: '1px solid rgba(142, 202, 230, 0.3)' }}>
+                      <div className="px-4 py-2" style={{ borderBottom: '1px solid rgba(142, 202, 230, 0.2)' }}>
+                        <p className="text-sm font-medium text-white">
                           {user.name || 'User'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-white/70">
                           {user.email}
                         </p>
                       </div>
                       
                       <button
-                        onClick={showWalletInfo}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        onClick={() => {
+                          if (onToggleWallet) {
+                            onToggleWallet();
+                          }
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center space-x-2"
                       >
-                        <Wallet className="w-4 h-4" />
-                        <span>Show Wallet Info</span>
+                        <Wallet className="w-3 h-3" />
+                        <span>{showWallet ? 'Hide Wallet' : 'Show Wallet'}</span>
                       </button>
                       
                       <button
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center space-x-2"
                       >
-                        <Settings className="w-4 h-4" />
+                        <Settings className="w-3 h-3" />
                         <span>Settings</span>
                       </button>
                       
@@ -133,9 +134,9 @@ export const Header = () => {
                       {config.isDevelopment && (
                         <button
                           onClick={toggleEnvironmentDebugger}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center space-x-2"
                         >
-                          <Bug className="w-4 h-4" />
+                          <Bug className="w-3 h-3" />
                           <span>{showEnvironmentDebugger ? 'Hide' : 'Show'} Debug Panel</span>
                         </button>
                       )}
@@ -144,9 +145,9 @@ export const Header = () => {
                       {isAdmin && (
                         <a
                           href="/admin"
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center space-x-2"
                         >
-                          <Shield className="w-4 h-4" />
+                          <Shield className="w-3 h-3" />
                           <span>Admin Dashboard</span>
                         </a>
                       )}
@@ -155,28 +156,33 @@ export const Header = () => {
                       {!isAdmin && (
                         <a
                           href="/admin/login"
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center space-x-2"
                         >
-                          <Shield className="w-4 h-4" />
+                          <Shield className="w-3 h-3" />
                           <span>Admin Access</span>
                         </a>
                       )}
                       
-                      <div className="border-t border-gray-100 my-1"></div>
+                      <div style={{ borderTop: '1px solid rgba(142, 202, 230, 0.2)' }} className="my-1"></div>
                       
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-red-500/20 flex items-center space-x-2"
+                        style={{ color: '#fb8500' }}
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-3 h-3" />
                         <span>Sign Out</span>
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
-                <Button onClick={handleLogin}>
-                  <User className="mr-2 h-4 w-4" />
+                <Button 
+                  onClick={handleLogin}
+                  className="text-sm px-4 py-2 border-0 hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: '#f78c01', color: 'white' }}
+                >
+                  <User className="mr-2 h-3 w-3" />
                   Sign In
                 </Button>
               )}

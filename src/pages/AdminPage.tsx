@@ -339,7 +339,7 @@ export const AdminPage = () => {
               <ul className="divide-y divide-gray-200">
                 {users.map((user) => (
                   <li key={user.id} className="px-6 py-4">
-                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <img
@@ -348,16 +348,16 @@ export const AdminPage = () => {
                             alt={user.name || 'User'}
                           />
                         </div>
-                        <div className="ml-4">
+                        <div className="ml-4 flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-gray-900 truncate">
                               {user.name || 'Unknown User'}
                             </p>
                             {user.is_admin && (
-                              <Shield className="w-4 h-4 text-purple-600" />
+                              <Shield className="w-4 h-4 text-purple-600 flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="text-sm text-gray-500 truncate">{user.email}</p>
                           <div className="flex items-center space-x-2 mt-1">
                             {getStatusBadge(user.status || 'pending')}
                             <span className="text-xs text-gray-500">
@@ -366,8 +366,8 @@ export const AdminPage = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-right">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                        <div className="text-left sm:text-right">
                           <p className="text-sm text-gray-900">
                             Connections: {user.total_connections || 0}
                           </p>
@@ -375,7 +375,7 @@ export const AdminPage = () => {
                             Successful: {user.successful_connections || 0}
                           </p>
                         </div>
-                        <div className="flex space-x-1">
+                        <div className="flex flex-wrap gap-1">
                           {user.status === 'pending' && (
                             <>
                               <Button

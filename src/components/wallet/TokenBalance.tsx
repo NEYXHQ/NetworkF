@@ -2,35 +2,45 @@ import { useState, useEffect } from 'react';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { useTokenService } from '../../hooks/useTokenService';
 import { Button } from '../ui/Button';
-import { Wallet, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Wallet, RefreshCw, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 export const TokenBalance = () => {
-  const { isConnected, user } = useWeb3Auth();
+  const { isConnected, user, getAccounts } = useWeb3Auth();
   const { getTokenBalances, formatBalance, formatNativeBalance } = useTokenService();
   
   const [balances, setBalances] = useState({ neyxt: '0', native: '0' });
+  const [walletAddress, setWalletAddress] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!isConnected) return;
     
-    const loadBalances = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
         setError(null);
+        
+        // Load wallet address
+        const accounts = await getAccounts();
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+        }
+        
+        // Load token balances
         const tokenBalances = await getTokenBalances();
         setBalances(tokenBalances);
       } catch (err) {
-        console.error('Error loading balances:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load balances');
+        console.error('Error loading wallet data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load wallet data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadBalances();
+    loadData();
   }, [isConnected]);
 
   const refreshBalances = async () => {
@@ -39,6 +49,14 @@ export const TokenBalance = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Refresh wallet address
+      const accounts = await getAccounts();
+      if (accounts.length > 0) {
+        setWalletAddress(accounts[0]);
+      }
+      
+      // Refresh token balances
       const tokenBalances = await getTokenBalances();
       setBalances(tokenBalances);
     } catch (err) {
@@ -47,6 +65,23 @@ export const TokenBalance = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const copyAddress = async () => {
+    if (!walletAddress) return;
+    
+    try {
+      await navigator.clipboard.writeText(walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
+  };
+
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   if (!isConnected) {
@@ -90,6 +125,29 @@ export const TokenBalance = () => {
           </Button>
         </div>
       </div>
+
+      {/* Wallet Address */}
+      {walletAddress && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-1">Wallet Address</h4>
+              <p className="text-sm text-gray-600 font-mono">
+                {formatAddress(walletAddress)}
+              </p>
+            </div>
+            <Button
+              onClick={copyAddress}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-1"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (
