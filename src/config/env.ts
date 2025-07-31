@@ -19,7 +19,7 @@ interface Config {
 
 const config: Config = {
   web3AuthClientId: import.meta.env.VITE_WEB3AUTH_CLIENT_ID || '',
-  appName: import.meta.env.VITE_APP_NAME || 'NetworkF2',
+  appName: import.meta.env.VITE_APP_NAME || 'WFounders',
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
   network: currentNetwork, // Full network configuration

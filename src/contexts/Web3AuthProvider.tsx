@@ -19,7 +19,7 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     const init = async () => {
       try {
         // Log environment information
-        console.log('🚀 NetworkF2 Application Starting...');
+        console.log('🚀 Wfounders Application Starting...');
         console.log('📊 Environment Information:');
         console.log(`   Environment: ${config.isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'}`);
         console.log(`   Network: ${config.network.displayName}`);
@@ -40,6 +40,8 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           web3AuthNetwork: config.network.features.isTestnet
             ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
             : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+          sessionTime: 24 * 60 * 60, // 24 hours in seconds
+          enableLogging: config.isDevelopment,
         });
 
         await web3authInstance.init();

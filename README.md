@@ -1,4 +1,4 @@
-# NetworkF2 - Modern Web3 App with Social Auth & Automatic Wallet Creation
+# Wfounders - Modern Web3 App with Social Auth & Automatic Wallet Creation
 
 A modern, fully static web application built with **Vite**, **React**, **TypeScript**, **Tailwind CSS 4.1**, **Web3Auth Plug-and-Play**, and **Supabase** for seamless social authentication, automatic wallet creation, and user management. Perfect for founders and entrepreneurs building Web3 networks.
 
@@ -83,7 +83,7 @@ src/
    VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
    
    # App Configuration
-   VITE_APP_NAME=NetworkF2
+   VITE_APP_NAME=Wfounders
    
    # Development Supabase (localhost)
    VITE_SUPABASE_DEV_URL=https://your-dev-project.supabase.co

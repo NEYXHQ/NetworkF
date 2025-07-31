@@ -1,5 +1,4 @@
 import { useSupabaseUser } from '../../hooks/useSupabaseUser'
-import { Button } from '../ui/Button'
 import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 
 export const UserProfile = () => {
@@ -7,7 +6,6 @@ export const UserProfile = () => {
     supabaseUser, 
     isLoading, 
     error, 
-    refreshUser,
     isApproved,
     isPending,
     isRejected 
@@ -36,9 +34,9 @@ export const UserProfile = () => {
           <AlertCircle className="w-8 h-8 mx-auto mb-2" />
           <p className="font-medium">Error loading profile</p>
           <p className="text-sm text-gray-600 mt-1">{error}</p>
-          <Button onClick={refreshUser} className="mt-3" size="sm">
+          {/* <Button onClick={refreshUser} className="mt-3" size="sm">
             Try Again
-          </Button>
+          </Button> */}
         </div>
       </div>
     )
@@ -92,8 +90,8 @@ export const UserProfile = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-start justify-between mb-6">
+    <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: 'rgba(2, 48, 71, 0.8)', border: '1px solid rgba(142, 202, 230, 0.3)' }}>
+      <div className="flex items-start mb-6">
         <div className="flex items-center space-x-4">
           {supabaseUser.profile_image ? (
             <img
@@ -102,52 +100,49 @@ export const UserProfile = () => {
               className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(142, 202, 230, 0.2)' }}>
+              <User className="w-8 h-8" style={{ color: '#8ecae6' }} />
             </div>
           )}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-semibold text-white truncate">
               {supabaseUser.name || 'Unknown User'}
             </h2>
             {supabaseUser.headline && (
-              <p className="text-gray-600 mt-1">{supabaseUser.headline}</p>
+              <p className="text-white/80 mt-1 truncate">{supabaseUser.headline}</p>
             )}
             <div className="mt-2">
               {getStatusBadge()}
             </div>
           </div>
         </div>
-        <Button onClick={refreshUser} variant="outline" size="sm">
-          Refresh
-        </Button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Contact Information */}
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Contact Information</h3>
+          <h3 className="font-medium text-white">Contact Information</h3>
           
           {supabaseUser.email && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Mail className="w-4 h-4 mr-2" />
+            <div className="flex items-center text-sm text-white/80">
+              <Mail className="w-4 h-4 mr-2" style={{ color: '#8ecae6' }} />
               <span>{supabaseUser.email}</span>
               {supabaseUser.email_verified && (
-                <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
+                <CheckCircle className="w-4 h-4 ml-2" style={{ color: '#f78c01' }} />
               )}
             </div>
           )}
 
           {supabaseUser.location && (
-            <div className="flex items-center text-sm text-gray-600">
-              <MapPin className="w-4 h-4 mr-2" />
+            <div className="flex items-center text-sm text-white/80">
+              <MapPin className="w-4 h-4 mr-2" style={{ color: '#8ecae6' }} />
               <span>{supabaseUser.location}</span>
             </div>
           )}
 
           {supabaseUser.industry && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Briefcase className="w-4 h-4 mr-2" />
+            <div className="flex items-center text-sm text-white/80">
+              <Briefcase className="w-4 h-4 mr-2" style={{ color: '#8ecae6' }} />
               <span>{supabaseUser.industry}</span>
             </div>
           )}
@@ -155,26 +150,26 @@ export const UserProfile = () => {
 
         {/* Account Information */}
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Account Information</h3>
+          <h3 className="font-medium text-white">Account Information</h3>
           
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-white/80">
             <span className="font-medium">Member since:</span> {formatDate(supabaseUser.created_at)}
           </div>
 
           {supabaseUser.last_login_at && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-white/80">
               <span className="font-medium">Last login:</span> {formatDate(supabaseUser.last_login_at)}
             </div>
           )}
 
           {supabaseUser.linkedin_id && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-white/80">
               <span className="font-medium">LinkedIn ID:</span> {supabaseUser.linkedin_id}
             </div>
           )}
 
           {supabaseUser.connections_count && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-white/80">
               <span className="font-medium">LinkedIn Connections:</span> {supabaseUser.connections_count.toLocaleString()}
             </div>
           )}
@@ -184,8 +179,8 @@ export const UserProfile = () => {
       {/* Summary */}
       {supabaseUser.summary && (
         <div className="mt-6">
-          <h3 className="font-medium text-gray-900 mb-2">About</h3>
-          <p className="text-sm text-gray-600 leading-relaxed">{supabaseUser.summary}</p>
+          <h3 className="font-medium text-white mb-2">About</h3>
+          <p className="text-sm text-white/80 leading-relaxed">{supabaseUser.summary}</p>
         </div>
       )}
 
@@ -197,7 +192,7 @@ export const UserProfile = () => {
             <div>
               <h4 className="text-sm font-medium text-yellow-800">Application Under Review</h4>
               <p className="text-sm text-yellow-700 mt-1">
-                Your application to join NetworkF2 is being reviewed by our team. 
+                Your application to join Wfounders is being reviewed by our team. 
                 You'll be notified once a decision has been made.
               </p>
             </div>
@@ -212,7 +207,7 @@ export const UserProfile = () => {
             <div>
               <h4 className="text-sm font-medium text-red-800">Application Not Approved</h4>
               <p className="text-sm text-red-700 mt-1">
-                Unfortunately, your application to join NetworkF2 was not approved at this time. 
+                Unfortunately, your application to join Wfounders was not approved at this time. 
                 Please contact support if you have questions.
               </p>
             </div>
@@ -225,9 +220,9 @@ export const UserProfile = () => {
           <div className="flex items-start">
             <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5" />
             <div>
-              <h4 className="text-sm font-medium text-green-800">Welcome to NetworkF2!</h4>
+              <h4 className="text-sm font-medium text-green-800">Welcome to Wfounders!</h4>
               <p className="text-sm text-green-700 mt-1">
-                Your application has been approved. You now have full access to the NetworkF2 platform.
+                Your application has been approved. Stay tuned for the platform launch.
               </p>
             </div>
           </div>

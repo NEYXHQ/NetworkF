@@ -22,15 +22,12 @@ const AppContent = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-          </Routes>
-        </main>
+      <div className="min-h-screen">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+        </Routes>
       </div>
     </Router>
   );

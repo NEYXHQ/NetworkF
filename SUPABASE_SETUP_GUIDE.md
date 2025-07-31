@@ -51,7 +51,7 @@ The app automatically switches between them based on the environment.
 VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
 
 # App Configuration
-VITE_APP_NAME=NetworkF2
+VITE_APP_NAME=Wfounders
 
 # Development Supabase (localhost)
 VITE_SUPABASE_DEV_URL=https://your-dev-project.supabase.co
