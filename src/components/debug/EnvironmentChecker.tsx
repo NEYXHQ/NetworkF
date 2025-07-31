@@ -3,9 +3,38 @@ import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
-import { Server } from 'lucide-react';
+import { Server, Mail } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
+  const handleTestEmail = async () => {
+    try {
+      // Replace with your actual Supabase project URL
+      const supabaseUrl = config.supabase.url;
+      const functionUrl = `${supabaseUrl}/functions/v1/send-welcome-email`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.supabase.anonKey}`,
+        },
+        body: JSON.stringify({
+          to: 'giloppe@gmail.com',
+          subject: 'Test Welcome Email',
+        }),
+      });
+      
+      if (response.ok) {
+        alert('Test email sent successfully!');
+      } else {
+        const error = await response.text();
+        alert(`Failed to send email: ${error}`);
+      }
+    } catch (error) {
+      alert(`Error: ${error}`);
+    }
+  };
+
   if (!config.isDevelopment) {
     return null; // Only show in development
   }
@@ -65,8 +94,19 @@ export const EnvironmentChecker = () => {
       </div>
 
       {/* Balance Debugger */}
-      <div>
+      <div className="mb-4">
         <BalanceDebugger />
+      </div>
+
+      {/* Email Test */}
+      <div className="border-t border-gray-200 pt-4">
+        <button
+          onClick={handleTestEmail}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+        >
+          <Mail className="w-3 h-3" />
+          <span>Test Welcome Email</span>
+        </button>
       </div>
     </div>
   );
