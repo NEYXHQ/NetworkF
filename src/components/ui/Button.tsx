@@ -11,10 +11,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
     
     const variantClasses = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700',
-      secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
-      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
-      ghost: 'text-gray-700 hover:bg-gray-100',
+      primary: 'bg-princeton-orange text-soft-white hover:bg-princeton-orange-600 focus-visible:ring-princeton-orange',
+      secondary: 'bg-teal-blue text-charcoal-black hover:bg-teal-blue-600 focus-visible:ring-teal-blue',
+      outline: 'border border-teal-blue bg-charcoal-black text-teal-blue hover:bg-teal-blue/10 focus-visible:ring-teal-blue',
+      ghost: 'text-soft-white hover:bg-teal-blue/10 focus-visible:ring-teal-blue',
     };
     
     const sizeClasses = {
