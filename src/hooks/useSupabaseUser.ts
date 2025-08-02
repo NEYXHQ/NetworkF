@@ -129,16 +129,47 @@ export const useSupabaseUser = () => {
     }
   }
 
+  // Survey completion handler
+  const completeSurvey = async (entityName: string, foundingIdea: string) => {
+    if (!supabaseUser?.id) return false
+
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const updatedUser = await userService.updateSurveyResponses(
+        supabaseUser.id, 
+        entityName, 
+        foundingIdea
+      )
+      
+      if (updatedUser) {
+        setSupabaseUser(updatedUser)
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('Error completing survey:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save survey')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     supabaseUser,
     isLoading,
     error,
     updateProfile,
     refreshUser,
+    completeSurvey,
     // Helper properties
     isApproved: supabaseUser?.status === 'approved',
     isPending: supabaseUser?.status === 'pending',
     isRejected: supabaseUser?.status === 'rejected',
+    needsSurvey: supabaseUser && !supabaseUser.survey_completed,
+    isNewUser: supabaseUser && !supabaseUser.survey_completed, // Same as needsSurvey for now
   }
 }
 

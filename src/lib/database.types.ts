@@ -35,6 +35,9 @@ export interface Database {
           total_connections: number | null
           successful_connections: number | null
           last_connection_at: string | null
+          entity_name: string | null
+          founding_idea: string | null
+          survey_completed: boolean | null
         }
         Insert: {
           id?: string
@@ -61,6 +64,9 @@ export interface Database {
           total_connections?: number | null
           successful_connections?: number | null
           last_connection_at?: string | null
+          entity_name?: string | null
+          founding_idea?: string | null
+          survey_completed?: boolean | null
         }
         Update: {
           id?: string
@@ -87,6 +93,9 @@ export interface Database {
           total_connections?: number | null
           successful_connections?: number | null
           last_connection_at?: string | null
+          entity_name?: string | null
+          founding_idea?: string | null
+          survey_completed?: boolean | null
         }
         Relationships: []
       }
