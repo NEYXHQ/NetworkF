@@ -339,6 +339,58 @@ class UserService {
       throw error
     }
   }
+
+  /**
+   * Update user survey responses
+   */
+  async updateSurveyResponses(userId: string, entityName: string, foundingIdea: string): Promise<UserRow | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          entity_name: entityName,
+          founding_idea: foundingIdea,
+          survey_completed: true
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error updating survey responses:', error)
+        throw error
+      }
+
+      console.log('✅ Survey responses saved successfully for user:', userId)
+      return data
+    } catch (error) {
+      console.error('UserService.updateSurveyResponses error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Check if user needs to complete survey
+   */
+  async needsSurvey(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('survey_completed')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error checking survey status:', error)
+        return true // Default to showing survey if we can't check
+      }
+
+      return !data.survey_completed
+    } catch (error) {
+      console.error('UserService.needsSurvey error:', error)
+      return true // Default to showing survey if error
+    }
+  }
 }
 
 export const userService = new UserService()

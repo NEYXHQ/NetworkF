@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWeb3Auth } from '../hooks/useWeb3Auth';
+import { useSupabaseUser } from '../hooks/useSupabaseUser';
 import { Button } from '../components/ui/Button';
 import { TokenBalance } from '../components/wallet/TokenBalance';
 import { UserProfile } from '../components/user/UserProfile';
+import { SurveyModal } from '../components/user/SurveyModal';
 import { Header } from '../components/layout/Header';
 import { ArrowRight } from 'lucide-react';
 
 export const HomePage = () => {
   const { isConnected, login } = useWeb3Auth();
+  const { supabaseUser, needsSurvey, completeSurvey, isLoading } = useSupabaseUser();
   const [showWallet, setShowWallet] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
 
   const handleGetStarted = async () => {
     if (isConnected) {
@@ -22,6 +26,21 @@ export const HomePage = () => {
       }
     }
   };
+
+  // Handle survey completion
+  const handleSurveyComplete = async (entityName: string, foundingIdea: string) => {
+    const success = await completeSurvey(entityName, foundingIdea);
+    if (success) {
+      setShowSurvey(false);
+    }
+  };
+
+  // Show survey modal when user needs to complete it
+  useEffect(() => {
+    if (isConnected && needsSurvey && !isLoading && !showSurvey) {
+      setShowSurvey(true);
+    }
+  }, [isConnected, needsSurvey, isLoading, showSurvey]);
 
   // If user is connected, show only the profile and optionally wallet
   if (isConnected) {
@@ -52,6 +71,14 @@ export const HomePage = () => {
             </div>
           </section>
         </div>
+
+        {/* Survey Modal for New Users */}
+        <SurveyModal
+          isOpen={showSurvey}
+          onClose={() => setShowSurvey(false)}
+          onComplete={handleSurveyComplete}
+          userName={supabaseUser?.name || undefined}
+        />
       </div>
     );
   }
