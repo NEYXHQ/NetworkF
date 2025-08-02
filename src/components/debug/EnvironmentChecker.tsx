@@ -3,35 +3,21 @@ import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
+import { emailService } from '../../services/emailService';
 import { Server, Mail } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
   const handleTestEmail = async () => {
     try {
-      // Replace with your actual Supabase project URL
-      const supabaseUrl = config.supabase.url;
-      const functionUrl = `${supabaseUrl}/functions/v1/send-welcome-email`;
+      const result = await emailService.sendTestEmail('giloppe@gmail.com');
       
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.supabase.anonKey}`,
-        },
-        body: JSON.stringify({
-          to: 'giloppe@gmail.com',
-          subject: 'Test Welcome Email',
-        }),
-      });
-      
-      if (response.ok) {
-        alert('Test email sent successfully!');
+      if (result.success) {
+        alert('✅ Test email sent successfully!');
       } else {
-        const error = await response.text();
-        alert(`Failed to send email: ${error}`);
+        alert(`❌ Failed to send email: ${result.error}`);
       }
     } catch (error) {
-      alert(`Error: ${error}`);
+      alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
