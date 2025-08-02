@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { Database } from '../lib/database.types'
+import { emailService } from './emailService'
 
 type UserRow = Database['public']['Tables']['users']['Row']
 type UserInsert = Database['public']['Tables']['users']['Insert']
@@ -58,6 +59,22 @@ class UserService {
       // Check if authUserId is a valid UUID
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authUserId)
       
+      // First, check if user already exists to determine if we need to send welcome email
+      let existingUser = null;
+      try {
+        if (isUUID) {
+          const { data } = await supabase.from('users').select('id').eq('id', authUserId).single();
+          existingUser = data;
+        } else if (linkedinData.email) {
+          const { data } = await supabase.from('users').select('id').eq('email', linkedinData.email).single();
+          existingUser = data;
+        }
+      } catch {
+        // User doesn't exist, this is fine
+      }
+      
+      const isNewUser = !existingUser;
+      
       const userData: UserInsert = {
         id: isUUID ? authUserId : undefined, // Only set ID if it's a valid UUID
         email: linkedinData.email,
@@ -87,6 +104,25 @@ class UserService {
       if (error) {
         console.error('Error upserting user:', error)
         throw error
+      }
+
+      // Send welcome email for new users only
+      if (isNewUser && linkedinData.email) {
+        console.log('🎉 New user registered, sending welcome email...');
+        
+        // Send welcome email asynchronously (don't block user registration if email fails)
+        emailService.sendWelcomeEmail({
+          to: linkedinData.email,
+          userName: linkedinData.name,
+        }).then((result) => {
+          if (result.success) {
+            console.log('✅ Welcome email sent successfully to new user:', linkedinData.email);
+          } else {
+            console.warn('⚠️ Failed to send welcome email (registration still successful):', result.error);
+          }
+        }).catch((emailError) => {
+          console.warn('⚠️ Welcome email error (registration still successful):', emailError);
+        });
       }
 
       return data

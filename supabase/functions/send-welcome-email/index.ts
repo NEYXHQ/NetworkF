@@ -12,6 +12,7 @@ declare const Deno: {
 interface EmailRequest {
   to: string;
   subject: string;
+  userName?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -33,7 +34,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Get the request body
-    const { to, subject }: EmailRequest = await req.json();
+    const { to, subject, userName }: EmailRequest = await req.json();
 
     if (!to || !subject) {
       return new Response(
@@ -69,23 +70,50 @@ Deno.serve(async (req: Request) => {
         to: [to],
         subject: subject,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333; text-align: center;">Welcome to NetworkF2!</h1>
-            <p style="color: #666; font-size: 16px; line-height: 1.5;">
-              Thank you for joining NetworkF2. We're excited to have you on board!
-            </p>
-            <p style="color: #666; font-size: 16px; line-height: 1.5;">
-              This is a test email to verify that our email system is working correctly.
-            </p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="#" style="background-color: #007cba; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Get Started
-              </a>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f2f2f2; padding: 20px;">
+            <div style="background-color: #1e293b; padding: 30px; border-radius: 10px; text-align: center;">
+              <h1 style="color: #f78c01; font-size: 28px; margin-bottom: 10px;">Welcome to WFounders!</h1>
+              <h2 style="color: #2dd4bf; font-size: 20px; margin-top: 0;">Hello ${userName || 'Founder'}! 👋</h2>
             </div>
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              Best regards,<br>
-              The NetworkF2 Team
-            </p>
+            
+            <div style="background-color: white; padding: 30px; border-radius: 10px; margin-top: 20px;">
+              <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                Thank you for joining WFounders – the exclusive network for ambitious founders and entrepreneurs!
+              </p>
+              
+              <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                Your application is currently under review by our team. We carefully evaluate each founder to ensure the highest quality of our network.
+              </p>
+              
+              <div style="background-color: #cefbf4; border-left: 4px solid #2dd4bf; padding: 20px; margin: 20px 0; border-radius: 5px;">
+                <h3 style="color: #0c6553; margin: 0 0 10px 0; font-size: 16px;">What happens next?</h3>
+                <ul style="color: #10976f; margin: 0; padding-left: 20px;">
+                  <li>Our team will review your application</li>
+                  <li>You'll receive an approval notification via email</li>
+                  <li>Once approved, you'll gain access to our exclusive founder network</li>
+                </ul>
+              </div>
+              
+              <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                While you wait, feel free to explore our platform and complete your profile to increase your approval chances.
+              </p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="#" style="background-color: #f78c01; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+                  Complete Your Profile
+                </a>
+              </div>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">
+              <p style="margin: 0;">
+                Best regards,<br>
+                <strong style="color: #f78c01;">The WFounders Team</strong>
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 12px;">
+                Building the future, one founder at a time.
+              </p>
+            </div>
           </div>
         `,
       }),
