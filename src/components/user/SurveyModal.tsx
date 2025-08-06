@@ -130,7 +130,13 @@ export const SurveyModal = ({ isOpen, onClose, onComplete, userName }: SurveyMod
           <div className="flex justify-between items-center">
             {currentStep === 1 ? (
               <>
-                <div></div>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="px-4"
+                >
+                  Skip for now
+                </Button>
                 <Button
                   onClick={handleNext}
                   disabled={!isStep1Valid}
@@ -142,14 +148,23 @@ export const SurveyModal = ({ isOpen, onClose, onComplete, userName }: SurveyMod
               </>
             ) : (
               <>
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  className="px-4"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    className="px-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onClose}
+                    className="px-4"
+                  >
+                    Skip for now
+                  </Button>
+                </div>
                 <Button
                   onClick={handleSubmit}
                   disabled={!isStep2Valid}

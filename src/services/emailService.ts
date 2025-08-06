@@ -5,31 +5,32 @@ interface WelcomeEmailData {
   userName?: string;
 }
 
+interface ApprovalEmailData {
+  to: string;
+  userName?: string;
+}
+
 class EmailService {
-  private readonly functionUrl: string;
+  private readonly welcomeEmailUrl: string;
+  private readonly approvalEmailUrl: string;
 
   constructor() {
-    this.functionUrl = `${config.supabase.url}/functions/v1/send-welcome-email`;
+    this.welcomeEmailUrl = `${config.supabase.url}/functions/v1/send-welcome-email`;
+    this.approvalEmailUrl = `${config.supabase.url}/functions/v1/send-approval-email`;
   }
 
   /**
-   * Send welcome email to new user
+   * Call the welcome email Supabase function
    */
-  async sendWelcomeEmail(emailData: WelcomeEmailData): Promise<{ success: boolean; error?: string }> {
+  private async callWelcomeEmailFunction(params: { to: string; subject: string; userName?: string }): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('📧 Sending welcome email to:', emailData.to);
-
-      const response = await fetch(this.functionUrl, {
+      const response = await fetch(this.welcomeEmailUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${config.supabase.anonKey}`,
         },
-        body: JSON.stringify({
-          to: emailData.to,
-          subject: `Welcome to WFounders, ${emailData.userName || 'Founder'}!`,
-          userName: emailData.userName,
-        }),
+        body: JSON.stringify(params),
       });
 
       if (!response.ok) {
@@ -37,16 +38,14 @@ class EmailService {
         console.error('❌ Failed to send welcome email:', response.status, errorText);
         return { 
           success: false, 
-          error: `Email service responded with ${response.status}: ${errorText}` 
+          error: `Welcome email service responded with ${response.status}: ${errorText}` 
         };
       }
 
-      const result = await response.json();
-      console.log('✅ Welcome email sent successfully:', result);
-      
+      await response.json(); // Consume response but don't need the result
       return { success: true };
     } catch (error) {
-      console.error('❌ Error sending welcome email:', error);
+      console.error('❌ Error calling welcome email function:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
@@ -55,44 +54,73 @@ class EmailService {
   }
 
   /**
-   * Send test email (for development/debugging)
+   * Call the approval email Supabase function
    */
-  async sendTestEmail(to: string): Promise<{ success: boolean; error?: string }> {
+  private async callApprovalEmailFunction(params: { to: string; subject: string; userName?: string }): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🧪 Sending test email to:', to);
-
-      const response = await fetch(this.functionUrl, {
+      const response = await fetch(this.approvalEmailUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${config.supabase.anonKey}`,
         },
-        body: JSON.stringify({
-          to,
-          subject: 'Test Email from WFounders',
-        }),
+        body: JSON.stringify(params),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Failed to send test email:', response.status, errorText);
+        console.error('❌ Failed to send approval email:', response.status, errorText);
         return { 
           success: false, 
-          error: `Email service responded with ${response.status}: ${errorText}` 
+          error: `Approval email service responded with ${response.status}: ${errorText}` 
         };
       }
 
-      const result = await response.json();
-      console.log('✅ Test email sent successfully:', result);
-      
+      await response.json(); // Consume response but don't need the result
       return { success: true };
     } catch (error) {
-      console.error('❌ Error sending test email:', error);
+      console.error('❌ Error calling approval email function:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
     }
+  }
+
+  /**
+   * Send welcome email to new user
+   */
+  async sendWelcomeEmail(emailData: WelcomeEmailData): Promise<{ success: boolean; error?: string }> {
+    console.log('📧 Sending welcome email to:', emailData.to);
+    return this.callWelcomeEmailFunction({
+      to: emailData.to,
+      subject: `Welcome to WFounders, ${emailData.userName || 'Founder'}!`,
+      userName: emailData.userName,
+    });
+  }
+
+  /**
+   * Send test welcome email (for development/debugging)
+   */
+  async sendTestEmail(to: string): Promise<{ success: boolean; error?: string }> {
+    console.log('🧪 Sending test welcome email to:', to);
+    return this.callWelcomeEmailFunction({
+      to: to,
+      subject: 'Test Welcome Email from NetworkF2',
+      userName: 'Test User',
+    });
+  }
+
+  /**
+   * Send approval email to approved user
+   */
+  async sendApprovalEmail(emailData: ApprovalEmailData): Promise<{ success: boolean; error?: string }> {
+    console.log('🎉 Sending approval email to:', emailData.to);
+    return this.callApprovalEmailFunction({
+      to: emailData.to,
+      subject: `Congratulations! Your WFounders Application is Approved`,
+      userName: emailData.userName,
+    });
   }
 }
 

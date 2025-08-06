@@ -39,9 +39,20 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           clientId: config.web3AuthClientId,
           web3AuthNetwork: config.network.features.isTestnet
             ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
-            : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-          sessionTime: 24 * 60 * 60, // 24 hours in seconds
+            : WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+          sessionTime: 7 * 24 * 60 * 60, // 7 days in seconds for better session persistence
           enableLogging: config.isDevelopment,
+          uiConfig: {
+            theme: {
+              primary: '#f78c01', // WFounders orange
+            },
+            mode: 'dark',
+            logoLight: undefined,
+            logoDark: undefined,
+            defaultLanguage: 'en',
+            loginGridCol: 3,
+            primaryButton: 'externalLogin',
+          },
         });
 
         await web3authInstance.init();

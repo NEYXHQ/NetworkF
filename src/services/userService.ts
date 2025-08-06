@@ -2,6 +2,9 @@ import { supabase } from '../lib/supabase'
 import type { Database } from '../lib/database.types'
 import { emailService } from './emailService'
 
+// Track welcome emails sent in current session to prevent duplicates
+const welcomeEmailsSent = new Set<string>()
+
 type UserRow = Database['public']['Tables']['users']['Row']
 type UserInsert = Database['public']['Tables']['users']['Insert']
 type UserUpdate = Database['public']['Tables']['users']['Update']
@@ -106,9 +109,12 @@ class UserService {
         throw error
       }
 
-      // Send welcome email for new users only
-      if (isNewUser && linkedinData.email) {
+      // Send welcome email for new users only (with duplicate prevention)
+      if (isNewUser && linkedinData.email && !welcomeEmailsSent.has(linkedinData.email)) {
         console.log('🎉 New user registered, sending welcome email...');
+        
+        // Mark this email as sent to prevent duplicates in this session
+        welcomeEmailsSent.add(linkedinData.email);
         
         // Send welcome email asynchronously (don't block user registration if email fails)
         emailService.sendWelcomeEmail({
@@ -119,10 +125,20 @@ class UserService {
             console.log('✅ Welcome email sent successfully to new user:', linkedinData.email);
           } else {
             console.warn('⚠️ Failed to send welcome email (registration still successful):', result.error);
+            // Remove from set if email failed so it can be retried
+            if (linkedinData.email) {
+              welcomeEmailsSent.delete(linkedinData.email);
+            }
           }
         }).catch((emailError) => {
           console.warn('⚠️ Welcome email error (registration still successful):', emailError);
+          // Remove from set if email failed so it can be retried
+          if (linkedinData.email) {
+            welcomeEmailsSent.delete(linkedinData.email);
+          }
         });
+      } else if (isNewUser && linkedinData.email && welcomeEmailsSent.has(linkedinData.email)) {
+        console.log('🔄 Welcome email already sent to this user in current session, skipping duplicate');
       }
 
       return data
@@ -389,6 +405,58 @@ class UserService {
     } catch (error) {
       console.error('UserService.needsSurvey error:', error)
       return true // Default to showing survey if error
+    }
+  }
+
+  /**
+   * Update user profile completion
+   */
+  async completeProfile(userId: string, lookingFor: string): Promise<UserRow | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          looking_for: lookingFor,
+          profile_completed: true
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error completing profile:', error)
+        throw error
+      }
+
+      console.log('✅ Profile completed successfully for user:', userId)
+      return data
+    } catch (error) {
+      console.error('UserService.completeProfile error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Check if user needs to complete profile
+   */
+  async needsProfileCompletion(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('profile_completed, survey_completed')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error checking profile completion status:', error)
+        return true // Default to showing profile completion if we can't check
+      }
+
+      // User needs profile completion if they've completed survey but not profile
+      return data.survey_completed && !data.profile_completed
+    } catch (error) {
+      console.error('UserService.needsProfileCompletion error:', error)
+      return true // Default to showing profile completion if error
     }
   }
 }

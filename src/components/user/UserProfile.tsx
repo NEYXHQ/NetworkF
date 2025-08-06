@@ -1,5 +1,5 @@
 import { useSupabaseUser } from '../../hooks/useSupabaseUser'
-import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle, Target } from 'lucide-react'
 
 export const UserProfile = () => {
   const { 
@@ -181,6 +181,19 @@ export const UserProfile = () => {
         <div className="mt-6">
           <h3 className="font-medium text-white mb-2">About</h3>
           <p className="text-sm text-white/80 leading-relaxed">{supabaseUser.summary}</p>
+        </div>
+      )}
+
+      {/* Looking For */}
+      {supabaseUser.looking_for && (
+        <div className="mt-6">
+          <h3 className="font-medium text-white mb-2 flex items-center">
+            <Target className="w-4 h-4 mr-2" style={{ color: '#f78c01' }} />
+            Looking For
+          </h3>
+          <div className="bg-princeton-orange/10 border border-princeton-orange/30 rounded-lg p-3">
+            <p className="text-sm text-princeton-orange font-medium">{supabaseUser.looking_for}</p>
+          </div>
         </div>
       )}
 
