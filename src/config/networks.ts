@@ -117,7 +117,7 @@ const POLYGON_MAINNET: NetworkConfig = {
 // Auto-detect current network based on environment
 const getCurrentNetwork = (): NetworkConfig => {
   const isDev = import.meta.env.DEV;
-  return isDev ? POLYGON_AMOY_TESTNET : POLYGON_MAINNET;
+  return isDev ? POLYGON_AMOY_TESTNET : POLYGON_AMOY_TESTNET;
 };
 
 export const currentNetwork = getCurrentNetwork();
