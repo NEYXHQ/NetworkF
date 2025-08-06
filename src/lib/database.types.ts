@@ -38,6 +38,8 @@ export interface Database {
           entity_name: string | null
           founding_idea: string | null
           survey_completed: boolean | null
+          looking_for: string | null
+          profile_completed: boolean | null
         }
         Insert: {
           id?: string
@@ -67,6 +69,8 @@ export interface Database {
           entity_name?: string | null
           founding_idea?: string | null
           survey_completed?: boolean | null
+          looking_for?: string | null
+          profile_completed?: boolean | null
         }
         Update: {
           id?: string
@@ -96,6 +100,8 @@ export interface Database {
           entity_name?: string | null
           founding_idea?: string | null
           survey_completed?: boolean | null
+          looking_for?: string | null
+          profile_completed?: boolean | null
         }
         Relationships: []
       }

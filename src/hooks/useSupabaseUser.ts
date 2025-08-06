@@ -157,6 +157,33 @@ export const useSupabaseUser = () => {
     }
   }
 
+  // Profile completion handler
+  const completeProfile = async (lookingFor: string) => {
+    if (!supabaseUser?.id) return false
+
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const updatedUser = await userService.completeProfile(
+        supabaseUser.id, 
+        lookingFor
+      )
+      
+      if (updatedUser) {
+        setSupabaseUser(updatedUser)
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('Error completing profile:', err)
+      setError(err instanceof Error ? err.message : 'Failed to complete profile')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     supabaseUser,
     isLoading,
@@ -164,11 +191,13 @@ export const useSupabaseUser = () => {
     updateProfile,
     refreshUser,
     completeSurvey,
+    completeProfile,
     // Helper properties
     isApproved: supabaseUser?.status === 'approved',
     isPending: supabaseUser?.status === 'pending',
     isRejected: supabaseUser?.status === 'rejected',
     needsSurvey: supabaseUser && !supabaseUser.survey_completed,
+    needsProfileCompletion: supabaseUser && supabaseUser.survey_completed && !supabaseUser.profile_completed,
     isNewUser: supabaseUser && !supabaseUser.survey_completed, // Same as needsSurvey for now
   }
 }

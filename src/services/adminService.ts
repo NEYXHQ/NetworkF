@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { emailService } from './emailService';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 type ConnectionRow = Database['public']['Tables']['connections']['Row'];
@@ -87,6 +88,26 @@ class AdminService {
         .single();
 
       if (error) throw error;
+
+      // Send approval email when user is approved
+      if (status === 'approved' && data?.email) {
+        console.log('🎉 User approved, sending approval email...');
+        
+        // Send approval email asynchronously (don't block status update if email fails)
+        emailService.sendApprovalEmail({
+          to: data.email,
+          userName: data.name || undefined,
+        }).then((result) => {
+          if (result.success) {
+            console.log('✅ Approval email sent successfully to:', data.email);
+          } else {
+            console.warn('⚠️ Failed to send approval email (status update still successful):', result.error);
+          }
+        }).catch((emailError) => {
+          console.warn('⚠️ Approval email error (status update still successful):', emailError);
+        });
+      }
+
       return data;
     } catch (error) {
       console.error('Error updating user status:', error);

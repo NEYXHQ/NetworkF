@@ -5,14 +5,20 @@ import { Button } from '../components/ui/Button';
 import { TokenBalance } from '../components/wallet/TokenBalance';
 import { UserProfile } from '../components/user/UserProfile';
 import { SurveyModal } from '../components/user/SurveyModal';
+import { ProfileCompletionModal } from '../components/user/ProfileCompletionModal';
 import { Header } from '../components/layout/Header';
 import { ArrowRight } from 'lucide-react';
 
 export const HomePage = () => {
   const { isConnected, login } = useWeb3Auth();
-  const { supabaseUser, needsSurvey, completeSurvey, isLoading } = useSupabaseUser();
+  const { supabaseUser, needsSurvey, needsProfileCompletion, completeSurvey, completeProfile, isLoading } = useSupabaseUser();
   const [showWallet, setShowWallet] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  
+  // Track if user has skipped for this session
+  const [surveySkipped, setSurveySkipped] = useState(false);
+  const [profileSkipped, setProfileSkipped] = useState(false);
 
   const handleGetStarted = async () => {
     if (isConnected) {
@@ -32,15 +38,47 @@ export const HomePage = () => {
     const success = await completeSurvey(entityName, foundingIdea);
     if (success) {
       setShowSurvey(false);
+      // After survey completion, check if profile completion is needed
+      // This will be handled by the useEffect below
     }
   };
 
-  // Show survey modal when user needs to complete it
-  useEffect(() => {
-    if (isConnected && needsSurvey && !isLoading && !showSurvey) {
-      setShowSurvey(true);
+  // Handle profile completion
+  const handleProfileComplete = async (lookingFor: string) => {
+    const success = await completeProfile(lookingFor);
+    if (success) {
+      setShowProfileCompletion(false);
     }
-  }, [isConnected, needsSurvey, isLoading, showSurvey]);
+  };
+
+  // Handle survey skip
+  const handleSurveySkip = () => {
+    setSurveySkipped(true);
+    setShowSurvey(false);
+    console.log('📝 Survey skipped for this session');
+  };
+
+  // Handle profile completion skip
+  const handleProfileSkip = () => {
+    setProfileSkipped(true);
+    setShowProfileCompletion(false);
+    console.log('🎯 Profile completion skipped for this session');
+  };
+
+  // Show survey modal when user needs to complete it (first priority)
+  useEffect(() => {
+    if (isConnected && needsSurvey && !isLoading && !showSurvey && !surveySkipped) {
+      setShowSurvey(true);
+      setShowProfileCompletion(false); // Hide profile completion if survey is needed
+    }
+  }, [isConnected, needsSurvey, isLoading, showSurvey, surveySkipped]);
+
+  // Show profile completion modal when user needs to complete it (second priority)
+  useEffect(() => {
+    if (isConnected && needsProfileCompletion && !isLoading && !showSurvey && !showProfileCompletion && !profileSkipped) {
+      setShowProfileCompletion(true);
+    }
+  }, [isConnected, needsProfileCompletion, isLoading, showSurvey, showProfileCompletion, profileSkipped]);
 
   // If user is connected, show only the profile and optionally wallet
   if (isConnected) {
@@ -75,8 +113,16 @@ export const HomePage = () => {
         {/* Survey Modal for New Users */}
         <SurveyModal
           isOpen={showSurvey}
-          onClose={() => setShowSurvey(false)}
+          onClose={handleSurveySkip}
           onComplete={handleSurveyComplete}
+          userName={supabaseUser?.name || undefined}
+        />
+
+        {/* Profile Completion Modal */}
+        <ProfileCompletionModal
+          isOpen={showProfileCompletion}
+          onClose={handleProfileSkip}
+          onComplete={handleProfileComplete}
           userName={supabaseUser?.name || undefined}
         />
       </div>

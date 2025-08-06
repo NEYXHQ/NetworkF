@@ -4,7 +4,7 @@ import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
 import { emailService } from '../../services/emailService';
-import { Server, Mail } from 'lucide-react';
+import { Server, Mail, CheckCircle } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
   const handleTestEmail = async () => {
@@ -12,9 +12,26 @@ export const EnvironmentChecker = () => {
       const result = await emailService.sendTestEmail('giloppe@gmail.com');
       
       if (result.success) {
-        alert('✅ Test email sent successfully!');
+        alert('✅ Test welcome email sent successfully!');
       } else {
-        alert(`❌ Failed to send email: ${result.error}`);
+        alert(`❌ Failed to send welcome email: ${result.error}`);
+      }
+    } catch (error) {
+      alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleTestApprovalEmail = async () => {
+    try {
+      const result = await emailService.sendApprovalEmail({
+        to: 'giloppe@gmail.com',
+        userName: 'Test Founder'
+      });
+      
+      if (result.success) {
+        alert('✅ Test approval email sent successfully!');
+      } else {
+        alert(`❌ Failed to send approval email: ${result.error}`);
       }
     } catch (error) {
       alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -85,13 +102,21 @@ export const EnvironmentChecker = () => {
       </div>
 
       {/* Email Test */}
-      <div className="border-t border-teal-blue/20 pt-4">
+      <div className="border-t border-teal-blue/20 pt-4 space-y-2">
         <button
           onClick={handleTestEmail}
           className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-princeton-orange text-soft-white text-xs rounded hover:bg-princeton-orange-600 transition-colors"
         >
           <Mail className="w-3 h-3" />
           <span>Test Welcome Email</span>
+        </button>
+        
+        <button
+          onClick={handleTestApprovalEmail}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-teal-blue text-charcoal-black text-xs rounded hover:bg-teal-blue-600 transition-colors"
+        >
+          <CheckCircle className="w-3 h-3" />
+          <span>Test Approval Email</span>
         </button>
       </div>
     </div>
