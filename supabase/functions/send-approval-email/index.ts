@@ -56,7 +56,7 @@ function getApprovalEmailTemplate(userName?: string): string {
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${Deno.env.get('ENVIRONMENT') === 'development' ? 'http://localhost:5174' : 'https://wfounders.vercel.app'}" style="background-color: #f78c01; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+          <a href="${Deno.env.get('SUPABASE_URL')?.includes('kxepoivhqnurxmkgiojo') ? 'http://localhost:5174' : 'https://wfounders.club'}" style="background-color: #f78c01; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
             Access WFounders Platform
           </a>
         </div>
@@ -122,14 +122,14 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Detect environment and add prefix for development emails
-    const environment = Deno.env.get('ENVIRONMENT') || 'development'
-    const isDevelopment = environment === 'development'
+    // Detect environment using Supabase URL (dev project has kxepoivhqnurxmkgiojo)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const isDevelopment = supabaseUrl.includes('kxepoivhqnurxmkgiojo')
     const emailSubject = isDevelopment ? `[DEV TEST] ${subject}` : subject
 
     console.log(`📧 Sending approval email to: ${to}`)
     console.log(`📄 Subject: ${emailSubject}`)
-    console.log(`🌍 Environment: ${environment}`)
+    console.log(`🌍 Environment: ${isDevelopment ? 'development' : 'production'}`)
 
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',

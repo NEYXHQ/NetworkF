@@ -39,7 +39,7 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
           clientId: config.web3AuthClientId,
           web3AuthNetwork: config.network.features.isTestnet
             ? WEB3AUTH_NETWORK.SAPPHIRE_DEVNET 
-            : WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+            : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
           sessionTime: 7 * 24 * 60 * 60, // 7 days in seconds for better session persistence
           enableLogging: config.isDevelopment,
           uiConfig: {
