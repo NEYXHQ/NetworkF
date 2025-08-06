@@ -49,7 +49,7 @@ function getWelcomeEmailTemplate(userName?: string): string {
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${Deno.env.get('ENVIRONMENT') === 'development' ? 'http://localhost:5174' : 'https://wfounders.vercel.app'}" style="background-color: #f78c01; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+          <a href="${Deno.env.get('SUPABASE_URL')?.includes('kxepoivhqnurxmkgiojo') ? 'http://localhost:5174' : 'https://wfounders.club'}" style="background-color: #f78c01; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
             Complete Your Profile
           </a>
         </div>
@@ -103,6 +103,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Detect environment using Supabase URL (dev project has kxepoivhqnurxmkgiojo)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const isDevelopment = supabaseUrl.includes('kxepoivhqnurxmkgiojo')
+    const emailSubject = isDevelopment ? `[DEV TEST] ${subject}` : subject
+
+    console.log(`📧 Sending welcome email to: ${to}`)
+    console.log(`📄 Subject: ${emailSubject}`)
+    console.log(`🌍 Environment: ${isDevelopment ? 'development' : 'production'}`)
+
     // Get Resend API key from environment variables
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
@@ -125,7 +134,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         from: 'World Founders <onboarding@wfounders.club>', // Update with your verified domain
         to: [to],
-        subject: subject,
+        subject: emailSubject,
         html: getWelcomeEmailTemplate(userName),
       }),
     });
