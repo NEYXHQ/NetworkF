@@ -1,0 +1,704 @@
+{
+  "version": "1.0",
+  "updated_at": "2025-08-08T14:39:36.868468Z",
+  "questions": [
+    {
+      "id": "Q1",
+      "style": "either_or",
+      "prompt": "When starting a venture, what draws you in first?",
+      "dimension": "vision_execution",
+      "options": [
+        {
+          "label": "Strongly prefer: Crafting the plan to ship quickly",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Crafting the plan to ship quickly",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Shaping a compelling long-term vision",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Shaping a compelling long-term vision",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q2",
+      "style": "scenario",
+      "prompt": "Your team can ship an imperfect MVP this week or wait 4 weeks to refine the concept and pitch. What do you do?",
+      "dimension": "vision_execution",
+      "options": [
+        {
+          "label": "Ship now; iterate later",
+          "value": -2
+        },
+        {
+          "label": "Probably ship; we\u2019ll fix it live",
+          "value": -1
+        },
+        {
+          "label": "Depends on the market pressure",
+          "value": 0
+        },
+        {
+          "label": "Wait and refine the concept",
+          "value": 1
+        },
+        {
+          "label": "Wait; vision-first then build",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q3",
+      "style": "either_or",
+      "prompt": "Faced with a high-variance bet with uncertain odds, how do you feel?",
+      "dimension": "risk",
+      "options": [
+        {
+          "label": "Strongly prefer: Avoid\u2014protect runway",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Avoid\u2014protect runway",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Take it\u2014outsized upside matters",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Take it\u2014outsized upside matters",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q4",
+      "style": "scenario",
+      "prompt": "A major customer wants a feature in 2 weeks for a big deal; risk of breaking things is real. What\u2019s your call?",
+      "dimension": "risk",
+      "options": [
+        {
+          "label": "Decline; too risky to stability",
+          "value": -2
+        },
+        {
+          "label": "Likely decline; keep discipline",
+          "value": -1
+        },
+        {
+          "label": "Negotiate scope/time",
+          "value": 0
+        },
+        {
+          "label": "Accept with safeguards",
+          "value": 1
+        },
+        {
+          "label": "Full send; capture the deal",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q5",
+      "style": "either_or",
+      "prompt": "Where do you naturally spend your time?",
+      "dimension": "people_product",
+      "options": [
+        {
+          "label": "Strongly prefer: Deep product/tech work",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Deep product/tech work",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: External conversations (customers, partners, team)",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: External conversations (customers, partners, team)",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q6",
+      "style": "scenario",
+      "prompt": "You have 6 free hours this week\u2014where do they go?",
+      "dimension": "people_product",
+      "options": [
+        {
+          "label": "Prototyping or code/design sprints",
+          "value": -2
+        },
+        {
+          "label": "User tests with product tweaks",
+          "value": -1
+        },
+        {
+          "label": "Split time evenly",
+          "value": 0
+        },
+        {
+          "label": "Customer interviews / hiring",
+          "value": 1
+        },
+        {
+          "label": "Partnerships, sales, community",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q7",
+      "style": "either_or",
+      "prompt": "What environment helps you perform?",
+      "dimension": "structure",
+      "options": [
+        {
+          "label": "Strongly prefer: Fluid, flexible, few rules",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Fluid, flexible, few rules",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Clear processes, roadmaps, and checklists",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Clear processes, roadmaps, and checklists",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q8",
+      "style": "scenario",
+      "prompt": "Your org is growing from 5\u219225 people. Process maturity?",
+      "dimension": "structure",
+      "options": [
+        {
+          "label": "Stay scrappy; avoid process",
+          "value": -2
+        },
+        {
+          "label": "Light guardrails only",
+          "value": -1
+        },
+        {
+          "label": "Some processes, case-by-case",
+          "value": 0
+        },
+        {
+          "label": "Define core processes",
+          "value": 1
+        },
+        {
+          "label": "Documented playbooks & KPIs",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q9",
+      "style": "either_or",
+      "prompt": "Which work gives you energy?",
+      "dimension": "innovation_style",
+      "options": [
+        {
+          "label": "Strongly prefer: Tinkering & inventing new things",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Tinkering & inventing new things",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Scaling & optimizing proven systems",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Scaling & optimizing proven systems",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q10",
+      "style": "scenario",
+      "prompt": "A choice of roles: Skunkworks lab vs. Ops excellence office.",
+      "dimension": "innovation_style",
+      "options": [
+        {
+          "label": "Skunkworks; create from zero",
+          "value": -2
+        },
+        {
+          "label": "Mostly skunkworks",
+          "value": -1
+        },
+        {
+          "label": "Either is fine",
+          "value": 0
+        },
+        {
+          "label": "Mostly ops excellence",
+          "value": 1
+        },
+        {
+          "label": "Ops excellence; make it hum",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q11",
+      "style": "either_or",
+      "prompt": "What do you do first to solve growth?",
+      "dimension": "sales_vs_product",
+      "options": [
+        {
+          "label": "Strongly prefer: Fix product until it sells itself",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Fix product until it sells itself",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Sell and partner aggressively",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Sell and partner aggressively",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q12",
+      "style": "scenario",
+      "prompt": "A quarter is soft. Where do you lead personally?",
+      "dimension": "sales_vs_product",
+      "options": [
+        {
+          "label": "Ship features that move metrics",
+          "value": -2
+        },
+        {
+          "label": "Prototype + targeted fixes",
+          "value": -1
+        },
+        {
+          "label": "Split time",
+          "value": 0
+        },
+        {
+          "label": "Key partner meetings & demos",
+          "value": 1
+        },
+        {
+          "label": "Back-to-back selling and BD",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q13",
+      "style": "either_or",
+      "prompt": "What ultimately guides decisions?",
+      "dimension": "mission_profit",
+      "options": [
+        {
+          "label": "Strongly prefer: Financial sustainability and returns",
+          "value": -2
+        },
+        {
+          "label": "Prefer: Financial sustainability and returns",
+          "value": -1
+        },
+        {
+          "label": "Neutral / depends",
+          "value": 0
+        },
+        {
+          "label": "Prefer: Mission and stakeholder impact",
+          "value": 1
+        },
+        {
+          "label": "Strongly prefer: Mission and stakeholder impact",
+          "value": 2
+        }
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "Q14",
+      "style": "scenario",
+      "prompt": "You must choose: higher-margin industrial client with low impact vs. lower-margin but high social impact.",
+      "dimension": "mission_profit",
+      "options": [
+        {
+          "label": "High margin; we need profits",
+          "value": -2
+        },
+        {
+          "label": "Lean to profits",
+          "value": -1
+        },
+        {
+          "label": "Balance case-by-case",
+          "value": 0
+        },
+        {
+          "label": "Lean to impact",
+          "value": 1
+        },
+        {
+          "label": "High impact; we\u2019ll make profits work",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q15",
+      "style": "scenario",
+      "prompt": "Board pushes to pivot. You\u2019re 8 months in. How do you respond?",
+      "dimension": "vision_execution",
+      "options": [
+        {
+          "label": "Pivot immediately; goal is survival",
+          "value": -2
+        },
+        {
+          "label": "Likely pivot; test fast",
+          "value": -1
+        },
+        {
+          "label": "Run dual tracks briefly",
+          "value": 0
+        },
+        {
+          "label": "Pressure-test pivot; keep direction",
+          "value": 1
+        },
+        {
+          "label": "Hold the course; refine vision",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q16",
+      "style": "scenario",
+      "prompt": "A founder conflict: ship now vs polish brand/UX. Your vote?",
+      "dimension": "innovation_style",
+      "options": [
+        {
+          "label": "Ship now; UX later",
+          "value": -2
+        },
+        {
+          "label": "Ship with minimal UX polish",
+          "value": -1
+        },
+        {
+          "label": "Decide by user impact",
+          "value": 0
+        },
+        {
+          "label": "Polish UX first for trust",
+          "value": 1
+        },
+        {
+          "label": "Polish significantly; brand matters",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q17",
+      "style": "scenario",
+      "prompt": "Recruiting a cofounder: strongest seller vs strongest engineer. Which do you prefer now?",
+      "dimension": "sales_vs_product",
+      "options": [
+        {
+          "label": "Engineer without hesitation",
+          "value": -2
+        },
+        {
+          "label": "Likely engineer",
+          "value": -1
+        },
+        {
+          "label": "Depends on stage",
+          "value": 0
+        },
+        {
+          "label": "Likely seller",
+          "value": 1
+        },
+        {
+          "label": "Seller without hesitation",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q18",
+      "style": "scenario",
+      "prompt": "Your team asks for more process. What\u2019s your instinct?",
+      "dimension": "structure",
+      "options": [
+        {
+          "label": "Push back; trust autonomy",
+          "value": -2
+        },
+        {
+          "label": "Add templates only",
+          "value": -1
+        },
+        {
+          "label": "Pilot processes in 1 squad",
+          "value": 0
+        },
+        {
+          "label": "Adopt across teams",
+          "value": 1
+        },
+        {
+          "label": "Formalize & audit regularly",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q19",
+      "style": "scenario",
+      "prompt": "A hot new market emerges adjacent to yours.",
+      "dimension": "risk",
+      "options": [
+        {
+          "label": "Ignore; stay focused",
+          "value": -2
+        },
+        {
+          "label": "Monitor quietly",
+          "value": -1
+        },
+        {
+          "label": "Small experiments",
+          "value": 0
+        },
+        {
+          "label": "Meaningful bet with guardrails",
+          "value": 1
+        },
+        {
+          "label": "All-in land grab",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q20",
+      "style": "scenario",
+      "prompt": "Your calendar next month can be optimized. What\u2019s the mix?",
+      "dimension": "people_product",
+      "options": [
+        {
+          "label": "70% product/tech, 30% people",
+          "value": -2
+        },
+        {
+          "label": "60/40 product",
+          "value": -1
+        },
+        {
+          "label": "50/50",
+          "value": 0
+        },
+        {
+          "label": "60/40 people",
+          "value": 1
+        },
+        {
+          "label": "70% people, 30% product/tech",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q21",
+      "style": "scenario",
+      "prompt": "A lighthouse customer offers design partnership but heavy influence.",
+      "dimension": "vision_execution",
+      "options": [
+        {
+          "label": "Decline; stay on our roadmap",
+          "value": -2
+        },
+        {
+          "label": "Likely decline",
+          "value": -1
+        },
+        {
+          "label": "Careful pilot",
+          "value": 0
+        },
+        {
+          "label": "Likely accept",
+          "value": 1
+        },
+        {
+          "label": "Accept; leverage their pull",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q22",
+      "style": "scenario",
+      "prompt": "Which OKR would you own personally this quarter?",
+      "dimension": "sales_vs_product",
+      "options": [
+        {
+          "label": "Stability/perf SLOs",
+          "value": -2
+        },
+        {
+          "label": "Activation/retention lift",
+          "value": -1
+        },
+        {
+          "label": "North-star proxy",
+          "value": 0
+        },
+        {
+          "label": "Enterprise pipeline",
+          "value": 1
+        },
+        {
+          "label": "Revenue closed-won",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q23",
+      "style": "scenario",
+      "prompt": "How do you prefer to validate ideas?",
+      "dimension": "innovation_style",
+      "options": [
+        {
+          "label": "Build prototype quickly",
+          "value": -2
+        },
+        {
+          "label": "Wizard-of-Oz/Fake door",
+          "value": -1
+        },
+        {
+          "label": "Depends on context",
+          "value": 0
+        },
+        {
+          "label": "Customer shadowing",
+          "value": 1
+        },
+        {
+          "label": "Market pilots/partners first",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    },
+    {
+      "id": "Q24",
+      "style": "scenario",
+      "prompt": "Values conflict: a profitable shortcut that violates a soft norm.",
+      "dimension": "mission_profit",
+      "options": [
+        {
+          "label": "Take it; users won\u2019t care",
+          "value": -2
+        },
+        {
+          "label": "Likely take it",
+          "value": -1
+        },
+        {
+          "label": "Discuss openly; depends",
+          "value": 0
+        },
+        {
+          "label": "Likely reject",
+          "value": 1
+        },
+        {
+          "label": "Reject; values > shortcuts",
+          "value": 2
+        }
+      ],
+      "weight": 1.1
+    }
+  ],
+  "recommended_min_questions": 10,
+  "recommended_max_questions": 18
+}

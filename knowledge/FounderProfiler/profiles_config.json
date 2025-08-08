@@ -1,0 +1,340 @@
+{
+  "version": "1.0",
+  "updated_at": "2025-08-08T14:39:36.867420Z",
+  "dimensions": [
+    {
+      "key": "vision_execution",
+      "label": "Vision \u2194 Execution",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Execution-first, +2=Vision-first"
+    },
+    {
+      "key": "risk",
+      "label": "Risk Tolerance",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Low, +2=Very High"
+    },
+    {
+      "key": "people_product",
+      "label": "People \u2194 Product",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Product-first, +2=People-first"
+    },
+    {
+      "key": "structure",
+      "label": "Structure Preference",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Flexible, +2=Highly structured"
+    },
+    {
+      "key": "innovation_style",
+      "label": "Innovation \u2194 Optimization",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Operator/Optimizer, +2=Inventor/Hacker"
+    },
+    {
+      "key": "sales_vs_product",
+      "label": "Sales/BD \u2194 Product/Eng",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Product/Engineering, +2=Sales/BD"
+    },
+    {
+      "key": "mission_profit",
+      "label": "Mission \u2194 Profit",
+      "range": [
+        -2,
+        2
+      ],
+      "desc": "-2=Profit-first, +2=Mission-first"
+    }
+  ],
+  "profiles": [
+    {
+      "name": "Dreamer",
+      "type": "Vision-Oriented",
+      "centroid": {
+        "vision_execution": 2,
+        "risk": 1,
+        "people_product": 0,
+        "structure": -1,
+        "innovation_style": 1,
+        "sales_vs_product": 0,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Visionary Disruptor",
+      "type": "Vision-Oriented",
+      "centroid": {
+        "vision_execution": 2,
+        "risk": 2,
+        "people_product": 0,
+        "structure": -2,
+        "innovation_style": 2,
+        "sales_vs_product": 0,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Evangelist",
+      "type": "Vision-Oriented",
+      "centroid": {
+        "vision_execution": 1,
+        "risk": 1,
+        "people_product": 2,
+        "structure": -1,
+        "innovation_style": 1,
+        "sales_vs_product": 2,
+        "mission_profit": 1
+      }
+    },
+    {
+      "name": "Planner",
+      "type": "Strategy-Oriented",
+      "centroid": {
+        "vision_execution": -1,
+        "risk": -2,
+        "people_product": 0,
+        "structure": 2,
+        "innovation_style": -1,
+        "sales_vs_product": 0,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Architect",
+      "type": "Strategy-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": -1,
+        "people_product": -1,
+        "structure": 2,
+        "innovation_style": 0,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Analyst",
+      "type": "Strategy-Oriented",
+      "centroid": {
+        "vision_execution": -1,
+        "risk": -1,
+        "people_product": -1,
+        "structure": 2,
+        "innovation_style": -1,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Builder",
+      "type": "Execution-Oriented",
+      "centroid": {
+        "vision_execution": -1,
+        "risk": 0,
+        "people_product": -1,
+        "structure": -1,
+        "innovation_style": 1,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Operator",
+      "type": "Execution-Oriented",
+      "centroid": {
+        "vision_execution": -2,
+        "risk": -1,
+        "people_product": -1,
+        "structure": 2,
+        "innovation_style": -2,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Rainmaker",
+      "type": "Execution-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 1,
+        "people_product": 2,
+        "structure": -1,
+        "innovation_style": 0,
+        "sales_vs_product": 2,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Inventor",
+      "type": "Innovation-Oriented",
+      "centroid": {
+        "vision_execution": 1,
+        "risk": 0,
+        "people_product": -2,
+        "structure": -1,
+        "innovation_style": 2,
+        "sales_vs_product": -2,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Hacker",
+      "type": "Innovation-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 2,
+        "people_product": -2,
+        "structure": -2,
+        "innovation_style": 2,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Creative",
+      "type": "Innovation-Oriented",
+      "centroid": {
+        "vision_execution": 1,
+        "risk": 0,
+        "people_product": 1,
+        "structure": -1,
+        "innovation_style": 1,
+        "sales_vs_product": -1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Risk Taker",
+      "type": "Resilience-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 2,
+        "people_product": 0,
+        "structure": -2,
+        "innovation_style": 1,
+        "sales_vs_product": 0,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Persistent Grinder",
+      "type": "Resilience-Oriented",
+      "centroid": {
+        "vision_execution": -1,
+        "risk": 0,
+        "people_product": 0,
+        "structure": 1,
+        "innovation_style": -1,
+        "sales_vs_product": 0,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Opportunist",
+      "type": "Resilience-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 1,
+        "people_product": 0,
+        "structure": -1,
+        "innovation_style": 0,
+        "sales_vs_product": 1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Connector",
+      "type": "People-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 1,
+        "people_product": 2,
+        "structure": -1,
+        "innovation_style": 0,
+        "sales_vs_product": 1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Mentor/Coach",
+      "type": "People-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": -1,
+        "people_product": 2,
+        "structure": 1,
+        "innovation_style": -1,
+        "sales_vs_product": 0,
+        "mission_profit": 1
+      }
+    },
+    {
+      "name": "Diplomat",
+      "type": "People-Oriented",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": 0,
+        "people_product": 2,
+        "structure": 1,
+        "innovation_style": -1,
+        "sales_vs_product": 1,
+        "mission_profit": 0
+      }
+    },
+    {
+      "name": "Social Entrepreneur",
+      "type": "Purpose-Driven",
+      "centroid": {
+        "vision_execution": 1,
+        "risk": 0,
+        "people_product": 1,
+        "structure": 0,
+        "innovation_style": 0,
+        "sales_vs_product": 0,
+        "mission_profit": 2
+      }
+    },
+    {
+      "name": "Ethical Guardian",
+      "type": "Purpose-Driven",
+      "centroid": {
+        "vision_execution": 0,
+        "risk": -2,
+        "people_product": 1,
+        "structure": 2,
+        "innovation_style": -1,
+        "sales_vs_product": 0,
+        "mission_profit": 1
+      }
+    }
+  ],
+  "scales": {
+    "likert5_to_value": {
+      "Strongly prefer A / Very unlikely": -2,
+      "Prefer A / Unlikely": -1,
+      "Neutral / Depends": 0,
+      "Prefer B / Likely": 1,
+      "Strongly prefer B / Very likely": 2
+    }
+  }
+}

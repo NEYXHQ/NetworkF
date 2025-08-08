@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import config from '../../config/env';
 import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
 import { emailService } from '../../services/emailService';
-import { Server, Mail, CheckCircle } from 'lucide-react';
+import { Server, Mail, CheckCircle, Bot } from 'lucide-react';
+import { AIProfilingModal } from '../user/AIProfilingModal';
 
 export const EnvironmentChecker = () => {
+  const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
     try {
       const result = await emailService.sendTestEmail('giloppe@gmail.com');
@@ -43,6 +46,7 @@ export const EnvironmentChecker = () => {
   }
 
   return (
+    <>
     <div className="fixed bottom-4 right-4 bg-slate-gray border border-teal-blue/30 rounded-lg shadow-lg p-4 text-xs max-w-sm">
       <div className="flex items-center space-x-2 mb-4">
         <Server className="w-4 h-4 text-teal-blue" />
@@ -118,8 +122,20 @@ export const EnvironmentChecker = () => {
           <CheckCircle className="w-3 h-3" />
           <span>Test Approval Email</span>
         </button>
+
+        <button
+          onClick={() => setShowAIChat(true)}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-slate-gray/40 text-soft-white text-xs rounded hover:bg-slate-gray/60 transition-colors border border-teal-blue/30"
+        >
+          <Bot className="w-3 h-3" />
+          <span>Open AI Chat Test</span>
+        </button>
       </div>
     </div>
+    {showAIChat && (
+      <AIProfilingModal isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
+    )}
+    </>
   );
 };
 
