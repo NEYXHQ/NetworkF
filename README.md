@@ -23,6 +23,7 @@ A modern, fully static web application built with **Vite**, **React**, **TypeScr
 - **User Profile Management** - LinkedIn profile data storage
 - **Approval Workflow** - Pending/Approved/Rejected user status
 - **Row Level Security** - Secure data access policies
+ - **Onboarding Flow** - Post-login survey + profile completion (see below)
 
 ### 🎨 UI/UX
 - **Responsive Design** - Mobile-first approach with beautiful UI
@@ -30,12 +31,19 @@ A modern, fully static web application built with **Vite**, **React**, **TypeScr
 - **Environment Indicators** - Visual feedback for current environment
 - **Network Mismatch Warnings** - Automatic network switching prompts
 - **Debug Tools** - Development environment checker
+ - **Faucet Links (Dev)** - Quick access to testnet faucets
 
 ### 🏗️ Architecture
 - **100% Static** - Deploy anywhere (Vercel, Netlify, AWS S3, etc.)
 - **TypeScript** - Full type safety throughout
 - **Environment Auto-Detection** - Dev/Prod switching based on deployment
 - **Developer Experience** - ESLint, Hot Module Replacement, comprehensive tooling
+
+### 🧭 Onboarding Flow (UX)
+- **Survey Modal** (`src/components/user/SurveyModal.tsx`): asks entity name + founding idea
+- **Profile Completion Modal** (`src/components/user/ProfileCompletionModal.tsx`): “What are you looking for?” (co-founder, investors, mentors, etc.)
+- **Storage**: `users.entity_name`, `users.founding_idea`, `users.survey_completed`, `users.looking_for`, `users.profile_completed`
+- **Flow control** and persistence handled by `useSupabaseUser` hook and `userService`
 
 ## 📁 Project Structure
 
@@ -72,10 +80,8 @@ src/
    npm install
    ```
 
-2. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
+2. **Create environment file:**
+   - Create a `.env` file at the project root (an example file is not committed).
 
 3. **Configure your environment variables:**
    ```env
@@ -107,6 +113,12 @@ src/
 
 5. **Open your browser:**
    Navigate to `http://localhost:5174`
+
+## 🧩 Routes
+
+- `/` - Home + onboarding flow (survey, profile completion) + wallet widget
+- `/admin/login` - Admin login screen
+- `/admin` - Admin dashboard (user approvals, connections, stats)
 
 ## 🔐 Web3Auth Setup
 
@@ -144,6 +156,8 @@ For both projects, run the SQL scripts:
 1. **Copy `supabase-setup.sql`** → Paste in SQL Editor → Run
 2. **Copy `fix-rls-policies.sql`** → Paste in SQL Editor → Run
 
+If you plan to use the onboarding flow, also run the updates listed in the Profile Setup Guide (linked below) to add `looking_for` and `profile_completed` fields.
+
 ### Step 3: Get Project Credentials
 
 For each project:
@@ -180,6 +194,12 @@ The app automatically switches environments:
 - **Network**: Polygon Mainnet
 - **Web3Auth**: Sapphire Mainnet
 - **Tokens**: Mainnet NEYXT contract
+
+### Visual Indicators and Debugging (Dev)
+- `EnvironmentChecker` (bottom-right in dev): shows current env, network, Supabase project
+- Buttons to send test welcome/approval emails
+- `NetworkIndicator` (header): displays chain; `NetworkMismatchWarning` prompts network switch
+- `BalanceDebugger` (dev-only): fetches native and NEYXT balances, contract code checks
 
 ## 🚀 Deployment
 
@@ -225,11 +245,35 @@ Users sign in with familiar social accounts and automatically get:
 - **Status Tracking**: Pending/Approved/Rejected states
 - **Last Login Tracking**: User activity monitoring
 
+### 🧭 **Onboarding (Survey + Profile Completion)**
+- Collects entity name + founding idea (survey)
+- Captures "what you’re looking for" to improve matching
+- Non-blocking: users can skip and complete later
+- See `PROFILE_SETUP_GUIDE.md` for DB updates and details
+
 ### 🔄 **Environment Intelligence**
 - **Auto-Detection**: Dev/Prod environment switching
 - **Database Selection**: Automatic dev/prod database selection
 - **Network Selection**: Testnet/mainnet based on environment
 - **Debug Tools**: Environment indicators and logging
+
+## ✉️ Email Edge Functions (Supabase)
+
+Two Supabase Edge Functions power onboarding emails:
+- `send-welcome-email` – sent to new users
+- `send-approval-email` – sent upon admin approval
+
+Both functions use Resend for delivery. Configure `RESEND_API_KEY` as a Supabase function secret and deploy the functions.
+- See `EMAIL_SETUP_GUIDE.md` for step-by-step setup, domain verification, and testing.
+- In dev, the `EnvironmentChecker` includes buttons to trigger test emails.
+
+## 🗃️ Database (Overview)
+
+Core tables used by the app (see `src/lib/database.types.ts`):
+- `users`: profile, LinkedIn data, approval status, admin flag, onboarding fields (`entity_name`, `founding_idea`, `survey_completed`, `looking_for`, `profile_completed`), usage metrics
+- `connections`: network connections between users (pending/accepted/rejected/cancelled)
+- `admin_users`: admin mapping and permissions
+- `app_statistics`: aggregate stats for dashboard
 
 ## 🛠️ Development
 
@@ -248,11 +292,15 @@ npm run lint         # Run ESLint
 - **Console Logs**: Database connection and network info
 - **Network Indicator**: Current network in header
 - **Network Mismatch Warning**: Automatic network switching
+- **Faucet Links (Dev)**: Quick links to get testnet POL/ETH
+- **Balance Debugger (Dev)**: Inspect balances and contract code
 
 ## 📚 Documentation
 
 - **[Supabase Setup Guide](SUPABASE_SETUP_GUIDE.md)** - Complete database setup
 - **[Environment Setup](ENVIRONMENT_SETUP.md)** - Environment configuration
+- **[Email Setup Guide](EMAIL_SETUP_GUIDE.md)** - Resend + Supabase Edge Functions for emails
+- **[Profile Setup Guide](PROFILE_SETUP_GUIDE.md)** - Onboarding survey + profile completion
 - **[Web3Auth Documentation](https://web3auth.io/docs)** - Authentication setup
 
 ## 🤝 Contributing
