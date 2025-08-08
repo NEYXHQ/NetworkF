@@ -40,10 +40,17 @@ export const AIProfilingModal = ({ isOpen, onClose, systemPrompt = 'You are a he
     setInput('');
     setLoading(true);
     try {
-      // const res = await fetch('/api/chat', {
-        const res = await fetch('https://wfounders.club/api/chat', {
+      // Prefer Supabase Edge Function if available; falls back to local API route
+      const baseUrl = (import.meta.env.VITE_SUPABASE_DEV_URL as string) || '';
+      const anonKey = (import.meta.env.VITE_SUPABASE_DEV_ANON_KEY as string) || '';
+      const useSupabase = Boolean(baseUrl && anonKey);
+
+      const res = await fetch(useSupabase ? `${baseUrl}/functions/v1/openai-chat` : '/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(useSupabase ? { Authorization: `Bearer ${anonKey}` } : {}),
+        },
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
           model: 'gpt-4o-mini',
@@ -57,7 +64,7 @@ export const AIProfilingModal = ({ isOpen, onClose, systemPrompt = 'You are a he
       const data = (await res.json()) as { content?: string };
       const reply = (data.content || '').trim();
       setMessages((prev) => [...prev, { role: 'assistant', content: reply || '...' }]);
-    } catch (e) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, I could not reach the AI service.' },
@@ -67,9 +74,9 @@ export const AIProfilingModal = ({ isOpen, onClose, systemPrompt = 'You are a he
     }
   };
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       void sendMessage();
     }
   };
