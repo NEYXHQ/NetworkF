@@ -5,13 +5,13 @@ import { Button } from '../components/ui/Button';
 import { TokenBalance } from '../components/wallet/TokenBalance';
 import { UserProfile } from '../components/user/UserProfile';
 import { SurveyModal } from '../components/user/SurveyModal';
-import { AIProfilingModal } from '../components/user/AIProfilingModal';
+import { ProfileCompletionModal } from '../components/user/ProfileCompletionModal';
 import { Header } from '../components/layout/Header';
 import { ArrowRight } from 'lucide-react';
 
 export const HomePage = () => {
   const { isConnected, login } = useWeb3Auth();
-  const { supabaseUser, needsSurvey, needsProfileCompletion, completeSurvey, isLoading } = useSupabaseUser();
+  const { supabaseUser, needsSurvey, needsProfileCompletion, completeSurvey, completeProfile, isLoading } = useSupabaseUser();
   const [showWallet, setShowWallet] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
@@ -43,7 +43,13 @@ export const HomePage = () => {
     }
   };
 
-  // Profile completion replaced by AI chat modal for testing
+  // Handle profile completion
+  const handleProfileComplete = async (lookingFor: string) => {
+    const success = await completeProfile(lookingFor);
+    if (success) {
+      setShowProfileCompletion(false);
+    }
+  };
 
   // Handle survey skip
   const handleSurveySkip = () => {
@@ -112,11 +118,12 @@ export const HomePage = () => {
           userName={supabaseUser?.name || undefined}
         />
 
-        {/* AI Profiling Modal (replaces profile completion for testing) */}
-        <AIProfilingModal
+        {/* Profile Completion Modal */}
+        <ProfileCompletionModal
           isOpen={showProfileCompletion}
           onClose={handleProfileSkip}
-          systemPrompt={"You are a helpful onboarding assistant for founders. Keep answers concise."}
+          onComplete={handleProfileComplete}
+          userName={supabaseUser?.name || undefined}
         />
       </div>
     );

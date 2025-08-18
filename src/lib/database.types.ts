@@ -40,6 +40,10 @@ export interface Database {
           survey_completed: boolean | null
           looking_for: string | null
           profile_completed: boolean | null
+          profiler_profile_name: string | null
+          profiler_profile_type: string | null
+          profiler_completed_at: string | null
+          profiler_confidence: number | null
         }
         Insert: {
           id?: string
@@ -71,6 +75,10 @@ export interface Database {
           survey_completed?: boolean | null
           looking_for?: string | null
           profile_completed?: boolean | null
+          profiler_profile_name?: string | null
+          profiler_profile_type?: string | null
+          profiler_completed_at?: string | null
+          profiler_confidence?: number | null
         }
         Update: {
           id?: string
@@ -102,6 +110,10 @@ export interface Database {
           survey_completed?: boolean | null
           looking_for?: string | null
           profile_completed?: boolean | null
+          profiler_profile_name?: string | null
+          profiler_profile_type?: string | null
+          profiler_completed_at?: string | null
+          profiler_confidence?: number | null
         }
         Relationships: []
       }

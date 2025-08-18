@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import profilesConfig from '../../../knowledge/FounderProfiler/profiles_config.json';
 import questionsBank from '../../../knowledge/FounderProfiler/questions_bank.json';
+import { mapFreeTextToScale, summarizeResult, type LLMMapResponse } from '../../services/profilerLLM';
+import { saveProfilerResult, getProfilerResult, type ProfilerResult } from '../../services/profilerService';
+import { useSupabaseUser } from '../../hooks/useSupabaseUser';
 
 type DimensionKey = (typeof profilesConfig)["dimensions"][number]["key"];
 
@@ -29,6 +32,7 @@ interface AnswerEvent {
   dimension: DimensionKey;
   value: number; // mapped -2..2
   weight: number;
+  llm_confidence?: number;
 }
 
 const INITIAL_VARIANCE = 1.0;
@@ -50,6 +54,8 @@ function softmaxNegSquared(distances: Record<string, number>): Record<string, nu
 }
 
 export const FounderProfiler = () => {
+  const { supabaseUser } = useSupabaseUser();
+  
   // Build initial dimension state
   const initialDims: Record<DimensionKey, DimensionState> = useMemo(() => {
     const state = {} as Record<DimensionKey, DimensionState>;
@@ -62,6 +68,16 @@ export const FounderProfiler = () => {
   const [dimState, setDimState] = useState<Record<DimensionKey, DimensionState>>(initialDims);
   const [answers, setAnswers] = useState<AnswerEvent[]>([]);
   const questionList = questionsBank.questions as QuestionItem[];
+  // LLM integration state
+  const [freeText, setFreeText] = useState<string>('');
+  const [clarifyPrompt, setClarifyPrompt] = useState<string>('');
+  const [waitingClarification, setWaitingClarification] = useState<boolean>(false);
+  const [clarificationsCount, setClarificationsCount] = useState<number>(0);
+  const [isMapping, setIsMapping] = useState<boolean>(false);
+  const [llmError, setLlmError] = useState<string>('');
+  const [finalNarrative, setFinalNarrative] = useState<string>('');
+  const [existingProfile, setExistingProfile] = useState<ProfilerResult | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(false);
 
   // Heuristic: pick next question for dimension with highest variance not yet asked too many times
   const nextQuestion = useMemo((): QuestionItem | null => {
@@ -117,8 +133,73 @@ export const FounderProfiler = () => {
   }, [answers.length, topProfile]);
 
   useEffect(() => {
-    // If we should stop, do nothing here (UI will switch)
-  }, [shouldStop]);
+    // When stopping, ask LLM for final summary once and save results
+    const run = async () => {
+      try {
+        if (!shouldStop) return;
+        const [profileName, prob] = topProfile;
+        if (!profileName) return;
+        
+        // Get profile type from config
+        const profileConfig = profilesConfig.profiles.find(p => p.name === profileName);
+        if (!profileConfig) return;
+        
+        const dims: Record<string, number> = {};
+        for (const d of profilesConfig.dimensions) {
+          dims[d.key] = dimState[d.key as DimensionKey].mean;
+        }
+        
+        const summary = await summarizeResult({
+          profile: profileName,
+          confidence: prob,
+          alternatives: Object.entries(posterior)
+            .sort((a, b) => b[1] - a[1])
+            .slice(1, 4)
+            .map(([p, pr]) => ({ profile: p, prob: pr })),
+        dimensions: dims,
+          nQuestions: answers.length,
+          nClarifications: clarificationsCount,
+        });
+        setFinalNarrative(summary.summary);
+        
+        // Save results to database if user is authenticated
+        if (supabaseUser?.id) {
+          const profilerResult: ProfilerResult = {
+            profileName,
+            profileType: profileConfig.type,
+            confidence: prob,
+            userId: supabaseUser.id
+          };
+          
+          await saveProfilerResult(profilerResult);
+        }
+      } catch (e) {
+        console.error('Error in profiler completion:', e);
+      }
+    };
+    void run();
+  }, [shouldStop, supabaseUser?.id]);
+
+  // Check for existing profile when component mounts
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      if (!supabaseUser?.id) return;
+      
+      setIsLoadingProfile(true);
+      try {
+        const result = await getProfilerResult(supabaseUser.id);
+        if (result.success && result.result) {
+          setExistingProfile(result.result);
+        }
+      } catch (error) {
+        console.error('Error checking existing profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    checkExistingProfile();
+  }, [supabaseUser?.id]);
 
   const handleAnswer = (q: QuestionItem, value: number) => {
     // Update dimension mean via weighted running average; reduce variance
@@ -133,10 +214,58 @@ export const FounderProfiler = () => {
     });
   };
 
+  const mapWithLLM = async (q: QuestionItem) => {
+    if (isMapping) return;
+    setIsMapping(true);
+    setLlmError('');
+    try {
+      const response: LLMMapResponse = await mapFreeTextToScale({
+        questionPrompt: q.prompt,
+        options: q.options,
+        userText: waitingClarification && clarifyPrompt ? clarifyPrompt : freeText,
+      });
+      if ('need_clarification' in response && response.need_clarification) {
+        // Show clarifying question once
+        setWaitingClarification(true);
+        setClarificationsCount((c) => c + 1);
+        setClarifyPrompt('');
+        // Use response.clarifying_question as placeholder
+        setLlmError('Clarification needed: ' + response.clarifying_question);
+        return;
+      }
+      // Success path
+      const mapped = response as Extract<LLMMapResponse, { answer_value: number; confidence: number }>;
+      handleAnswer(q, mapped.answer_value as number);
+      setAnswers((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.qid === q.id) {
+          // enrich last answer with confidence
+          const enriched = [...prev];
+          enriched[enriched.length - 1] = { ...last, llm_confidence: mapped.confidence as number };
+          return enriched;
+        }
+        return prev;
+      });
+      // Reset inputs
+      setFreeText('');
+      setClarifyPrompt('');
+      setWaitingClarification(false);
+      setLlmError('');
+    } catch (e) {
+      setLlmError('AI mapping failed. You can select an option or try again.');
+    } finally {
+      setIsMapping(false);
+    }
+  };
+
   const reset = () => {
     setDimState(initialDims);
     setAnswers([]);
+    setExistingProfile(null);
+    setFinalNarrative('');
   };
+
+
 
   return (
     <div className="min-h-screen bg-slate-gray/20">
@@ -144,14 +273,55 @@ export const FounderProfiler = () => {
         <h1 className="text-2xl font-bold text-soft-white mb-2">Founder Profiler (Adaptive)</h1>
         <p className="text-soft-white/70 text-sm mb-6">Answer about {questionsBank.recommended_min_questions || 10}–{questionsBank.recommended_max_questions || 18} questions. We stop early if confidence ≥ 90%.</p>
 
-        {/* Progress */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="text-soft-white/80 text-sm">Questions answered: {progress.count}</div>
-          <div className="text-soft-white/80 text-sm">Top profile confidence: {(topProfile[1] * 100).toFixed(0)}%</div>
-        </div>
+        {/* Existing Profile Display */}
+        {isLoadingProfile && (
+          <div className="bg-charcoal-black border border-teal-blue/30 rounded-lg p-4 mb-6">
+            <div className="text-soft-white/80 text-sm">Loading your existing profile...</div>
+          </div>
+        )}
+        
+        {existingProfile && !isLoadingProfile && (
+          <div className="bg-charcoal-black border border-teal-blue/30 rounded-lg p-4 mb-6">
+            <h3 className="text-soft-white text-lg font-semibold mb-2">Your Current Profile</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div className="bg-slate-gray/30 border border-teal-blue/20 rounded p-3">
+                <div className="text-soft-white/70 text-xs mb-1">Profile Name</div>
+                <div className="text-soft-white text-sm font-medium">{existingProfile.profileName}</div>
+              </div>
+              <div className="bg-slate-gray/30 border border-teal-blue/20 rounded p-3">
+                <div className="text-soft-white/70 text-xs mb-1">Profile Type</div>
+                <div className="text-soft-white text-sm font-medium">{existingProfile.profileType}</div>
+              </div>
+              <div className="bg-slate-gray/30 border border-teal-blue/20 rounded p-3">
+                <div className="text-soft-white/70 text-xs mb-1">Confidence</div>
+                <div className="text-soft-white text-sm font-medium">{(existingProfile.confidence * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button 
+                onClick={() => {
+                  setExistingProfile(null);
+                  reset();
+                }} 
+                variant="outline" 
+                size="sm"
+              >
+                Retake Profiler
+              </Button>
+            </div>
+          </div>
+        )}
 
-        {/* Question Card or Result */}
-        {!shouldStop && nextQuestion && (
+        {/* Progress */}
+        {!existingProfile && (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <div className="text-soft-white/80 text-sm">Questions answered: {progress.count}</div>
+              <div className="text-soft-white/80 text-sm">Top profile confidence: {(topProfile[1] * 100).toFixed(0)}%</div>
+            </div>
+
+            {/* Question Card or Result */}
+            {!shouldStop && nextQuestion && (
           <div className="bg-charcoal-black border border-teal-blue/30 rounded-lg p-5 mb-6">
             <div className="text-soft-white/80 text-xs mb-2">Dimension: {profilesConfig.dimensions.find(d => d.key === nextQuestion.dimension)?.label}</div>
             <h2 className="text-lg font-semibold text-soft-white mb-4">{nextQuestion.prompt}</h2>
@@ -167,6 +337,38 @@ export const FounderProfiler = () => {
                   {opt.label}
                 </Button>
               ))}
+            </div>
+
+            {/* Free-text + LLM mapping */}
+            <div className="mt-4 space-y-2">
+              {!waitingClarification ? (
+                <input
+                  type="text"
+                  value={freeText}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  placeholder="Type your answer in your own words (optional)"
+                  className="w-full px-3 py-2 bg-charcoal-black border border-teal-blue/20 rounded text-soft-white placeholder-soft-white/40 focus:outline-none focus:ring-2 focus:ring-princeton-orange focus:border-transparent"
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={clarifyPrompt}
+                  onChange={(e) => setClarifyPrompt(e.target.value)}
+                  placeholder="Answer the clarifying question..."
+                  className="w-full px-3 py-2 bg-charcoal-black border border-teal-blue/20 rounded text-soft-white placeholder-soft-white/40 focus:outline-none focus:ring-2 focus:ring-princeton-orange focus:border-transparent"
+                />
+              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => mapWithLLM(nextQuestion)}
+                  disabled={isMapping || (!freeText && !waitingClarification)}
+                >
+                  {isMapping ? 'Mapping...' : waitingClarification ? 'Submit Clarification' : 'Map with AI'}
+                </Button>
+                {llmError && <span className="text-xs text-princeton-orange">{llmError}</span>}
+              </div>
             </div>
           </div>
         )}
@@ -187,10 +389,20 @@ export const FounderProfiler = () => {
               ))}
             </div>
 
+            {finalNarrative && (
+              <div className="bg-slate-gray/20 border border-teal-blue/20 rounded p-4 mb-3">
+                <div className="text-soft-white/80 text-sm whitespace-pre-wrap">{finalNarrative}</div>
+              </div>
+            )}
+
+
+
             <div className="flex items-center space-x-2">
               <Button onClick={reset} variant="outline">Restart</Button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
