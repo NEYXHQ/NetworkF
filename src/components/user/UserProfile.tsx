@@ -1,7 +1,12 @@
 import { useSupabaseUser } from '../../hooks/useSupabaseUser'
-import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle, Target } from 'lucide-react'
+import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle, Target, Brain } from 'lucide-react'
+import { Button } from '../ui/Button'
+import { useState } from 'react'
+import { FounderProfiler } from '../../features/profiler/FounderProfiler'
 
 export const UserProfile = () => {
+  const [showProfiler, setShowProfiler] = useState(false)
+  
   const { 
     supabaseUser, 
     isLoading, 
@@ -197,6 +202,47 @@ export const UserProfile = () => {
         </div>
       )}
 
+      {/* Founder Profile */}
+      {supabaseUser.profiler_profile_name && (
+        <div className="mt-6">
+          <h3 className="font-medium text-white mb-2 flex items-center">
+            <Brain className="w-4 h-4 mr-2" style={{ color: '#8ecae6' }} />
+            Founder Profile
+          </h3>
+          <div className="bg-slate-gray/20 border border-teal-blue/30 rounded-lg p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <span className="text-xs text-soft-white/60">Profile Name:</span>
+                <p className="text-sm text-soft-white font-medium">{supabaseUser.profiler_profile_name}</p>
+              </div>
+              <div>
+                <span className="text-xs text-soft-white/60">Profile Type:</span>
+                <p className="text-sm text-soft-white font-medium">{supabaseUser.profiler_profile_type}</p>
+              </div>
+              {supabaseUser.profiler_confidence && (
+                <div>
+                  <span className="text-xs text-soft-white/60">Confidence:</span>
+                  <p className="text-sm text-soft-white font-medium">
+                    {(supabaseUser.profiler_confidence * 100).toFixed(0)}%
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="mt-3">
+              <Button
+                onClick={() => setShowProfiler(true)}
+                variant="outline"
+                size="sm"
+                className="text-teal-blue border-teal-blue/30 hover:bg-teal-blue/10"
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                Retake
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status Messages */}
       {isPending && (
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -232,11 +278,52 @@ export const UserProfile = () => {
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-start">
             <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <h4 className="text-sm font-medium text-green-800">Welcome to Wfounders!</h4>
-              <p className="text-sm text-green-700 mt-1">
-                Your application has been approved. Stay tuned for the platform launch.
+              
+              
+              {/* Profiler Button - Only show if profile is incomplete */}
+              {!supabaseUser.profiler_profile_name && (
+                <div className="mt-3">
+                  <p className="text-sm text-green-700 mt-1">
+                Your application has been approved. Complete your founder profile to get the most out of the network.
               </p>
+                  <Button
+                    onClick={() => setShowProfiler(true)}
+                    size="sm"
+                    className="bg-princeton-orange hover:bg-princeton-orange/90 text-white"
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    Complete Your Founder Profile
+                  </Button>
+                </div>
+              )} else {
+                <div className="mt-0">
+                  <p className="text-sm text-green-700 mt-1">
+                    Your application has been approved.  Stay tuned for the platform launch.
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profiler Modal */}
+      {showProfiler && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-charcoal-black border border-teal-blue/30 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-teal-blue/30">
+              <h3 className="text-lg font-semibold text-soft-white">Founder Profiler</h3>
+              <button
+                onClick={() => setShowProfiler(false)}
+                className="text-soft-white/60 hover:text-soft-white transition-colors"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <FounderProfiler />
             </div>
           </div>
         </div>

@@ -1,15 +1,14 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import config from '../../config/env';
 import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
 import { emailService } from '../../services/emailService';
-import { Server, Mail, CheckCircle, Bot } from 'lucide-react';
-import { AIProfilingModal } from '../user/AIProfilingModal';
+import { Server, Mail, CheckCircle } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
-  const [showAIChat, setShowAIChat] = useState(false);
+  // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
     try {
       const result = await emailService.sendTestEmail('giloppe@gmail.com');
@@ -123,18 +122,10 @@ export const EnvironmentChecker = () => {
           <span>Test Approval Email</span>
         </button>
 
-        <button
-          onClick={() => setShowAIChat(true)}
-          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-slate-gray/40 text-soft-white text-xs rounded hover:bg-slate-gray/60 transition-colors border border-teal-blue/30"
-        >
-          <Bot className="w-3 h-3" />
-          <span>Open AI Chat Test</span>
-        </button>
+        {/* AI Chat test button removed for now */}
       </div>
     </div>
-    {showAIChat && (
-      <AIProfilingModal isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
-    )}
+    {/* AI Profiling modal removed for now */}
     </>
   );
 };
