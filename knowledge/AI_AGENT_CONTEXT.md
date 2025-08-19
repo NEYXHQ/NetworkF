@@ -1,6 +1,6 @@
 ## Purpose
 
-This document gives an AI agent the minimal but complete context needed to understand and work within this application. It covers architecture, data flow, key modules, workflows, and strict contribution rules (style, safety, and quality) to follow when proposing or making changes.
+This OLD document gives an AI agent the minimal but complete context needed to understand and work within this application. It covers architecture, data flow, key modules, workflows, and strict contribution rules (style, safety, and quality) to follow when proposing or making changes.
 
 ## What This App Is
 
