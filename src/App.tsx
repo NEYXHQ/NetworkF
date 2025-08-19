@@ -4,6 +4,7 @@ import { Web3AuthProvider } from './contexts/Web3AuthProvider';
 import { HomePage } from './pages/HomePage';
 import { AdminPage } from './pages/AdminPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
+import { ScrollProgressBar } from './components/ui/ScrollProgressBar';
 
 const AppContent = () => {
   const { isLoading } = useWeb3Auth();
@@ -22,6 +23,7 @@ const AppContent = () => {
   return (
     <Router>
       <div className="min-h-screen">
+        <ScrollProgressBar />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />

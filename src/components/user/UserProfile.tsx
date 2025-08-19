@@ -301,7 +301,7 @@ export const UserProfile = () => {
                {supabaseUser.profiler_profile_name && (
                 <div className="mt-3">
                   <p className="text-sm text-green-700 mt-1">
-                    Your application has been approved. Complete your founder profile to get the most out of the network.
+                    Your application has been approved. Stay tuned for the platform launch.
                   </p>
                 </div>
                )}
