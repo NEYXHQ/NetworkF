@@ -1,0 +1,346 @@
+NEYXT – Buy Flow (Polygon)
+
+A minimal-friction way for users to buy NEYXT on Polygon using USDC/POL/ETH or Fiat, while paying gas in NEYXT via a token paymaster (no native POL/MATIC required).
+
+Principles
+	•	Ship fast with existing infra: Supabase Edge Functions + Vercel
+	•	Keep front & back in one repo
+	•	No native gas UX (fees charged in NEYXT)
+	•	Safe quotes (price bounds vs WETH/NEYXT reference pool)
+
+⸻
+
+1) High-level UX
+	•	Single CTA: Buy NEYXT
+	•	3 steps: Select pay asset → Get quote → Confirm
+	•	Crypto path (Polygon): (USDC | POL | ETH) → swap → NEYXT
+	•	Fiat path: Onramp → settle USDC/POL on Polygon → auto-swap → NEYXT
+	•	Gas abstraction: Biconomy Token Paymaster charges fees in NEYXT
+	•	Fail-fast copy if insufficient NEYXT to cover fees (suggest increase amount)
+
+⸻
+
+2) Current Stack
+	•	Frontend: React + Vite + Tailwind (Vercel)
+	•	Wallet/Auth: Web3Auth (LinkedIn-only)
+	•	Backend: Supabase Edge Functions (Deno)
+	•	Web3: Polygon, ethers v6
+	•	Providers:
+	•	Onramp: Transak (Ramp Network as backup)
+	•	Swap Aggregator: 0x Swap API (ParaSwap or LI.FI single-chain as backup)
+	•	Gas Abstraction: Biconomy Token Paymaster (Gelato backup)
+
+⸻
+
+3) Repo Placement (Added/Updated files)
+
+See the merged tree in context. Key additions:
+	•	Frontend
+	•	src/components/wallet/BuyNeyxtModal.tsx  (TODO [M6.1])
+	•	src/components/wallet/OnrampWidget.tsx  (TODO [M7.1])
+	•	src/components/wallet/GaslessBadge.tsx   (TODO [M6.3])
+	•	src/components/ui/QuoteBreakdown.tsx     (TODO [M4.4])
+	•	src/hooks/useQuote.ts                    (TODO [M4.2])
+	•	src/hooks/useBuyNeyxt.ts                 (TODO [M5.5])
+	•	src/hooks/useOnrampEvents.ts             (TODO [M7.3])
+	•	src/services/swapService.ts              (TODO [M4.2])
+	•	src/services/paymasterService.ts         (TODO [M5.4])
+	•	src/services/onrampService.ts            (TODO [M7.4])
+	•	src/services/analytics.ts                (TODO [M6.4])
+	•	src/config/contracts.ts                  (TODO [M1.1/M2.2/M3.1])
+	•	src/config/env.ts                        (TODO [M1.2])
+	•	src/config/networks.ts                   (TODO [M1.3])
+	•	src/types/buy.ts                         (TODO [M4.3])
+	•	Edge Functions
+	•	supabase/functions/quote/                (GET /api/quote – TODO [M4.1])
+	•	supabase/functions/execute/              (POST /api/execute – TODO [M5.2])
+	•	supabase/functions/status/               (GET /api/status – TODO [M5.3])
+	•	supabase/functions/onramp-webhook/       (Onramp → autoswap – TODO [M7.2])
+	•	supabase/functions/_shared/pricing.ts    (pool TWAP & sanity – TODO [M3.2])
+	•	supabase/functions/_shared/paymaster.ts  (token paymaster utils – TODO [M5.1])
+	•	supabase/functions/_shared/hmac.ts       (webhook verify – TODO [M7.2])
+
+⸻
+
+4) Feature Flags
+
+Set in frontend via src/config/env.ts (public), toggled per env:
+	•	NEXT_PUBLIC_FEATURE_ENABLE_FIAT (bool)
+	•	NEXT_PUBLIC_FEATURE_ENABLE_GAS_SPONSORSHIP (bool)
+	•	NEXT_PUBLIC_FEATURE_ENABLE_CROSS_CHAIN (bool; phase 2+)
+
+⸻
+
+5) Environment Variables
+
+Public (frontend)
+
+Safe to expose in client (build-time or runtime via Vercel env):
+
+	•	NEXT_PUBLIC_CHAIN_ID – Polygon chain ID
+	•	NEXT_PUBLIC_NEYXT_ADDRESS – NEYXT ERC-20 address on Polygon
+	•	NEXT_PUBLIC_FEATURE_ENABLE_FIAT – true|false
+	•	NEXT_PUBLIC_FEATURE_ENABLE_GAS_SPONSORSHIP – true|false
+	•	NEXT_PUBLIC_FEATURE_ENABLE_CROSS_CHAIN – true|false
+
+Server (Supabase Edge Functions – store as secrets)
+
+Never expose to frontend:
+
+	•	ZEROX_API_KEY – 0x Swap API key
+	•	ONRAMP_API_KEY – Transak (or Ramp) API key
+	•	ONRAMP_WEBHOOK_SECRET – HMAC secret to verify onramp events
+	•	BICONOMY_API_KEY – Biconomy
+	•	BICONOMY_PAYMASTER_ID – Token paymaster app/ID
+	•	ALCHEMY_OR_RPC_URL_POLYGON – RPC for Polygon
+	•	REF_POOL_ADDRESS – WETH/NEYXT reference pool address (DEX specific)
+	•	ALLOWED_ROUTERS – Comma-separated router addresses allowlist (e.g., 0x, ParaSwap)
+
+Optional / later:
+	•	SENTRY_DSN, LOG_LEVEL, RATE_LIMIT_CFG, COMPLIANCE_GEOFENCE
+
+⸻
+
+6) API Contracts (Edge)
+
+GET /api/quote  (TODO [M4.1])
+
+Query
+
+pay_asset=USDC|POL|ETH|FIAT
+pay_chain=polygon   // v1 polygon-only; “FIAT” returns onramp params
+amount_in=string_decimal
+receive_asset=NEYXT
+receive_chain=polygon
+
+Response
+
+{
+  "route_id": "string",
+  "amount_out_est": "string_decimal",
+  "price": "string_decimal",
+  "fees": {
+    "protocol": "string_decimal",
+    "gas_in_neyxt_est": "string_decimal"
+  },
+  "slippage_bps": 100,
+  "estimated_time_sec": 0,
+  "ttl_sec": 45,
+  "warnings": ["string"]
+}
+
+POST /api/execute  (TODO [M5.2])
+
+Body
+
+{
+  "route_id": "string",
+  "user_address": "0x...",
+  "sponsor_gas": true
+}
+
+Response
+
+{
+  "tx_ids": ["0x..."],
+  "status_url": "/api/status?route_id=string"
+}
+
+GET /api/status  (TODO [M5.3])
+
+Query
+
+route_id=string
+
+Response
+
+{
+  "state": "PENDING|CONFIRMED|FAILED",
+  "tx_ids": ["0x..."],
+  "details": "string"
+}
+
+POST /api/onramp-webhook  (TODO [M7.2])
+	•	Verify HMAC (ONRAMP_WEBHOOK_SECRET)
+	•	On success: server-initiated autoswap USDC→NEYXT via /api/execute
+	•	Must be idempotent (no double swaps on retries)
+
+⸻
+
+7) Pricing Guardrails (Reference Pool)
+	•	Reference: QuickSwap v2 WETH/NEYXT 50/50 pool on Polygon (REF_POOL_ADDRESS)
+	•	Policy:
+	•	slippage_bps ≤ 100
+	•	max_price_impact_bps ≤ 200
+	•	quote_ttl_sec = 45
+	•	min_purchase_multiple_of_gas ≥ 1.25
+	•	max_trade_notional_base = CAP_IN_WETH
+	•	per_wallet_daily_cap_base = CAP_PER_WALLET
+	•	Reject quotes if route price deviates from pool TWAP beyond policy thresholds
+
+⸻
+
+8) Telemetry (Events & Targets)
+
+Events
+	•	buy_opened, asset_selected, quote_returned, kyc_started
+	•	swap_submitted, swap_confirmed, swap_failed
+	•	time_to_complete_sec
+
+Targets
+	•	Success rate ≥ 95%
+	•	Median time to complete ≤ 180s
+	•	Drop-off before payment ≤ 15%
+
+⸻
+
+9) Milestones & Checklists
+
+Legend:
+✅ = done 🧩 = in progress ⬜ = todo
+
+M1 – Foundation
+	•	⬜ M1.1 Create contracts.ts (placeholders) & README-BUY-FLOW.md
+	•	⬜ M1.2 Extend env.ts with feature flags & API base
+	•	⬜ M1.3 Ensure networks.ts has Polygon mainnet + Amoy
+	•	⬜ M1.4 Edge “health” routes deployable
+
+Exit: Frontend builds; Edge deploy OK.
+
+⸻
+
+M2 – Providers & Addresses
+	•	⬜ Transak account; Polygon USDC/POL enabled
+	•	⬜ 0x API key; Polygon enabled
+	•	⬜ Biconomy paymaster app created; NEYXT allowed as fee token
+	•	⬜ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS
+	•	⬜ Save secrets in Supabase (DEV/PROD)
+
+M2.3 – Pool Creation
+	•	⬜ Choose initial NEYXT price (low, conservative) and compute seed amounts
+	•	⬜ Create QuickSwap v2 WETH/NEYXT pool (50/50)
+	•	⬜ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS
+	•	⬜ Set REF_POOL_ADDRESS secret and verify quotes via 0x
+
+Exit: Keys present; paymaster NEYXT-configured.
+
+⸻
+
+M3 – Reference Pool & Pricing
+	•	⬜ Confirm WETH/NEYXT pool DEX + address
+	•	⬜ _shared/pricing.ts: spot/TWAP fetch utility
+	•	⬜ Sanity checks (deviation, slippage, TTL) + unit tests
+
+Exit: Quotes rejected when out of bounds.
+
+⸻
+
+M4 – Quote Endpoint
+	•	⬜ GET /api/quote with 0x (Polygon-only v1)
+	•	⬜ swapService.ts + useQuote.ts in FE
+	•	⬜ QuoteBreakdown.tsx UI
+	•	⬜ Return gas_in_neyxt_est and warnings for min purchase
+	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est)
+	•	⬜ Apply per-trade cap (≤ max_trade_notional_base)
+
+Exit: Valid quotes for USDC/POL/ETH.
+
+⸻
+
+M5 – Execute & Status (Gas in NEYXT)
+	•	⬜ _shared/paymaster.ts (Biconomy Token Paymaster)
+	•	⬜ POST /api/execute uses paymaster; no native POL required
+	•	⬜ GET /api/status (poll tx/route)
+	•	⬜ useBuyNeyxt.ts orchestration
+	•	⬜ Fail-fast if NEYXT_out < gas_in_neyxt_est + buffer
+	•	⬜ Apply per-wallet daily cap during execution
+
+Exit: Swap executes gasless (for user); clear insufficient NEYXT message.
+
+⸻
+
+M6 – Frontend Modal UX
+	•	⬜ Add CTA in HomePage.tsx
+	•	⬜ BuyNeyxtModal.tsx (3 steps)
+	•	⬜ GaslessBadge.tsx
+	•	⬜ analytics.ts events
+
+Exit: 3-step flow functional on DEV.
+
+⸻
+
+M7 – Fiat Onramp & Autoswap
+	•	⬜ OnrampWidget.tsx (prefill wallet + Polygon)
+	•	⬜ onramp-webhook (HMAC verify, idempotent)
+	•	⬜ Autoswap to NEYXT via server /api/execute
+	•	⬜ useOnrampEvents.ts status handling
+
+Exit: Fiat → NEYXT path confirmed on DEV.
+
+⸻
+
+M8 – Observability
+	•	⬜ route_id correlation across quote/execute/status
+	•	⬜ Counters: success_rate, median_time_to_complete, drop-off
+	•	⬜ Alerts on provider errors (0x, paymaster, onramp)
+
+Exit: Minimal dashboard covers funnel; alerts wired.
+
+⸻
+
+M9 – Staging/Prod & Launch
+	•	⬜ Feature flags: enable internally, then public
+	•	⬜ Scripted test purchases (USDC→NEYXT, POL→NEYXT, Fiat→NEYXT)
+	•	⬜ Go-live: public flags on; support runbook ready
+
+Exit: Users complete purchases in ≤ 3 steps; metrics on target.
+
+⸻
+
+10) Runbooks (Short)
+
+Onramp down
+	•	Action: Disable NEXT_PUBLIC_FEATURE_ENABLE_FIAT; show copy recommending crypto path.
+
+DEX liquidity thin / price impact high
+	•	Action: Raise min purchase or fallback to backup aggregator; show “try smaller amount” copy.
+
+Paymaster errors / Insufficient NEYXT for fees
+	•	Action: Bump min NEYXT_out threshold; show copy “Increase amount to cover fees.”
+
+RPC degraded
+	•	Action: Switch to backup RPC; degrade to slower polling; surface status to user.
+
+⸻
+
+11) Security & Compliance
+	•	Never custody user funds.
+	•	Verify & pin contract addresses and chain IDs.
+	•	Only call allowlisted routers/bridges.
+	•	Use HMAC on onramp webhook; ensure idempotency.
+	•	Reasonable rate limits and per-user caps.
+	•	KYC/AML handled by the onramp; store status/refs only (no PII duplication).
+
+⸻
+
+12) Acceptance Criteria
+	•	≤ 3 steps to buy
+	•	No native gas needed (fees in NEYXT)
+	•	Fiat & crypto both deliver NEYXT to the same wallet
+	•	Clear failure when NEYXT insufficient to cover fees
+	•	Metrics hit: success ≥ 95%, median time ≤ 180s
+
+⸻
+
+13) Decision Log (living)
+	•	Backend: Supabase Edge Functions (keep single-repo DX).
+	•	Onramp: Transak primary (Ramp backup).
+	•	Swap: 0x primary (ParaSwap/LI.FI single-chain backup).
+	•	Gas: Biconomy Token Paymaster (Gelato backup).
+	•	Scope v1: Polygon-only (USDC/POL/ETH + Fiat). Cross-chain later.
+
+⸻
+
+Owner: Stephane
+Last updated: [fill date]
+Next action: Start M1 checklist and seed ENV for DEV.
