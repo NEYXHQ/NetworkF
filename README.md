@@ -104,6 +104,21 @@ src/
    # NEYXT Token Contract Addresses
    VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
    VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
+   
+   # Buy Flow Feature Flags (Optional - defaults to false)
+   VITE_FEATURE_ENABLE_FIAT=false
+   VITE_FEATURE_ENABLE_GAS_SPONSORSHIP=false
+   VITE_FEATURE_ENABLE_CROSS_CHAIN=false
+   
+   # Buy Flow Configuration (Optional - uses defaults if not set)
+   VITE_BUY_FLOW_API_BASE_URL=/api
+   VITE_CHAIN_ID=137
+   # Note: NEYXT address automatically selected from VITE_POLYGON_*_NEYXT_CONTRACT_ADDRESS
+   
+   # Legacy/Unused Variables (can be removed)
+   # VITE_API_URL=http://localhost:3001/api
+   # VITE_LINKEDIN_CLIENT_ID=your_linkedin_client_id_here
+   # VITE_RESEND_API_KEY=your_resend_api_key_here
    ```
 
 4. **Start the development server:**
@@ -275,9 +290,52 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `admin_users`: admin mapping and permissions
 - `app_statistics`: aggregate stats for dashboard
 
-## 🛠️ Development
+## 🔧 Environment Variables Reference
 
-### Available Scripts
+### Required Variables
+
+#### Core Authentication
+- `VITE_WEB3AUTH_CLIENT_ID` - Web3Auth project client ID for social login
+- `VITE_APP_NAME` - Application name displayed in UI
+
+#### Supabase Configuration
+- `VITE_SUPABASE_DEV_URL` - Development Supabase project URL
+- `VITE_SUPABASE_DEV_ANON_KEY` - Development Supabase anonymous key
+- `VITE_SUPABASE_DEV_PROJECT_ID` - Development Supabase project ID
+- `VITE_SUPABASE_PROD_URL` - Production Supabase project URL
+- `VITE_SUPABASE_PROD_ANON_KEY` - Production Supabase anonymous key
+- `VITE_SUPABASE_PROD_PROJECT_ID` - Production Supabase project ID
+
+#### Smart Contract Addresses
+- `VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon Amoy testnet
+- `VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon mainnet
+- **Note**: These are automatically selected based on environment (dev = testnet, prod = mainnet)
+
+### Optional Variables (Buy Flow Features)
+
+#### Feature Flags
+- `VITE_FEATURE_ENABLE_FIAT` - Enable fiat onramp (default: false)
+- `VITE_FEATURE_ENABLE_GAS_SPONSORSHIP` - Enable gasless transactions (default: false)
+- `VITE_FEATURE_ENABLE_CROSS_CHAIN` - Enable cross-chain functionality (default: false)
+
+#### Buy Flow Configuration
+- `VITE_BUY_FLOW_API_BASE_URL` - API base URL for buy flow (default: /api)
+- `VITE_CHAIN_ID` - Target blockchain chain ID (default: 137 for Polygon)
+- `neyxtAddress` - Automatically uses testnet/mainnet address based on environment
+
+### Legacy/Unused Variables
+These variables exist in the codebase but are not currently used:
+- `VITE_API_URL` - Legacy API URL (unused)
+- `VITE_LINKEDIN_CLIENT_ID` - LinkedIn OAuth (unused)
+- `VITE_RESEND_API_KEY` - Email service (unused, moved to Supabase secrets)
+
+### Environment Detection
+The app automatically detects the environment:
+- **Development**: Uses `VITE_SUPABASE_DEV_*` variables
+- **Production**: Uses `VITE_SUPABASE_PROD_*` variables
+- **Network Selection**: Automatically switches between testnet/mainnet based on environment
+
+## 🛠️ Development
 
 ```bash
 npm run dev          # Start development server
