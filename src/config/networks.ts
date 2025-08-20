@@ -121,6 +121,7 @@ const getCurrentNetwork = (): NetworkConfig => {
 };
 
 export const currentNetwork = getCurrentNetwork();
+
 export const networks = {
   testnet: POLYGON_AMOY_TESTNET,
   mainnet: POLYGON_MAINNET,

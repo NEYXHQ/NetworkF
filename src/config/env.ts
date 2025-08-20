@@ -15,6 +15,12 @@ interface Config {
     anonKey: string;
     projectId: string;
   };
+  // AI service configuration
+  ai: {
+    supabaseEdgeUrl: string;
+    fallbackApiUrl: string;
+    useSupabase: boolean;
+  };
   // TODO [M1.2] - Add flags/API base (FIAT, GAS, CROSS_CHAIN)
   buyFlow: {
     // Feature flags
@@ -49,6 +55,18 @@ const config: Config = {
       ? (import.meta.env.VITE_SUPABASE_DEV_PROJECT_ID || '')
       : (import.meta.env.VITE_SUPABASE_PROD_PROJECT_ID || ''),
   },
+  // AI service configuration - auto-selects based on environment
+  ai: {
+    supabaseEdgeUrl: import.meta.env.DEV
+      ? `${import.meta.env.VITE_SUPABASE_DEV_URL || ''}/functions/v1/openai-chat`
+      : `${import.meta.env.VITE_SUPABASE_PROD_URL || ''}/functions/v1/openai-chat`,
+    fallbackApiUrl: '/api/chat',
+    useSupabase: Boolean(
+      import.meta.env.DEV 
+        ? (import.meta.env.VITE_SUPABASE_DEV_URL && import.meta.env.VITE_SUPABASE_DEV_ANON_KEY)
+        : (import.meta.env.VITE_SUPABASE_PROD_URL && import.meta.env.VITE_SUPABASE_PROD_ANON_KEY)
+    ),
+  },
   // Buy flow configuration
   buyFlow: {
     // Feature flags - can be toggled per environment
@@ -57,8 +75,8 @@ const config: Config = {
     enableCrossChain: import.meta.env.VITE_FEATURE_ENABLE_CROSS_CHAIN === 'true',
     // API configuration
     apiBaseUrl: import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api',
-    chainId: import.meta.env.VITE_CHAIN_ID || currentNetwork.chainId,
-    neyxtAddress: import.meta.env.VITE_NEYXT_ADDRESS || currentNetwork.contracts.neyxt,
+    chainId: currentNetwork.chainId,
+    neyxtAddress: currentNetwork.contracts.neyxt, // Auto-selects testnet/mainnet based on environment
   },
 };
 

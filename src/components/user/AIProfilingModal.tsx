@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Send, Bot, User as UserIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
+import config from '../../config/env';
 
 type ChatRole = 'system' | 'user' | 'assistant' | 'developer' | 'tool';
 
@@ -33,23 +34,22 @@ export const AIProfilingModal = ({ isOpen, onClose, systemPrompt = 'You are a he
   if (!isOpen) return null;
 
   const sendMessage = async () => {
-    const content = input.trim();
-    if (!content || loading) return;
-    const nextMessages: ChatMessage[] = [...messages, { role: 'user', content }];
+    if (!input.trim()) return;
+    
+    const nextMessages = [...messages, { role: 'user' as ChatRole, content: input.trim() }];
     setMessages(nextMessages);
     setInput('');
     setLoading(true);
     try {
-      // Prefer Supabase Edge Function if available; falls back to local API route
-      const baseUrl = (import.meta.env.VITE_SUPABASE_DEV_URL as string) || '';
-      const anonKey = (import.meta.env.VITE_SUPABASE_DEV_ANON_KEY as string) || '';
-      const useSupabase = Boolean(baseUrl && anonKey);
+      // Use centralized config that auto-detects environment
+      const baseUrl = config.ai.useSupabase ? config.ai.supabaseEdgeUrl : config.ai.fallbackApiUrl;
+      const useSupabase = config.ai.useSupabase;
 
-      const res = await fetch(useSupabase ? `${baseUrl}/functions/v1/openai-chat` : '/api/chat', {
+      const res = await fetch(baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(useSupabase ? { Authorization: `Bearer ${anonKey}` } : {}),
+          ...(useSupabase ? { Authorization: `Bearer ${config.supabase.anonKey}` } : {}),
         },
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),

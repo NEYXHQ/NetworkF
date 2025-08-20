@@ -2,6 +2,8 @@
 // - Uses Supabase Edge Function `openai-chat` as a generic proxy to OpenAI
 // - Enforces strict JSON contracts per mission_statement.MD
 
+import config from '../config/env';
+
 export interface LLMMapSuccess {
   answer_value: -2 | -1 | 0 | 1 | 2;
   confidence: number; // 0..1
@@ -26,12 +28,13 @@ export interface LLMSummary {
 }
 
 const getSupabaseEdge = () => {
-  const baseUrl = (import.meta.env.VITE_SUPABASE_DEV_URL as string) || '';
-  const anonKey = (import.meta.env.VITE_SUPABASE_DEV_ANON_KEY as string) || '';
-  if (!baseUrl || !anonKey) {
-    throw new Error('Supabase URL or anon key not configured');
+  if (!config.ai.useSupabase) {
+    throw new Error('Supabase Edge Function not configured for this environment');
   }
-  return { url: `${baseUrl}/functions/v1/openai-chat`, anonKey };
+  return { 
+    url: config.ai.supabaseEdgeUrl, 
+    anonKey: config.supabase.anonKey 
+  };
 };
 
 export async function mapFreeTextToScale(params: {
