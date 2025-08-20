@@ -197,101 +197,101 @@ Targets
 9) Milestones & Checklists
 
 Legend:
-✅ = done 🧩 = in progress ⬜ = todo
+✅ = done	🧩 = in progress	⬜ = todo
 
 M1 – Foundation
-	•	⬜ M1.1 Create contracts.ts (placeholders) & README-BUY-FLOW.md
-	•	⬜ M1.2 Extend env.ts with feature flags & API base
-	•	⬜ M1.3 Ensure networks.ts has Polygon mainnet + Amoy
-	•	⬜ M1.4 Edge “health” routes deployable
+	•	✅ M1.1 Create contracts.ts (placeholders) & README-BUY-FLOW.md
+	•	✅ M1.2 Extend env.ts with feature flags & API base
+	•	✅ M1.3 Ensure networks.ts has Polygon mainnet + Amoy
+	•	✅ M1.4 Edge "health" routes deployable - Stubs deployed and responding ✅
 
-Exit: Frontend builds; Edge deploy OK.
+Exit: ✅ Frontend builds; ✅ Edge deploy OK. M1 Complete!
 
 ⸻
 
 M2 – Providers & Addresses
-	•	⬜ Transak account; Polygon USDC/POL enabled
-	•	⬜ 0x API key; Polygon enabled
-	•	⬜ Biconomy paymaster app created; NEYXT allowed as fee token
-	•	⬜ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS
-	•	⬜ Save secrets in Supabase (DEV/PROD)
+	•	⬜ Transak account; Polygon USDC/POL enabled - TODO: Sign up, verify KYC, enable Polygon
+	•	⬜ 0x API key; Polygon enabled - TODO: Get API key, test Polygon endpoints
+	•	⬜ Biconomy paymaster app created; NEYXT allowed as fee token - TODO: Create app, configure NEYXT
+	•	⬜ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS - TODO: Get actual addresses from deployment
+	•	⬜ Save secrets in Supabase (DEV/PROD) - TODO: Add provider keys to Supabase secrets
 
 M2.3 – Pool Creation
-	•	⬜ Choose initial NEYXT price (low, conservative) and compute seed amounts
-	•	⬜ Create QuickSwap v2 WETH/NEYXT pool (50/50)
-	•	⬜ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS
-	•	⬜ Set REF_POOL_ADDRESS secret and verify quotes via 0x
+	•	⬜ Choose initial NEYXT price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/NEYXT amounts
+	•	⬜ Create QuickSwap v2 WETH/NEYXT pool (50/50) - TODO: Deploy pool with seed liquidity
+	•	⬜ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS - TODO: Update contracts.ts with actual addresses
+	•	⬜ Set REF_POOL_ADDRESS secret and verify quotes via 0x - TODO: Test quote endpoint with pool data
 
 Exit: Keys present; paymaster NEYXT-configured.
 
 ⸻
 
 M3 – Reference Pool & Pricing
-	•	⬜ Confirm WETH/NEYXT pool DEX + address
-	•	⬜ _shared/pricing.ts: spot/TWAP fetch utility
-	•	⬜ Sanity checks (deviation, slippage, TTL) + unit tests
+	•	⬜ Confirm WETH/NEYXT pool DEX + address - TODO: Verify QuickSwap v2 pool is active
+	•	⬜ _shared/pricing.ts: spot/TWAP fetch utility - TODO: Implement actual pool data fetching
+	•	⬜ Sanity checks (deviation, slippage, TTL) + unit tests - TODO: Add validation logic and tests
 
 Exit: Quotes rejected when out of bounds.
 
 ⸻
 
 M4 – Quote Endpoint
-	•	⬜ GET /api/quote with 0x (Polygon-only v1)
-	•	⬜ swapService.ts + useQuote.ts in FE
-	•	⬜ QuoteBreakdown.tsx UI
-	•	⬜ Return gas_in_neyxt_est and warnings for min purchase
-	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est)
-	•	⬜ Apply per-trade cap (≤ max_trade_notional_base)
+	•	⬜ GET /api/quote with 0x (Polygon-only v1) - TODO: Replace health check with actual 0x API calls
+	•	⬜ swapService.ts + useQuote.ts in FE - TODO: Connect frontend hooks to backend API
+	•	⬜ QuoteBreakdown.tsx UI - TODO: Connect UI to actual quote data
+	•	⬜ Return gas_in_neyxt_est and warnings for min purchase - TODO: Calculate actual gas estimates
+	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est) - TODO: Add validation logic
+	•	⬜ Apply per-trade cap (≤ max_trade_notional_base) - TODO: Add trade size limits
 
 Exit: Valid quotes for USDC/POL/ETH.
 
 ⸻
 
 M5 – Execute & Status (Gas in NEYXT)
-	•	⬜ _shared/paymaster.ts (Biconomy Token Paymaster)
-	•	⬜ POST /api/execute uses paymaster; no native POL required
-	•	⬜ GET /api/status (poll tx/route)
-	•	⬜ useBuyNeyxt.ts orchestration
-	•	⬜ Fail-fast if NEYXT_out < gas_in_neyxt_est + buffer
-	•	⬜ Apply per-wallet daily cap during execution
+	•	⬜ _shared/paymaster.ts (Biconomy Token Paymaster) - TODO: Replace mock with actual Biconomy integration
+	•	⬜ POST /api/execute uses paymaster; no native POL required - TODO: Implement gasless swap execution
+	•	⬜ GET /api/status (poll tx/route) - TODO: Add blockchain transaction monitoring
+	•	⬜ useBuyNeyxt.ts orchestration - TODO: Connect hooks to execute/status endpoints
+	•	⬜ Fail-fast if NEYXT_out < gas_in_neyxt_est + buffer - TODO: Add gas coverage validation
+	•	⬜ Apply per-wallet daily cap during execution - TODO: Add rate limiting per wallet
 
 Exit: Swap executes gasless (for user); clear insufficient NEYXT message.
 
 ⸻
 
 M6 – Frontend Modal UX
-	•	⬜ Add CTA in HomePage.tsx
-	•	⬜ BuyNeyxtModal.tsx (3 steps)
-	•	⬜ GaslessBadge.tsx
-	•	⬜ analytics.ts events
+	•	⬜ Add CTA in HomePage.tsx - TODO: Add "Buy NEYXT" button to homepage
+	•	⬜ BuyNeyxtModal.tsx (3 steps) - TODO: Connect modal to actual quote/execute flow
+	•	⬜ GaslessBadge.tsx - TODO: Show actual gas estimates in NEYXT
+	•	⬜ analytics.ts events - TODO: Track user interactions and conversion funnel
 
 Exit: 3-step flow functional on DEV.
 
 ⸻
 
 M7 – Fiat Onramp & Autoswap
-	•	⬜ OnrampWidget.tsx (prefill wallet + Polygon)
-	•	⬜ onramp-webhook (HMAC verify, idempotent)
-	•	⬜ Autoswap to NEYXT via server /api/execute
-	•	⬜ useOnrampEvents.ts status handling
+	•	⬜ OnrampWidget.tsx (prefill wallet + Polygon) - TODO: Integrate Transak/Ramp widget
+	•	⬜ onramp-webhook (HMAC verify, idempotent) - TODO: Add HMAC verification and webhook processing
+	•	⬜ Autoswap to NEYXT via server /api/execute - TODO: Auto-trigger swap on onramp success
+	•	⬜ useOnrampEvents.ts status handling - TODO: Listen to onramp events and update UI
 
 Exit: Fiat → NEYXT path confirmed on DEV.
 
 ⸻
 
 M8 – Observability
-	•	⬜ route_id correlation across quote/execute/status
-	•	⬜ Counters: success_rate, median_time_to_complete, drop-off
-	•	⬜ Alerts on provider errors (0x, paymaster, onramp)
+	•	⬜ route_id correlation across quote/execute/status - TODO: Add request tracing and correlation IDs
+	•	⬜ Counters: success_rate, median_time_to_complete, drop-off - TODO: Implement metrics collection
+	•	⬜ Alerts on provider errors (0x, paymaster, onramp) - TODO: Add error monitoring and alerting
 
 Exit: Minimal dashboard covers funnel; alerts wired.
 
 ⸻
 
 M9 – Staging/Prod & Launch
-	•	⬜ Feature flags: enable internally, then public
-	•	⬜ Scripted test purchases (USDC→NEYXT, POL→NEYXT, Fiat→NEYXT)
-	•	⬜ Go-live: public flags on; support runbook ready
+	•	⬜ Feature flags: enable internally, then public - TODO: Test with internal team, then public rollout
+	•	⬜ Scripted test purchases (USDC→NEYXT, POL→NEYXT, Fiat→NEYXT) - TODO: Automated testing of all purchase paths
+	•	⬜ Go-live: public flags on; support runbook ready - TODO: Enable public access and prepare support docs
 
 Exit: Users complete purchases in ≤ 3 steps; metrics on target.
 
@@ -343,4 +343,4 @@ RPC degraded
 
 Owner: Stephane
 Last updated: [fill date]
-Next action: Start M1 checklist and seed ENV for DEV.
+Next action: M1.1 ✅ Complete - stubs online + health checks. Proceed to M2 (Providers & Addresses).
