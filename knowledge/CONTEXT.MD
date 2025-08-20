@@ -77,67 +77,91 @@ WFounders addresses the "noise" in traditional founder networks by providing:
 
 ```
 NetworkF/
-├── src/                          # Main application source
-│   ├── components/               # React components
-│   │   ├── debug/               # Development debugging tools
-│   │   │   ├── BalanceDebugger.tsx    # Token balance debugging
-│   │   │   └── EnvironmentChecker.tsx # Environment status display
-│   │   ├── layout/              # Layout components
-│   │   │   └── Header.tsx       # Main navigation header
-│   │   ├── ui/                  # Reusable UI components
-│   │   │   ├── Button.tsx       # Custom button component
-│   │   │   └── NetworkIndicator.tsx # Network status display
-│   │   ├── user/                # User-related components
-│   │   │   ├── AIProfilingModal.tsx      # AI chat interface
-│   │   │   ├── ProfileCompletionModal.tsx # Profile completion
-│   │   │   ├── SurveyModal.tsx           # User onboarding survey
-│   │   │   └── UserProfile.tsx           # User profile display
-│   │   └── wallet/              # Wallet and token components
-│   │       ├── FaucetLinks.tsx           # Testnet faucet links
-│   │       ├── NetworkMismatchWarning.tsx # Network switching
-│   │       └── TokenBalance.tsx          # Token balance display
-│   ├── config/                  # Configuration files
-│   │   ├── env.ts               # Environment configuration
-│   │   └── networks.ts          # Blockchain network configs
-│   ├── contexts/                # React contexts
-│   │   ├── Web3AuthContext.ts   # Web3Auth context types
-│   │   └── Web3AuthProvider.tsx # Web3Auth provider
-│   ├── features/                # Feature-specific components
-│   │   └── profiler/            # Founder profiling system
-│   │       └── FounderProfiler.tsx # Adaptive founder profiler
-│   ├── hooks/                   # Custom React hooks
-│   │   ├── ethersRPC.ts         # Ethers.js RPC operations
-│   │   ├── useAdmin.ts          # Admin functionality hook
-│   │   ├── useSupabaseUser.ts   # Supabase user management
-│   │   ├── useTokenService.ts   # Token operations hook
-│   │   └── useWeb3Auth.ts       # Web3Auth hook
-│   ├── lib/                     # Library configurations
-│   │   ├── database.types.ts    # Supabase database types
-│   │   └── supabase.ts          # Supabase client setup
-│   ├── pages/                   # Page components
-│   │   ├── AdminLoginPage.tsx   # Admin authentication
-│   │   ├── AdminPage.tsx        # Admin dashboard
-│   │   └── HomePage.tsx         # Main landing page
-│   ├── services/                # Business logic services
-│   │   ├── adminService.ts      # Admin operations
-│   │   ├── emailService.ts      # Email functionality
-│   │   ├── profilerLLM.ts       # AI profiling integration
-│   │   ├── profilerService.ts   # Profiler data management
-│   │   └── userService.ts       # User operations
-│   └── types/                   # TypeScript type definitions
-│       ├── auth.ts              # Authentication types
-│       └── rollup-plugin-polyfill-node.d.ts # Build tool types
-├── supabase/                    # Supabase backend configuration
-│   └── functions/               # Edge functions
-│       ├── _shared/             # Shared utilities
-│       │   └── cors.ts          # CORS configuration
-│       ├── openai-chat/         # OpenAI chat integration
-│       ├── send-approval-email/ # Approval email service
-│       └── send-welcome-email/  # Welcome email service
-├── knowledge/                    # AI profiling knowledge base
-│   └── FounderProfiler/         # Founder profiling data
-├── public/                      # Static assets
-└── Configuration files          # Build and deployment configs
+├── src/
+│   ├── components/
+│   │   ├── debug/
+│   │   │   ├── BalanceDebugger.tsx
+│   │   │   └── EnvironmentChecker.tsx
+│   │   ├── layout/
+│   │   │   └── Header.tsx
+│   │   ├── ui/
+│   │   │   ├── Button.tsx
+│   │   │   ├── NetworkIndicator.tsx
+│   │   │   └── QuoteBreakdown.tsx                 # TODO [M4.4] Quote/fees/slippage summary UI
+│   │   ├── user/
+│   │   │   ├── AIProfilingModal.tsx
+│   │   │   ├── ProfileCompletionModal.tsx
+│   │   │   ├── SurveyModal.tsx
+│   │   │   └── UserProfile.tsx
+│   │   └── wallet/
+│   │       ├── FaucetLinks.tsx
+│   │       ├── NetworkMismatchWarning.tsx
+│   │       ├── TokenBalance.tsx
+│   │       ├── BuyNeyxtModal.tsx                  # TODO [M6.1] 3-step flow (select → quote → confirm)
+│   │       ├── GaslessBadge.tsx                   # TODO [M6.3] “No gas needed – fees in NEYXT”
+│   │       └── OnrampWidget.tsx                   # TODO [M7.1] Transak/Ramp widget wrapper
+│   ├── config/
+│   │   ├── env.ts                                 # TODO [M1.2] Add flags/API base (FIAT, GAS, CROSS_CHAIN)
+│   │   ├── networks.ts                            # TODO [M1.3] Ensure Polygon mainnet + Amoy configs
+│   │   └── contracts.ts                           # TODO [M1.1] Create placeholder
+│   │                                              # TODO [M2.2] Fill NEYXT/WETH/router/ref-pool addresses
+│   │                                              # TODO [M3.1] Reference pool policy/tags
+│   ├── contexts/
+│   │   ├── Web3AuthContext.ts
+│   │   ├── Web3AuthProvider.tsx
+│   │   └── BuyFlowProvider.tsx                    # TODO [M6.2] (optional) shared state for modal steps
+│   ├── features/
+│   │   └── profiler/
+│   │       └── FounderProfiler.tsx
+│   ├── hooks/
+│   │   ├── ethersRPC.ts
+│   │   ├── useAdmin.ts
+│   │   ├── useSupabaseUser.ts
+│   │   ├── useTokenService.ts
+│   │   ├── useWeb3Auth.ts
+│   │   ├── useBuyNeyxt.ts                         # TODO [M5.5] Orchestrate quote → execute → status
+│   │   ├── useQuote.ts                            # TODO [M4.2] Call /api/quote + min-fee checks
+│   │   └── useOnrampEvents.ts                     # TODO [M7.3] Listen to widget & webhook statuses
+│   ├── lib/
+│   │   ├── database.types.ts
+│   │   └── supabase.ts
+│   ├── pages/
+│   │   ├── AdminLoginPage.tsx
+│   │   ├── AdminPage.tsx
+│   │   └── HomePage.tsx                           # TODO [M6.1] Add “Buy NEYXT” CTA entry point
+│   ├── services/
+│   │   ├── adminService.ts
+│   │   ├── emailService.ts
+│   │   ├── profilerLLM.ts
+│   │   ├── profilerService.ts
+│   │   ├── userService.ts
+│   │   ├── analytics.ts                           # TODO [M6.4] Emit buy_opened/quote_returned/etc.
+│   │   ├── onrampService.ts                       # TODO [M7.4] Widget params, status decorators
+│   │   ├── paymasterService.ts                    # TODO [M5.4] Estimate gas_in_neyxt + UX messages
+│   │   └── swapService.ts                         # TODO [M4.2] Client for /api/quote & /api/execute
+│   └── types/
+│       ├── auth.ts
+│       ├── buy.ts                                 # TODO [M4.3] Quote/Route/Status types (zod)
+│       └── rollup-plugin-polyfill-node.d.ts
+├── supabase/
+│   └── functions/
+│       ├── _shared/
+│       │   ├── cors.ts
+│       │   ├── hmac.ts                            # TODO [M7.2] Verify onramp webhook (HMAC)
+│       │   ├── paymaster.ts                       # TODO [M5.1] Biconomy token paymaster helpers
+│       │   └── pricing.ts                         # TODO [M3.2] Pool price/TWAP + sanity checks
+│       ├── openai-chat/
+│       ├── send-approval-email/
+│       ├── send-welcome-email/
+│       ├── execute/                               # TODO [M5.2] POST /api/execute (gas in NEYXT)
+│       ├── onramp-webhook/                        # TODO [M7.2] Onramp success → autoswap NEYXT
+│       ├── quote/                                 # TODO [M4.1] GET /api/quote (0x on Polygon)
+│       └── status/                                # TODO [M5.3] GET /api/status (poll tx/route)
+├── knowledge/
+│   └── FounderProfiler/
+├── public/
+├── Configuration files
+└── README-BUY-FLOW.md                              # TODO [M1.1] Overview, flags, runbooks & milestones
 ```
 
 ## 🔧 Technology Stack
