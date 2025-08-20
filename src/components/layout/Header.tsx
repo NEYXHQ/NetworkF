@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
-  const { user, isConnected, isLoading, login, logout } = useWeb3Auth();
+  const { user, isConnected, isLoading, isRestoringSession, login, logout } = useWeb3Auth();
   const { isAdmin } = useAdmin();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showEnvironmentDebugger, setShowEnvironmentDebugger] = useState(false);
@@ -179,6 +179,9 @@ export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
                   onClick={handleLogin}
                   variant="primary"
                   className="text-sm px-4 py-2"
+                  loading={isRestoringSession}
+                  loadingText="Restoring Session..."
+                  disabled={isRestoringSession}
                 >
                   <User className="mr-2 h-3 w-3" />
                   Sign In

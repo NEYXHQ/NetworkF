@@ -10,7 +10,7 @@ import { Header } from '../components/layout/Header';
 import { ArrowRight } from 'lucide-react';
 
 export const HomePage = () => {
-  const { isConnected, login } = useWeb3Auth();
+  const { isConnected, login, isRestoringSession } = useWeb3Auth();
   const { supabaseUser, needsSurvey, needsProfileCompletion, completeSurvey, completeProfile, isLoading } = useSupabaseUser();
   const [showWallet, setShowWallet] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
@@ -21,6 +21,11 @@ export const HomePage = () => {
   const [profileSkipped, setProfileSkipped] = useState(false);
 
   const handleGetStarted = async () => {
+    // Prevent action while restoring session
+    if (isRestoringSession) {
+      return;
+    }
+    
     if (isConnected) {
       // Navigate to dashboard or main app
       console.log('Navigate to dashboard');
@@ -160,6 +165,9 @@ export const HomePage = () => {
                 className="text-base md:text-lg px-6 py-3 md:px-8 md:py-4 border-0 hover:opacity-90 transition-opacity" 
                 style={{ backgroundColor: '#f78c01', color: 'white' }}
                 onClick={handleGetStarted}
+                loading={isRestoringSession}
+                loadingText="Restoring Session..."
+                disabled={isRestoringSession}
               >
                 Join via LinkedIn
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -200,6 +208,9 @@ export const HomePage = () => {
               className="text-base md:text-lg px-6 py-3 md:px-8 md:py-4 border-0 hover:opacity-90 transition-opacity" 
               style={{ backgroundColor: '#f78c01', color: 'white' }}
               onClick={handleGetStarted}
+              loading={isRestoringSession}
+              loadingText="Restoring Session..."
+              disabled={isRestoringSession}
             >
               Join via LinkedIn
             </Button>
@@ -318,6 +329,9 @@ export const HomePage = () => {
             className="text-base md:text-lg px-6 py-3 md:px-8 md:py-4 hover:bg-white/90 border-0 font-semibold transition-colors"
             style={{ backgroundColor: 'white', color: '#023047' }}
             onClick={handleGetStarted}
+            loading={isRestoringSession}
+            loadingText="Restoring Session..."
+            disabled={isRestoringSession}
           >
             → Get Verified with LinkedIn
           </Button>

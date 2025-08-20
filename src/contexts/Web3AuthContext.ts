@@ -22,6 +22,7 @@ export interface Web3AuthContextType {
   provider: IProvider | null;
   user: UserInfo | null;
   isLoading: boolean;
+  isRestoringSession: boolean;
   isConnected: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
@@ -43,6 +44,7 @@ export const Web3AuthContext = createContext<Web3AuthContextType>({
   provider: null,
   user: null,
   isLoading: true,
+  isRestoringSession: false,
   isConnected: false,
   login: async () => {},
   logout: async () => {},

@@ -14,6 +14,12 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
   const [provider, setProvider] = useState<IProvider | null>(null);
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
+
+  // Debug logging for isRestoringSession state changes
+  useEffect(() => {
+    console.log('🔄 isRestoringSession state changed to:', isRestoringSession);
+  }, [isRestoringSession]);
 
   useEffect(() => {
     const init = async () => {
@@ -58,26 +64,67 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
         await web3authInstance.init();
         setWeb3auth(web3authInstance);
 
-        if (web3authInstance.connected) {
-          setProvider(web3authInstance.provider);
-          const user = await web3authInstance.getUserInfo();
-          setUser(user);
+        // Add event listeners BEFORE checking connected state
+        web3authInstance.on('connected', async (data) => {
+          console.log('🎉 Web3Auth connected/reconnected:', data);
           
-          // Log wallet information
-          console.log('👤 User Connected:');
-          console.log(`   Name: ${user.name || 'N/A'}`);
-          console.log(`   Email: ${user.email || 'N/A'}`);
-          console.log(`   Verifier ID: ${(user as UserInfo).verifierId || 'N/A'}`);
-          console.log(`   Profile Image: ${user.profileImage ? 'Available' : 'Not available'}`);
-          console.log('');
-          
-          // Auto-switch network on reconnection too
-          if (web3authInstance.provider) {
-            await autoSwitchNetwork(web3authInstance.provider);
+          // Only set restoring state if we don't already have a user
+          if (!user) {
+            console.log('🔄 Setting isRestoringSession to true');
+            setIsRestoringSession(true);
           }
+          
+          setProvider(web3authInstance.provider);
+          try {
+            const user = await web3authInstance.getUserInfo();
+            setUser(user);
+            console.log('✅ User session restored:', user);
+            
+            // Only stop spinning when session is successfully restored
+            console.log('🔄 Setting isRestoringSession to false - session restored via event');
+            setIsRestoringSession(false);
+          } catch (error) {
+            console.error('❌ Failed to get user info after connection:', error);
+            // Keep spinning - don't set isRestoringSession to false on error
+          }
+        });
+
+        web3authInstance.on('disconnected', () => {
+          console.log('🔌 Web3Auth disconnected');
+          setProvider(null);
+          setUser(null);
+        });
+
+        // Check if already connected immediately after init
+        // This handles the case where Web3Auth already has an active session
+        if (web3authInstance.connected) {
+          console.log('🔄 Web3Auth already connected, restoring session...');
+          console.log('🔄 Setting isRestoringSession to true');
+          setIsRestoringSession(true);
+          
+          // Add a delay to ensure Web3Auth is fully ready
+          setTimeout(async () => {
+            try {
+              const user = await web3authInstance.getUserInfo();
+              setUser(user);
+              setProvider(web3authInstance.provider);
+              console.log('✅ Existing session restored immediately:', user);
+              
+              if (web3authInstance.provider) {
+                await autoSwitchNetwork(web3authInstance.provider);
+              }
+              
+              // Only stop spinning when session is successfully restored
+              console.log('🔄 Setting isRestoringSession to false - session restored successfully');
+              setIsRestoringSession(false);
+            } catch {
+              console.log('ℹ️ Session check failed, waiting for connection events...');
+              // Keep spinning - the event listeners will handle reconnection
+              // Don't set isRestoringSession to false here
+            }
+          }, 500); // Give Web3Auth time to be ready
         } else {
-          console.log('🔐 Web3Auth initialized - User not connected');
-          console.log('');
+          console.log('🔐 Web3Auth initialized - waiting for connection...');
         }
       } catch (error) {
         console.error('❌ Web3Auth initialization error:', error);
@@ -324,6 +371,7 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     provider,
     user,
     isLoading,
+    isRestoringSession,
     isConnected: !!provider,
     login,
     logout,
