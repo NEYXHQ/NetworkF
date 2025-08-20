@@ -15,6 +15,17 @@ interface Config {
     anonKey: string;
     projectId: string;
   };
+  // TODO [M1.2] - Add flags/API base (FIAT, GAS, CROSS_CHAIN)
+  buyFlow: {
+    // Feature flags
+    enableFiat: boolean;
+    enableGasSponsorship: boolean;
+    enableCrossChain: boolean;
+    // API configuration
+    apiBaseUrl: string;
+    chainId: string;
+    neyxtAddress: string;
+  };
 }
 
 const config: Config = {
@@ -37,6 +48,17 @@ const config: Config = {
     projectId: import.meta.env.DEV
       ? (import.meta.env.VITE_SUPABASE_DEV_PROJECT_ID || '')
       : (import.meta.env.VITE_SUPABASE_PROD_PROJECT_ID || ''),
+  },
+  // Buy flow configuration
+  buyFlow: {
+    // Feature flags - can be toggled per environment
+    enableFiat: import.meta.env.VITE_FEATURE_ENABLE_FIAT === 'true',
+    enableGasSponsorship: import.meta.env.VITE_FEATURE_ENABLE_GAS_SPONSORSHIP === 'true',
+    enableCrossChain: import.meta.env.VITE_FEATURE_ENABLE_CROSS_CHAIN === 'true',
+    // API configuration
+    apiBaseUrl: import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api',
+    chainId: import.meta.env.VITE_CHAIN_ID || currentNetwork.chainId,
+    neyxtAddress: import.meta.env.VITE_NEYXT_ADDRESS || currentNetwork.contracts.neyxt,
   },
 };
 

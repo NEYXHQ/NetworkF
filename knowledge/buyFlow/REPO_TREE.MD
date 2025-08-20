@@ -8,7 +8,7 @@
 │   │   ├── ui/
 │   │   │   ├── Button.tsx
 │   │   │   ├── NetworkIndicator.tsx
-│   │   │   └── QuoteBreakdown.tsx                 # TODO [M4.4] Quote/fees/slippage summary UI
+│   │   │   └── QuoteBreakdown.tsx                 # ☑️ [M4.4] Scaffolded - TODO: Implement quote display logic
 │   │   ├── user/
 │   │   │   ├── AIProfilingModal.tsx
 │   │   │   ├── ProfileCompletionModal.tsx
@@ -18,13 +18,13 @@
 │   │       ├── FaucetLinks.tsx
 │   │       ├── NetworkMismatchWarning.tsx
 │   │       ├── TokenBalance.tsx
-│   │       ├── BuyNeyxtModal.tsx                  # TODO [M6.1] 3-step flow (select → quote → confirm)
-│   │       ├── GaslessBadge.tsx                   # TODO [M6.3] “No gas needed – fees in NEYXT”
-│   │       └── OnrampWidget.tsx                   # TODO [M7.1] Transak/Ramp widget wrapper
+│   │       ├── BuyNeyxtModal.tsx                  # ☑️ [M6.1] Scaffolded - TODO: Implement 3-step buy flow
+│   │       ├── GaslessBadge.tsx                   # ☑️ [M6.3] Scaffolded - TODO: Implement gas fee display
+│   │       └── OnrampWidget.tsx                   # ☑️ [M7.1] Scaffolded - TODO: Integrate Transak/Ramp widget
 │   ├── config/
-│   │   ├── env.ts                                 # TODO [M1.2] Add flags/API base (FIAT, GAS, CROSS_CHAIN)
-│   │   ├── networks.ts                            # TODO [M1.3] Ensure Polygon mainnet + Amoy configs
-│   │   └── contracts.ts                           # TODO [M1.1] Create placeholder
+│   │   ├── env.ts                                 # ☑️ [M1.2] Extended - TODO: Add provider API keys
+│   │   ├── networks.ts                            # ☑️ [M1.3] Ready - Polygon mainnet + Amoy configured
+│   │   └── contracts.ts                           # ☑️ [M1.1] Scaffolded - TODO: Fill actual contract addresses
 │   │                                              # TODO [M2.2] Fill NEYXT/WETH/token router addresses
 │   │                                              # TODO [M2.3] Record QuickSwap v2 WETH/NEYXT 50/50 pool address (REF_POOL_ADDRESS) + QuickSwap router/factory
 │   │                                              # TODO [M3.1] Tag reference DEX = QuickSwap v2; policy bounds for sanity checks
@@ -41,44 +41,44 @@
 │   │   ├── useSupabaseUser.ts
 │   │   ├── useTokenService.ts
 │   │   ├── useWeb3Auth.ts
-│   │   ├── useBuyNeyxt.ts                         # TODO [M5.5] Orchestrate quote → execute → status
-│   │   ├── useQuote.ts                            # TODO [M4.2] Call /api/quote + min-fee checks
-│   │   └── useOnrampEvents.ts                     # TODO [M7.3] Listen to widget & webhook statuses
+│   │   ├── useBuyNeyxt.ts                         # ☑️ [M5.5] Scaffolded - TODO: Implement actual buy orchestration
+│   │   ├── useQuote.ts                            # ☑️ [M4.2] Scaffolded - TODO: Implement quote API calls
+│   │   └── useOnrampEvents.ts                     # ☑️ [M7.3] Scaffolded - TODO: Implement onramp event handling
 │   ├── lib/
 │   │   ├── database.types.ts
 │   │   └── supabase.ts
 │   ├── pages/
 │   │   ├── AdminLoginPage.tsx
 │   │   ├── AdminPage.tsx
-│   │   └── HomePage.tsx                           # TODO [M6.1] Add “Buy NEYXT” CTA entry point
+│   │   └── HomePage.tsx                           # TODO [M6.1] Add "Buy NEYXT" CTA entry point
 │   ├── services/
 │   │   ├── adminService.ts
 │   │   ├── emailService.ts
 │   │   ├── profilerLLM.ts
 │   │   ├── profilerService.ts
 │   │   ├── userService.ts
-│   │   ├── analytics.ts                           # TODO [M6.4] Emit buy_opened/quote_returned/etc.
-│   │   ├── onrampService.ts                       # TODO [M7.4] Widget params, status decorators
-│   │   ├── paymasterService.ts                    # TODO [M5.4] Estimate gas_in_neyxt + UX messages
-│   │   └── swapService.ts                         # TODO [M4.2] Client for /api/quote & /api/execute
+│   │   ├── analytics.ts                           # ☑️ [M6.4] Scaffolded - TODO: Implement actual analytics events
+│   │   ├── onrampService.ts                       # ☑️ [M7.4] Scaffolded - TODO: Implement onramp integration
+│   │   ├── paymasterService.ts                    # ☑️ [M5.4] Scaffolded - TODO: Implement Biconomy integration
+│   │   └── swapService.ts                         # ☑️ [M4.2] Scaffolded - TODO: Implement actual swap API calls
 │   └── types/
 │       ├── auth.ts
-│       ├── buy.ts                                 # TODO [M4.3] Quote/Route/Status types (zod)
+│       ├── buy.ts                                 # ☑️ [M4.3] Scaffolded - TODO: Add zod validation schemas
 │       └── rollup-plugin-polyfill-node.d.ts
 ├── supabase/
 │   └── functions/
 │       ├── _shared/
 │       │   ├── cors.ts
-│       │   ├── hmac.ts                            # TODO [M7.2] Verify onramp webhook (HMAC)
-│       │   ├── paymaster.ts                       # TODO [M5.1] Biconomy token paymaster helpers
-│       │   └── pricing.ts                         # TODO [M3.2] QuickSwap v2 reserve math + TWAP; apply sanity bounds vs REF_POOL_ADDRESS
+│       │   ├── hmac.ts                            # ☑️ [M7.2] Scaffolded - TODO: Implement actual HMAC verification
+│       │   ├── paymaster.ts                       # ☑️ [M5.1] Scaffolded - TODO: Implement Biconomy helpers
+│       │   └── pricing.ts                         # ☑️ [M3.2] Scaffolded - TODO: Implement pool price fetching
 │       ├── openai-chat/
 │       ├── send-approval-email/
 │       ├── send-welcome-email/
-│       ├── execute/                               # TODO [M5.2] POST /api/execute (gas in NEYXT) — enforce per_wallet_daily_cap_base
-│       ├── onramp-webhook/                        # TODO [M7.2] Onramp success → autoswap NEYXT
-│       ├── quote/                                 # TODO [M4.1] GET /api/quote (0x on Polygon) — enforce min_purchase_multiple_of_gas, max_trade_notional_base
-│       └── status/                                # TODO [M5.3] GET /api/status (poll tx/route)
+│       ├── execute/                               # ☑️ [M5.2] Scaffolded - TODO: Implement actual swap execution
+│       ├── onramp-webhook/                        # ☑️ [M7.2] Scaffolded - TODO: Implement webhook processing
+│       ├── quote/                                 # ☑️ [M4.1] Scaffolded - TODO: Implement 0x quote API
+│       └── status/                                # ☑️ [M5.3] Scaffolded - TODO: Implement transaction status checking
 ├── knowledge/
 │   └── FounderProfiler/
 ├── public/
