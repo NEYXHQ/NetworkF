@@ -1,4 +1,10 @@
 # BUY FLOW PROGRESS SUMMARY
+
+# Legend
+✅ = done
+🧩 = in progress
+⬜ = todo
+
 ## Milestone Status (as of 2024-12-19)
 - ✅ **M1 - Foundation**: Complete - All config files ready, Edge functions deployed
 - ✅ **M2 - Providers & Addresses**: Complete - 0x, Biconomy, Transak, contract addresses configured
