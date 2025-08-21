@@ -36,12 +36,15 @@ export interface SwapExecuteResponse {
 }
 
 class SwapService {
+  private apiBaseUrl: string;
+
   constructor() {
-    // TODO: Get from environment config
+    // Get API base URL from config
+    this.apiBaseUrl = import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api';
   }
 
   async getQuote(request: SwapQuoteRequest): Promise<SwapQuoteResponse> {
-    // TODO: Implement actual API call
+    // TODO: Implement actual API call to ${this.apiBaseUrl}/quote
     console.log('Getting swap quote:', request);
     
     // Placeholder response
@@ -61,18 +64,18 @@ class SwapService {
   }
 
   async executeSwap(request: SwapExecuteRequest): Promise<SwapExecuteResponse> {
-    // TODO: Implement actual API call
+    // TODO: Implement actual API call to ${this.apiBaseUrl}/execute
     console.log('Executing swap:', request);
     
     // Placeholder response
     return {
       txIds: ['mock-tx-id'],
-      statusUrl: '/api/status?route_id=mock-route-id'
+      statusUrl: `${this.apiBaseUrl}/status?route_id=mock-route-id`
     };
   }
 
-  async getSwapStatus(routeId: string): Promise<any> {
-    // TODO: Implement actual API call
+  async getSwapStatus(routeId: string): Promise<{ state: string; txIds: string[]; details: string }> {
+    // TODO: Implement actual API call to ${this.apiBaseUrl}/status
     console.log('Getting swap status for route:', routeId);
     
     // Placeholder response

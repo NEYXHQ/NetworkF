@@ -210,11 +210,11 @@ Exit: ✅ Frontend builds; ✅ Edge deploy OK. M1 Complete!
 ⸻
 
 M2 – Providers & Addresses
-	•	⬜ Transak account; Polygon USDC/POL enabled - TODO: Sign up, verify KYC, enable Polygon
-	•	⬜ 0x API key; Polygon enabled - TODO: Get API key, test Polygon endpoints
-	•	⬜ Biconomy paymaster app created; NEYXT allowed as fee token - TODO: Create app, configure NEYXT
-	•	⬜ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS - TODO: Get actual addresses from deployment
-	•	⬜ Save secrets in Supabase (DEV/PROD) - TODO: Add provider keys to Supabase secrets
+	•	✅ Transak account; Polygon USDC/POL enabled - TRANSAK_API_KEY configured in Supabase secrets
+	•	✅ 0x API key; Polygon enabled - API key configured in Supabase secrets
+	•	✅ Biconomy paymaster app created; NEYXT allowed as fee token - Paymaster apps configured for dev/prod
+	•	✅ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS - All contract addresses completed in .env
+	•	✅ Save secrets in Supabase (DEV/PROD) - BICONOMY_API_KEY, BICONOMY_PAYMASTER_ID, ZEROX_API_KEY, TRANSAK_API_KEY configured
 
 M2.3 – Pool Creation
 	•	⬜ Choose initial NEYXT price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/NEYXT amounts
@@ -222,7 +222,7 @@ M2.3 – Pool Creation
 	•	⬜ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS - TODO: Update contracts.ts with actual addresses
 	•	⬜ Set REF_POOL_ADDRESS secret and verify quotes via 0x - TODO: Test quote endpoint with pool data
 
-Exit: Keys present; paymaster NEYXT-configured.
+Exit: ✅ Keys present; paymaster NEYXT-configured; contract addresses completed. M2 Complete!
 
 ⸻
 
@@ -342,5 +342,5 @@ RPC degraded
 ⸻
 
 Owner: Stephane
-Last updated: [fill date]
-Next action: M1.1 ✅ Complete - stubs online + health checks. Proceed to M2 (Providers & Addresses).
+Last updated: 2024-12-19
+Next action: M2 ✅ Complete - providers configured, addresses set. Proceed to M3 (Reference Pool & Pricing).
