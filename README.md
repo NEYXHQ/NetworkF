@@ -101,9 +101,29 @@ src/
    VITE_SUPABASE_PROD_ANON_KEY=your_prod_anon_key_here
    VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
    
-   # NEYXT Token Contract Addresses
+   # Smart Contract Addresses (Required - Auto-switch between testnet/mainnet)
    VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
    VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
+   VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS=your_polygon_amoy_testnet_weth_address_here
+   VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS=0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
+   VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS=your_polygon_amoy_testnet_usdc_address_here
+   VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS=0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+   VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS=your_polygon_amoy_testnet_pol_address_here
+   VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS=your_polygon_mainnet_pol_address_here
+   
+   # QuickSwap DEX Addresses (Required)
+   VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY=your_polygon_amoy_testnet_quickswap_factory_here
+   VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY=0x5757371414417b8C6CAad45bAeF941aBc173d036
+   VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER=your_polygon_amoy_testnet_quickswap_router_here
+   VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER=0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff
+   
+   # Buy Flow Pool & Paymaster (Required)
+   VITE_POLYGON_TESTNET_REF_POOL_ADDRESS=your_polygon_amoy_testnet_weth_neyxt_pool_here
+   VITE_POLYGON_MAINNET_REF_POOL_ADDRESS=your_polygon_mainnet_weth_neyxt_pool_here
+   VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER=your_polygon_amoy_testnet_paymaster_here
+   VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER=your_polygon_mainnet_paymaster_here
+   VITE_POLYGON_TESTNET_ALLOWED_ROUTERS=your_polygon_amoy_testnet_router_addresses_here
+   VITE_POLYGON_MAINNET_ALLOWED_ROUTERS=0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff
    
    # Buy Flow Feature Flags (Optional - defaults to false)
    VITE_FEATURE_ENABLE_FIAT=false
@@ -113,7 +133,8 @@ src/
    # Buy Flow Configuration (Optional - uses defaults if not set)
    VITE_BUY_FLOW_API_BASE_URL=/api
    VITE_CHAIN_ID=137
-   # Note: NEYXT address automatically selected from VITE_POLYGON_*_NEYXT_CONTRACT_ADDRESS
+   # Note: All contract addresses automatically selected from VITE_POLYGON_*_*_ADDRESS variables
+   # ⚠️  IMPORTANT: All contract address variables are required - no fallbacks provided
    
    # Legacy/Unused Variables (can be removed)
    # VITE_API_URL=http://localhost:3001/api
@@ -306,10 +327,27 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `VITE_SUPABASE_PROD_ANON_KEY` - Production Supabase anonymous key
 - `VITE_SUPABASE_PROD_PROJECT_ID` - Production Supabase project ID
 
-#### Smart Contract Addresses
+#### Smart Contract Addresses (Required)
 - `VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon Amoy testnet
 - `VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon mainnet
-- **Note**: These are automatically selected based on environment (dev = testnet, prod = mainnet)
+- `VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS` - WETH token address on testnet
+- `VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS` - WETH token address on mainnet
+- `VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS` - USDC token address on testnet
+- `VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS` - USDC token address on mainnet
+- `VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS` - POL token address on testnet
+- `VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS` - POL token address on mainnet
+- `VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY` - QuickSwap factory on testnet
+- `VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY` - QuickSwap factory on mainnet
+- `VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER` - QuickSwap router on testnet
+- `VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER` - QuickSwap router on mainnet
+- `VITE_POLYGON_TESTNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on testnet
+- `VITE_POLYGON_MAINNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on mainnet
+- `VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER` - Biconomy paymaster on testnet
+- `VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER` - Biconomy paymaster on mainnet
+- `VITE_POLYGON_TESTNET_ALLOWED_ROUTERS` - Comma-separated router addresses on testnet
+- `VITE_POLYGON_MAINNET_ALLOWED_ROUTERS` - Comma-separated router addresses on mainnet
+- **Note**: All addresses automatically switch between testnet/mainnet based on environment (dev = testnet, prod = mainnet)
+- **Important**: These variables are required - no fallback addresses are provided
 
 ### Optional Variables (Buy Flow Features)
 
