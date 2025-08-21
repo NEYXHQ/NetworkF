@@ -1,7 +1,7 @@
-// TODO [M1.1] - Create contracts.ts (placeholders)
-// TODO [M2.2] - Fill NEYXT/WETH/token router addresses
-// TODO [M2.3] - Record QuickSwap v2 WETH/NEYXT 50/50 pool address (REF_POOL_ADDRESS) + QuickSwap router/factory
-// TODO [M3.1] - Tag reference DEX = QuickSwap v2; policy bounds for sanity checks
+// Auto-switching contract addresses based on environment (dev = testnet, prod = mainnet)
+// TODO [M2.2] - Fill testnet contract addresses in environment variables
+// TODO [M2.3] - Create WETH/NEYXT pool and record addresses
+// TODO [M3.1] - Configure pricing policy bounds for sanity checks
 
 export interface ContractAddresses {
   // Core tokens
@@ -31,23 +31,38 @@ export interface PricingPolicy {
   perWalletDailyCapBase: string; // in WETH
 }
 
-// TODO: Get from environment variables
+// Auto-select contract addresses based on environment (dev = testnet, prod = mainnet)
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  NEYXT: '0x0000000000000000000000000000000000000000', // TODO: Set actual address
-  WETH: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // Polygon WETH
-  USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // Polygon USDC
-  POL: '0x0000000000000000000000000000000000000000', // TODO: Set actual POL address
+  NEYXT: import.meta.env.DEV 
+    ? import.meta.env.VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS
+    : import.meta.env.VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS,
+  WETH: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS
+    : import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS,
+  USDC: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS
+    : import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS,
+  POL: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS
+    : import.meta.env.VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS,
   
-  QUICKSWAP_FACTORY: '0x5757371414417b8C6CAad45bAeF941aBc173d036', // QuickSwap v2 Factory
-  QUICKSWAP_ROUTER: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff', // QuickSwap v2 Router
-  REF_POOL_ADDRESS: '0x0000000000000000000000000000000000000000', // TODO: Set actual pool address
+  QUICKSWAP_FACTORY: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY
+    : import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY,
+  QUICKSWAP_ROUTER: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER
+    : import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER,
+  REF_POOL_ADDRESS: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_REF_POOL_ADDRESS
+    : import.meta.env.VITE_POLYGON_MAINNET_REF_POOL_ADDRESS,
   
-  BICONOMY_PAYMASTER: '0x0000000000000000000000000000000000000000', // TODO: Set actual paymaster address
+  BICONOMY_PAYMASTER: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER
+    : import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER,
   
-  ALLOWED_ROUTERS: [
-    '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff', // QuickSwap v2 Router
-    // TODO: Add other allowed routers
-  ]
+  ALLOWED_ROUTERS: import.meta.env.DEV
+    ? import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',')
+    : import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',')
 };
 
 export const PRICING_POLICY: PricingPolicy = {
@@ -74,12 +89,12 @@ export const SUPPORTED_CHAINS = {
   }
 };
 
-export const getContractAddresses = (_chainId: number): ContractAddresses => {
-  // TODO: Return different addresses based on chain ID
+export const getContractAddresses = (): ContractAddresses => {
+  // Auto-selects testnet/mainnet addresses based on environment
   return CONTRACT_ADDRESSES;
 };
 
-export const getPricingPolicy = (_chainId: number): PricingPolicy => {
-  // TODO: Return different policies based on chain ID
+export const getPricingPolicy = (): PricingPolicy => {
+  // Auto-selects testnet/mainnet policies based on environment
   return PRICING_POLICY;
 };
