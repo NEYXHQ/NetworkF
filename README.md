@@ -108,8 +108,7 @@ src/
    VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS=0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
    VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS=your_polygon_amoy_testnet_usdc_address_here
    VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS=0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
-   VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS=your_polygon_amoy_testnet_pol_address_here
-   VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS=your_polygon_mainnet_pol_address_here
+   # Note: POL is the native token of Polygon - no contract address needed
    
    # QuickSwap DEX Addresses (Required)
    VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY=your_polygon_amoy_testnet_quickswap_factory_here
@@ -120,8 +119,9 @@ src/
    # Buy Flow Pool & Paymaster (Required)
    VITE_POLYGON_TESTNET_REF_POOL_ADDRESS=your_polygon_amoy_testnet_weth_neyxt_pool_here
    VITE_POLYGON_MAINNET_REF_POOL_ADDRESS=your_polygon_mainnet_weth_neyxt_pool_here
-   VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER=your_polygon_amoy_testnet_paymaster_here
-   VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER=your_polygon_mainnet_paymaster_here
+   # Biconomy Paymaster Contract Addresses
+   VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER=your_polygon_amoy_testnet_paymaster_address_here
+   VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER=your_polygon_mainnet_paymaster_address_here
    VITE_POLYGON_TESTNET_ALLOWED_ROUTERS=your_polygon_amoy_testnet_router_addresses_here
    VITE_POLYGON_MAINNET_ALLOWED_ROUTERS=0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff
    
@@ -334,20 +334,21 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS` - WETH token address on mainnet
 - `VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS` - USDC token address on testnet
 - `VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS` - USDC token address on mainnet
-- `VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS` - POL token address on testnet
-- `VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS` - POL token address on mainnet
+- **Note**: POL is the native token of Polygon - no contract address needed
 - `VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY` - QuickSwap factory on testnet
 - `VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY` - QuickSwap factory on mainnet
 - `VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER` - QuickSwap router on testnet
 - `VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER` - QuickSwap router on mainnet
 - `VITE_POLYGON_TESTNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on testnet
 - `VITE_POLYGON_MAINNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on mainnet
-- `VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER` - Biconomy paymaster on testnet
-- `VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER` - Biconomy paymaster on mainnet
+- `VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER` - Biconomy paymaster contract on testnet
+- `VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER` - Biconomy paymaster contract on mainnet
+- **Note**: Biconomy uses singleton paymaster contracts per chain - your instance is identified by API key + paymaster ID in Supabase secrets
 - `VITE_POLYGON_TESTNET_ALLOWED_ROUTERS` - Comma-separated router addresses on testnet
 - `VITE_POLYGON_MAINNET_ALLOWED_ROUTERS` - Comma-separated router addresses on mainnet
 - **Note**: All addresses automatically switch between testnet/mainnet based on environment (dev = testnet, prod = mainnet)
 - **Important**: These variables are required - no fallback addresses are provided
+- **Native Token**: POL is the native token of Polygon - use `networks.ts` for native currency info or `getNativeTokenAddress()` from `contracts.ts`
 
 ### Optional Variables (Buy Flow Features)
 
@@ -360,6 +361,18 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `VITE_BUY_FLOW_API_BASE_URL` - API base URL for buy flow (default: /api)
 - `VITE_CHAIN_ID` - Target blockchain chain ID (default: 137 for Polygon)
 - `neyxtAddress` - Automatically uses testnet/mainnet address based on environment
+
+### Supabase Secrets (Server-Side Only)
+These variables are stored as secrets in Supabase and are NOT exposed to the frontend:
+
+- `ZEROX_API_KEY` - 0x Swap API key for DEX aggregation ✅ **Configured**
+- `BICONOMY_API_KEY` - Biconomy API key for gas sponsorship ✅ **Configured**
+- `BICONOMY_PAYMASTER_ID` - Biconomy paymaster application ID ✅ **Configured**
+- `ONRAMP_API_KEY` - Transak or Ramp API key for fiat onramp
+- `ONRAMP_WEBHOOK_SECRET` - HMAC secret for webhook verification
+- `ALCHEMY_OR_RPC_URL_POLYGON` - RPC endpoint for Polygon blockchain
+- `REF_POOL_ADDRESS` - WETH/NEYXT reference pool address
+- `ALLOWED_ROUTERS` - Comma-separated list of allowed DEX router addresses
 
 ### Legacy/Unused Variables
 These variables exist in the codebase but are not currently used:

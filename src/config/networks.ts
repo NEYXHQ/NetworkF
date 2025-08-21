@@ -111,7 +111,7 @@ const POLYGON_MAINNET: NetworkConfig = {
     eip1559: true,
     isTestnet: false,
   },
-  web3AuthNetwork: 'sapphire_mainnet',
+  web3AuthNetwork: 'sapphire_devnet',
 };
 
 // Auto-detect current network based on environment

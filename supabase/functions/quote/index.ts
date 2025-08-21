@@ -6,6 +6,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 
+// 0x API configuration
+const ZEROX_API_KEY = Deno.env.get('ZEROX_API_KEY');
+const ZEROX_BASE_URL = 'https://api.0x.org';
+
+// Biconomy configuration (needed for gas estimation in quotes)
+const BICONOMY_API_KEY = Deno.env.get('BICONOMY_API_KEY');
+const BICONOMY_PAYMASTER_ID = Deno.env.get('BICONOMY_PAYMASTER_ID');
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -15,19 +23,51 @@ serve(async (req) => {
   // Health check - no business logic yet
   if (req.method === 'GET') {
     try {
+      // Validate 0x API key is configured
+      if (!ZEROX_API_KEY) {
+        console.error('ZEROX_API_KEY not configured');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Service configuration error',
+            message: 'Quote service not properly configured' 
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 503 
+          }
+        );
+      }
+
+      // Validate Biconomy configuration (needed for gas estimation)
+      if (!BICONOMY_API_KEY || !BICONOMY_PAYMASTER_ID) {
+        console.error('Biconomy configuration missing');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Service configuration error',
+            message: 'Quote service not properly configured - Biconomy missing' 
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 503 
+          }
+        );
+      }
+
       // TODO: Parse query parameters
       // TODO: Validate request
       // TODO: Call 0x API for quote
       // TODO: Apply pricing sanity checks
       // TODO: Return quote response
       
-      console.log('Quote endpoint called - health check response');
+      console.log('Quote endpoint called - health check response (0x API key configured)');
       
       const response = {
         message: 'Quote endpoint - health check OK',
         status: 'placeholder',
         timestamp: new Date().toISOString(),
-        note: 'Business logic not yet implemented'
+        note: 'Business logic not yet implemented - 0x API key and Biconomy configured',
+        zeroXConfigured: true,
+        biconomyConfigured: true
       };
 
       return new Response(

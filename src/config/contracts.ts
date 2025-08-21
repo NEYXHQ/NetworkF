@@ -8,7 +8,7 @@ export interface ContractAddresses {
   NEYXT: string;
   WETH: string;
   USDC: string;
-  POL: string;
+  // POL is the native token - no contract address needed
   
   // DEX contracts
   QUICKSWAP_FACTORY: string;
@@ -42,9 +42,6 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   USDC: import.meta.env.DEV
     ? import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS
     : import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS,
-  POL: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_POL_CONTRACT_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_POL_CONTRACT_ADDRESS,
   
   QUICKSWAP_FACTORY: import.meta.env.DEV
     ? import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY
@@ -56,6 +53,8 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
     ? import.meta.env.VITE_POLYGON_TESTNET_REF_POOL_ADDRESS
     : import.meta.env.VITE_POLYGON_MAINNET_REF_POOL_ADDRESS,
   
+  // Biconomy uses singleton paymaster contracts per chain
+  // Your instance is identified by API key + paymaster ID, not contract address
   BICONOMY_PAYMASTER: import.meta.env.DEV
     ? import.meta.env.VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER
     : import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER,
@@ -63,6 +62,12 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   ALLOWED_ROUTERS: import.meta.env.DEV
     ? import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',')
     : import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',')
+};
+
+// Helper function to get native token address (POL)
+export const getNativeTokenAddress = (): string => {
+  // Native tokens use the special address 0x0000000000000000000000000000000000000000
+  return '0x0000000000000000000000000000000000000000';
 };
 
 export const PRICING_POLICY: PricingPolicy = {

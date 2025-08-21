@@ -9,6 +9,26 @@ export interface PaymasterConfig {
   allowedTokens: string[];
 }
 
+// Helper function to create PaymasterConfig from environment variables
+export const createPaymasterConfigFromEnv = (): PaymasterConfig => {
+  const apiKey = Deno.env.get('BICONOMY_API_KEY');
+  const paymasterId = Deno.env.get('BICONOMY_PAYMASTER_ID');
+  
+  if (!apiKey || !paymasterId) {
+    throw new Error('Biconomy configuration missing from environment');
+  }
+  
+  // Auto-detect chain ID based on environment (dev = testnet, prod = mainnet)
+  const chainId = Deno.env.get('ENVIRONMENT') === 'production' ? 137 : 80002; // Polygon mainnet vs Amoy testnet
+  
+  return {
+    apiKey,
+    paymasterId,
+    chainId,
+    allowedTokens: ['NEYXT'] // Only NEYXT is allowed as fee token
+  };
+};
+
 export interface GasEstimate {
   gasInNeyxt: string;
   gasInUsd: string;

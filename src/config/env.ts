@@ -31,6 +31,9 @@ interface Config {
     apiBaseUrl: string;
     chainId: string;
     neyxtAddress: string;
+    // Provider API keys (stored in Supabase secrets)
+    zeroXApiKey?: string; // Available in Edge Functions only
+    // Note: Biconomy uses singleton contracts - identified by API key + paymaster ID
   };
 }
 
