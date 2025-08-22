@@ -217,10 +217,10 @@ M2 – Providers & Addresses
 	•	✅ Save secrets in Supabase (DEV/PROD) - BICONOMY_API_KEY, BICONOMY_PAYMASTER_ID, ZEROX_API_KEY, TRANSAK_API_KEY configured
 
 M2.3 – Pool Creation
-	•	⬜ Choose initial NEYXT price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/NEYXT amounts
-	•	⬜ Create QuickSwap v2 WETH/NEYXT pool (50/50) - TODO: Deploy pool with seed liquidity
-	•	⬜ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS - TODO: Update contracts.ts with actual addresses
-	•	⬜ Set REF_POOL_ADDRESS secret and verify quotes via 0x - TODO: Test quote endpoint with pool data
+	•	✅ Choose initial NEYXT price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/NEYXT amounts
+	•	✅Create QuickSwap v2 WETH/NEYXT pool (50/50) - TODO: Deploy pool with seed liquidity
+	•	✅ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS - TODO: Update contracts.ts with actual addresses
+	•	✅ Set REF_POOL_ADDRESS secret and verify quotes via 0x - TODO: Test quote endpoint with pool data
 
 Exit: ✅ Keys present; paymaster NEYXT-configured; contract addresses completed. M2 Complete!
 

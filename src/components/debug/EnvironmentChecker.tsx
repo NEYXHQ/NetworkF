@@ -1,13 +1,17 @@
 // import { useState } from 'react';
+import { useState } from 'react';
 import config from '../../config/env';
 import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
+import { BuyNeyxtModal } from '../wallet/BuyNeyxtModal';
 import { emailService } from '../../services/emailService';
-import { Server, Mail, CheckCircle } from 'lucide-react';
+import { Server, Mail, CheckCircle, ShoppingCart } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
+  const [showBuyFlowModal, setShowBuyFlowModal] = useState(false);
+  
   // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
     try {
@@ -38,6 +42,10 @@ export const EnvironmentChecker = () => {
     } catch (error) {
       alert(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
+
+  const handleTestBuyFlow = () => {
+    setShowBuyFlowModal(true);
   };
 
   if (!config.isDevelopment) {
@@ -104,6 +112,17 @@ export const EnvironmentChecker = () => {
         <BalanceDebugger />
       </div>
 
+      {/* Buy Flow Test */}
+      <div className="border-t border-teal-blue/20 pt-4 mb-4">
+        <button
+          onClick={handleTestBuyFlow}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-teal-blue text-charcoal-black text-xs rounded hover:bg-teal-blue-600 transition-colors"
+        >
+          <ShoppingCart className="w-3 h-3" />
+          <span>Test Buy Flow</span>
+        </button>
+      </div>
+
       {/* Email Test */}
       <div className="border-t border-teal-blue/20 pt-4 space-y-2">
         <button
@@ -125,6 +144,13 @@ export const EnvironmentChecker = () => {
         {/* AI Chat test button removed for now */}
       </div>
     </div>
+
+    {/* Buy Flow Modal */}
+    <BuyNeyxtModal 
+      isOpen={showBuyFlowModal} 
+      onClose={() => setShowBuyFlowModal(false)} 
+    />
+    
     {/* AI Profiling modal removed for now */}
     </>
   );
