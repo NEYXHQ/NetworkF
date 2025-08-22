@@ -1,33 +1,18 @@
 # Environment Setup Summary
 
-## 🎯 Automatic Environment Switching
+## 🎯 Environment Files by Mode (Vite)
 
-The app now automatically switches between **development** and **production** environments:
+Vite loads env files by mode. Use generic key names in both files:
 
-### Development (localhost)
-- **Database**: Uses `VITE_SUPABASE_DEV_*` variables
-- **Network**: Polygon Amoy Testnet
-- **Web3Auth**: Sapphire Devnet
+- `.env.development` (used by `npm run dev`)
+- `.env.production` (used by `npm run build` / `npm run preview`)
 
-### Production (Vercel)
-- **Database**: Uses `VITE_SUPABASE_PROD_*` variables  
-- **Network**: Polygon Mainnet
-- **Web3Auth**: Sapphire Mainnet
+## 📋 Required Environment Variables (generic)
 
-## 📋 Required Environment Variables
-
-### Development (.env file):
 ```bash
-VITE_SUPABASE_DEV_URL=https://your-dev-project.supabase.co
-VITE_SUPABASE_DEV_ANON_KEY=your_dev_anon_key_here
-VITE_SUPABASE_DEV_PROJECT_ID=your_dev_project_id_here
-```
-
-### Production (Vercel):
-```bash
-VITE_SUPABASE_PROD_URL=https://your-prod-project.supabase.co
-VITE_SUPABASE_PROD_ANON_KEY=your_prod_anon_key_here
-VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PROJECT_ID=
 ```
 
 ## 🔧 Setup Steps
@@ -35,7 +20,7 @@ VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
 1. **Create 2 Supabase projects** (dev + prod)
 2. **Run `supabase-setup.sql`** in both projects
 3. **Run `fix-rls-policies.sql`** in both projects
-4. **Add environment variables** to `.env` and Vercel
+4. **Add environment variables** to `.env.development`, `.env.production`, and Vercel
 5. **Test both environments**
 
 ## 🐛 Debug Features
@@ -46,10 +31,6 @@ VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
 
 ## 🚀 Deployment
 
-The app will automatically:
-- Use **dev database** when running `npm run dev`
-- Use **prod database** when deployed to Vercel
-- Switch **networks** accordingly
-- Handle **Web3Auth environments** automatically
+Vite uses the correct env file automatically by mode. Provide appropriate values per environment in each file.
 
 No manual configuration needed! 🎉 

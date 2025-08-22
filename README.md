@@ -424,3 +424,63 @@ This project is licensed under the MIT License.
 ---
 
 **Built with ❤️ for the Web3 community**
+
+---
+
+## Environment Configuration (Updated)
+
+We now use generic env names with two files loaded by Vite based on mode:
+
+- `.env.development` for local dev (`npm run dev`)
+- `.env.production` for build/preview (`npm run build`, `npm run preview`)
+
+Put the same keys in both files; only values differ.
+
+Required frontend keys:
+
+```env
+VITE_WEB3AUTH_CLIENT_ID=
+VITE_APP_NAME=
+
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PROJECT_ID=
+
+VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=
+VITE_POLYGON_WETH_CONTRACT_ADDRESS=
+VITE_POLYGON_USDC_CONTRACT_ADDRESS=
+VITE_POLYGON_QUICKSWAP_FACTORY=
+VITE_POLYGON_QUICKSWAP_ROUTER=
+VITE_POLYGON_REF_POOL_ADDRESS=
+VITE_POLYGON_BICONOMY_PAYMASTER=
+VITE_POLYGON_ALLOWED_ROUTERS=0x...,0x...
+
+VITE_FEATURE_ENABLE_FIAT=false
+VITE_FEATURE_ENABLE_GAS_SPONSORSHIP=false
+VITE_FEATURE_ENABLE_CROSS_CHAIN=false
+
+VITE_BUY_FLOW_API_BASE_URL=/api
+```
+
+Server-only (Supabase secrets):
+
+```env
+ZEROX_API_KEY=
+TRANSAK_API_KEY=
+BICONOMY_API_KEY=
+BICONOMY_PAYMASTER_ID=
+RESEND_API_KEY=
+OPENAI_API_KEY=
+# Optional
+ONRAMP_WEBHOOK_SECRET=
+ALCHEMY_OR_RPC_URL_POLYGON=
+```
+
+Sync env files to Supabase:
+
+```bash
+npm run secrets:dev   # .env.development → dev project
+npm run secrets:prod  # .env.production → prod project
+```
+
+Note: legacy `VITE_*_DEV_*`, `VITE_*_PROD_*`, `VITE_POLYGON_TESTNET_*`, and `VITE_POLYGON_MAINNET_*` are deprecated.
