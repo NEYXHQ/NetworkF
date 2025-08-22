@@ -60,8 +60,8 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
     : import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER,
   
   ALLOWED_ROUTERS: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',')
-    : import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',')
+    ? (import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',') || [])
+    : (import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',') || [])
 };
 
 // Helper function to get native token address (POL)
@@ -102,4 +102,63 @@ export const getContractAddresses = (): ContractAddresses => {
 export const getPricingPolicy = (): PricingPolicy => {
   // Auto-selects testnet/mainnet policies based on environment
   return PRICING_POLICY;
+};
+
+// Comprehensive environment variable validation
+export const validateEnvironmentVariables = (): { isValid: boolean; missing: string[] } => {
+  const isDev = import.meta.env.DEV;
+  const missing: string[] = [];
+
+  // Required for all environments
+  if (!import.meta.env.VITE_WEB3AUTH_CLIENT_ID) missing.push('VITE_WEB3AUTH_CLIENT_ID');
+
+  if (isDev) {
+    // Development/Testnet required variables
+    if (!import.meta.env.VITE_SUPABASE_DEV_URL) missing.push('VITE_SUPABASE_DEV_URL');
+    if (!import.meta.env.VITE_SUPABASE_DEV_ANON_KEY) missing.push('VITE_SUPABASE_DEV_ANON_KEY');
+    if (!import.meta.env.VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS');
+    if (!import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS');
+    if (!import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS');
+  } else {
+    // Production/Mainnet required variables
+    if (!import.meta.env.VITE_SUPABASE_PROD_URL) missing.push('VITE_SUPABASE_PROD_URL');
+    if (!import.meta.env.VITE_SUPABASE_PROD_ANON_KEY) missing.push('VITE_SUPABASE_PROD_ANON_KEY');
+    if (!import.meta.env.VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS');
+    if (!import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS');
+    if (!import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS');
+  }
+
+  return {
+    isValid: missing.length === 0,
+    missing
+  };
+};
+
+// Helper to get all contract addresses with proper fallbacks
+export const getAllContractAddresses = () => {
+  return {
+    // Auto-switching addresses
+    neyxt: CONTRACT_ADDRESSES.NEYXT,
+    weth: CONTRACT_ADDRESSES.WETH,
+    usdc: CONTRACT_ADDRESSES.USDC,
+    quickswapFactory: CONTRACT_ADDRESSES.QUICKSWAP_FACTORY,
+    quickswapRouter: CONTRACT_ADDRESSES.QUICKSWAP_ROUTER,
+    refPoolAddress: CONTRACT_ADDRESSES.REF_POOL_ADDRESS,
+    biconomyPaymaster: CONTRACT_ADDRESSES.BICONOMY_PAYMASTER,
+    allowedRouters: CONTRACT_ADDRESSES.ALLOWED_ROUTERS,
+    // Native token (POL)
+    nativeToken: getNativeTokenAddress(),
+    // Environment info
+    environment: import.meta.env.DEV ? 'testnet' : 'mainnet',
+    chainId: import.meta.env.DEV ? '80002' : '137',
+  };
+};
+
+// Feature flags helper
+export const getFeatureFlags = () => {
+  return {
+    enableFiat: import.meta.env.VITE_FEATURE_ENABLE_FIAT === 'true',
+    enableGasSponsorship: import.meta.env.VITE_FEATURE_ENABLE_GAS_SPONSORSHIP === 'true',
+    enableCrossChain: import.meta.env.VITE_FEATURE_ENABLE_CROSS_CHAIN === 'true',
+  };
 };

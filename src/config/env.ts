@@ -21,7 +21,7 @@ interface Config {
     fallbackApiUrl: string;
     useSupabase: boolean;
   };
-  // TODO [M1.2] - Add flags/API base (FIAT, GAS, CROSS_CHAIN)
+  // Buy Flow configuration
   buyFlow: {
     // Feature flags
     enableFiat: boolean;
@@ -31,6 +31,16 @@ interface Config {
     apiBaseUrl: string;
     chainId: string;
     neyxtAddress: string;
+    // All contract addresses (auto-switching based on environment)
+    contracts: {
+      weth: string;
+      usdc: string;
+      quickswapFactory: string;
+      quickswapRouter: string;
+      refPoolAddress: string;
+      biconomyPaymaster: string;
+      allowedRouters: string[];
+    };
     // Provider API keys (stored in Supabase secrets)
     zeroXApiKey?: string; // Available in Edge Functions only
     // Note: Biconomy uses singleton contracts - identified by API key + paymaster ID
@@ -80,6 +90,30 @@ const config: Config = {
     apiBaseUrl: import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api',
     chainId: currentNetwork.chainId,
     neyxtAddress: currentNetwork.contracts.neyxt, // Auto-selects testnet/mainnet based on environment
+    // All contract addresses (auto-switching based on environment)
+    contracts: {
+      weth: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS || ''),
+      usdc: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS || ''),
+      quickswapFactory: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY || ''),
+      quickswapRouter: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER || ''),
+      refPoolAddress: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_REF_POOL_ADDRESS || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_REF_POOL_ADDRESS || ''),
+      biconomyPaymaster: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER || '')
+        : (import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER || ''),
+      allowedRouters: import.meta.env.DEV
+        ? (import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',') || [])
+        : (import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',') || []),
+    },
   },
 };
 
