@@ -33,35 +33,19 @@ export interface PricingPolicy {
 
 // Auto-select contract addresses based on environment (dev = testnet, prod = mainnet)
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  NEYXT: import.meta.env.DEV 
-    ? import.meta.env.VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS,
-  WETH: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS,
-  USDC: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS,
+  NEYXT: import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS as string,
+  WETH: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS as string,
+  USDC: import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS as string,
   
-  QUICKSWAP_FACTORY: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY
-    : import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY,
-  QUICKSWAP_ROUTER: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER
-    : import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER,
-  REF_POOL_ADDRESS: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_REF_POOL_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_REF_POOL_ADDRESS,
+  QUICKSWAP_FACTORY: import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY as string,
+  QUICKSWAP_ROUTER: import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER as string,
+  REF_POOL_ADDRESS: import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS as string,
   
   // Biconomy uses singleton paymaster contracts per chain
   // Your instance is identified by API key + paymaster ID, not contract address
-  BICONOMY_PAYMASTER: import.meta.env.DEV
-    ? import.meta.env.VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER
-    : import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER,
+  BICONOMY_PAYMASTER: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER as string,
   
-  ALLOWED_ROUTERS: import.meta.env.DEV
-    ? (import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',') || [])
-    : (import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',') || [])
+  ALLOWED_ROUTERS: (import.meta.env.VITE_POLYGON_ALLOWED_ROUTERS as string | undefined)?.split(',') || []
 };
 
 // Helper function to get native token address (POL)
@@ -106,27 +90,24 @@ export const getPricingPolicy = (): PricingPolicy => {
 
 // Comprehensive environment variable validation
 export const validateEnvironmentVariables = (): { isValid: boolean; missing: string[] } => {
-  const isDev = import.meta.env.DEV;
   const missing: string[] = [];
 
   // Required for all environments
   if (!import.meta.env.VITE_WEB3AUTH_CLIENT_ID) missing.push('VITE_WEB3AUTH_CLIENT_ID');
 
-  if (isDev) {
-    // Development/Testnet required variables
-    if (!import.meta.env.VITE_SUPABASE_DEV_URL) missing.push('VITE_SUPABASE_DEV_URL');
-    if (!import.meta.env.VITE_SUPABASE_DEV_ANON_KEY) missing.push('VITE_SUPABASE_DEV_ANON_KEY');
-    if (!import.meta.env.VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS');
-    if (!import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS');
-    if (!import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS');
-  } else {
-    // Production/Mainnet required variables
-    if (!import.meta.env.VITE_SUPABASE_PROD_URL) missing.push('VITE_SUPABASE_PROD_URL');
-    if (!import.meta.env.VITE_SUPABASE_PROD_ANON_KEY) missing.push('VITE_SUPABASE_PROD_ANON_KEY');
-    if (!import.meta.env.VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS');
-    if (!import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS');
-    if (!import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS');
-  }
+  // Supabase: generic
+  if (!import.meta.env.VITE_SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
+  if (!import.meta.env.VITE_SUPABASE_ANON_KEY) missing.push('VITE_SUPABASE_ANON_KEY');
+  if (!import.meta.env.VITE_SUPABASE_PROJECT_ID) missing.push('VITE_SUPABASE_PROJECT_ID');
+
+  // Contracts: generic
+  if (!import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_WETH_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_USDC_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY) missing.push('VITE_POLYGON_QUICKSWAP_FACTORY');
+  if (!import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER) missing.push('VITE_POLYGON_QUICKSWAP_ROUTER');
+  if (!import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS) missing.push('VITE_POLYGON_REF_POOL_ADDRESS');
+  if (!import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER) missing.push('VITE_POLYGON_BICONOMY_PAYMASTER');
 
   return {
     isValid: missing.length === 0,

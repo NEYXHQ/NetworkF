@@ -136,10 +136,6 @@ src/
    # Note: All contract addresses automatically selected from VITE_POLYGON_*_*_ADDRESS variables
    # ⚠️  IMPORTANT: All contract address variables are required - no fallbacks provided
    
-   # Legacy/Unused Variables (can be removed)
-   # VITE_API_URL=http://localhost:3001/api
-   # VITE_LINKEDIN_CLIENT_ID=your_linkedin_client_id_here
-   # VITE_RESEND_API_KEY=your_resend_api_key_here
    ```
 
 4. **Start the development server:**
@@ -373,12 +369,6 @@ These variables are stored as secrets in Supabase and are NOT exposed to the fro
 - `ALCHEMY_OR_RPC_URL_POLYGON` - RPC endpoint for Polygon blockchain
 - `REF_POOL_ADDRESS` - WETH/NEYXT reference pool address
 - `ALLOWED_ROUTERS` - Comma-separated list of allowed DEX router addresses
-
-### Legacy/Unused Variables
-These variables exist in the codebase but are not currently used:
-- `VITE_API_URL` - Legacy API URL (unused)
-- `VITE_LINKEDIN_CLIENT_ID` - LinkedIn OAuth (unused)
-- `VITE_RESEND_API_KEY` - Email service (unused, moved to Supabase secrets)
 
 ### Environment Detection
 The app automatically detects the environment:
