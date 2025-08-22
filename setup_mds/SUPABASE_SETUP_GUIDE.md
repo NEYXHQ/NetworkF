@@ -44,36 +44,38 @@ The app automatically switches between them based on the environment.
 
 ## 📝 Step 3: Update Environment Variables
 
-### Create/Update `.env` file:
+Create two files at repo root and use generic key names:
+
+- `.env.development` (dev values)
+- `.env.production` (prod values)
 
 ```bash
-# Web3Auth Configuration
-VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
-
-# App Configuration
+# Web3Auth
+VITE_WEB3AUTH_CLIENT_ID=
 VITE_APP_NAME=Wfounders
 
-# Development Supabase (localhost)
-VITE_SUPABASE_DEV_URL=https://your-dev-project.supabase.co
-VITE_SUPABASE_DEV_ANON_KEY=your_dev_anon_key_here
-VITE_SUPABASE_DEV_PROJECT_ID=your_dev_project_id_here
+# Supabase (frontend)
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PROJECT_ID=
 
-# Production Supabase (Vercel)
-VITE_SUPABASE_PROD_URL=https://your-prod-project.supabase.co
-VITE_SUPABASE_PROD_ANON_KEY=your_prod_anon_key_here
-VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
-
-# NEYXT Token Contract Addresses
-VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
-VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
+# Contracts & DEX
+VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=
+VITE_POLYGON_WETH_CONTRACT_ADDRESS=
+VITE_POLYGON_USDC_CONTRACT_ADDRESS=
+VITE_POLYGON_QUICKSWAP_FACTORY=
+VITE_POLYGON_QUICKSWAP_ROUTER=
+VITE_POLYGON_REF_POOL_ADDRESS=
+VITE_POLYGON_BICONOMY_PAYMASTER=
+VITE_POLYGON_ALLOWED_ROUTERS=0x...,0x...
 ```
 
 ### For Vercel Deployment:
 
-Add these environment variables in your Vercel project settings:
-- `VITE_SUPABASE_PROD_URL`
-- `VITE_SUPABASE_PROD_ANON_KEY`
-- `VITE_SUPABASE_PROD_PROJECT_ID`
+Add these environment variables in your Vercel project settings (generic names):
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
 
 ## 🗄️ Step 4: Set Up Database Schema
 
@@ -165,15 +167,12 @@ npm run preview
 ### Debug Commands:
 
 ```bash
-# Check environment variables
-echo $VITE_SUPABASE_DEV_URL
-echo $VITE_SUPABASE_PROD_URL
-
 # Test build
 npm run build
 
-# Check which database is being used
-# Look in browser console for database URL
+# Sync secrets to Supabase
+npm run secrets:dev
+npm run secrets:prod
 ```
 
 ## 🚀 Deployment Checklist
@@ -200,25 +199,6 @@ npm run build
 - Track user sessions
 - Check for errors
 
-## 🔄 Environment Switching Logic
+## 🔄 Environment Selection (Vite)
 
-The app automatically detects the environment:
-
-```typescript
-// Development (localhost)
-if (import.meta.env.DEV) {
-  // Uses VITE_SUPABASE_DEV_* variables
-  // Connects to development database
-}
-
-// Production (Vercel)
-else {
-  // Uses VITE_SUPABASE_PROD_* variables
-  // Connects to production database
-}
-```
-
-This ensures:
-- **Development**: Uses dev database, testnet network
-- **Production**: Uses prod database, mainnet network
-- **Automatic switching**: No manual configuration needed 
+Vite selects `.env.development` for dev and `.env.production` for build/preview. Provide environment-specific values in each file.
