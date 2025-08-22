@@ -319,46 +319,30 @@ User Action → React Component → Hook → Service → External API
 - **Optimized**: Production builds, no debug tools
 
 ### Auto-Switching Logic
-All configuration automatically switches between DEV and PROD environments based on `import.meta.env.DEV`:
+Vite loads environment files by mode and we use generic key names in both files. No DEV/PROD suffixes in variable names anymore.
+
+- `npm run dev` → Vite loads `.env.development`
+- `npm run build`/`npm run preview` → Vite loads `.env.production`
+
+Config reads the same keys in both environments:
 
 ```typescript
-// Environment detection in config/env.ts
+// config/env.ts (simplified)
 const config = {
   isDevelopment: import.meta.env.DEV,
   supabase: {
-    url: import.meta.env.DEV 
-      ? import.meta.env.VITE_SUPABASE_DEV_URL
-      : import.meta.env.VITE_SUPABASE_PROD_URL,
-    // ... other configs
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    projectId: import.meta.env.VITE_SUPABASE_PROJECT_ID,
   },
   buyFlow: {
     enableFiat: import.meta.env.VITE_FEATURE_ENABLE_FIAT === 'true',
     enableGasSponsorship: import.meta.env.VITE_FEATURE_ENABLE_GAS_SPONSORSHIP === 'true',
-    // ... buy flow configs
   }
-};
-
-// Network auto-selection in config/networks.ts
-const getCurrentNetwork = (): NetworkConfig => {
-  const isDev = import.meta.env.DEV;
-  return isDev ? POLYGON_AMOY_TESTNET : POLYGON_MAINNET;
-};
-
-// Contract addresses auto-selection in config/contracts.ts
-export const CONTRACT_ADDRESSES: ContractAddresses = {
-  NEYXT: import.meta.env.DEV 
-    ? import.meta.env.VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS
-    : import.meta.env.VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS,
-  // ... all other contracts follow same pattern
 };
 ```
 
-**Key Auto-Switching Components:**
-- **Networks**: Amoy testnet (DEV) ↔ Polygon mainnet (PROD)
-- **Supabase**: Dev project (DEV) ↔ Prod project (PROD)  
-- **Contracts**: Testnet addresses (DEV) ↔ Mainnet addresses (PROD)
-- **Web3Auth**: Sapphire devnet (DEV) ↔ Sapphire mainnet (PROD)
-- **Feature Flags**: Can be toggled per environment independently
+Contracts and addresses are also generic and come from the env file currently loaded by Vite. Networks still switch UI/network metadata via `import.meta.env.DEV`, while addresses themselves come from the env file values.
 
 ## 🗄️ Database Schema
 
@@ -452,48 +436,50 @@ CREATE TABLE buy_flow_sessions (
 - **GitHub Pages**: Free hosting option
 
 ### Environment Variables
-All variables automatically switch between DEV and PROD environments using the logic in `src/config/`:
+Use generic names in both env files. The values differ per file.
 
 ```bash
-# Required for all environments
-VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id
+# Shared (frontend) — placed in .env.development and .env.production
+VITE_WEB3AUTH_CLIENT_ID=
+VITE_APP_NAME=
 
-# Development environment (auto-selected when import.meta.env.DEV = true)
-VITE_SUPABASE_DEV_URL=https://dev-project.supabase.co
-VITE_SUPABASE_DEV_ANON_KEY=dev_anon_key
-VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=testnet_contract
-VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS=testnet_weth
-VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS=testnet_usdc
-VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY=testnet_factory
-VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER=testnet_router
-VITE_POLYGON_TESTNET_REF_POOL_ADDRESS=testnet_pool
-VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER=testnet_paymaster
-VITE_POLYGON_TESTNET_ALLOWED_ROUTERS=0x_router,quickswap_router
+# Supabase (frontend)
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PROJECT_ID=
 
-# Production environment (auto-selected when import.meta.env.DEV = false)
-VITE_SUPABASE_PROD_URL=https://prod-project.supabase.co
-VITE_SUPABASE_PROD_ANON_KEY=prod_anon_key
-VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=mainnet_contract
-VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS=mainnet_weth
-VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS=mainnet_usdc
-VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY=mainnet_factory
-VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER=mainnet_router
-VITE_POLYGON_MAINNET_REF_POOL_ADDRESS=mainnet_pool
-VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER=mainnet_paymaster
-VITE_POLYGON_MAINNET_ALLOWED_ROUTERS=0x_router,quickswap_router
-
-# Buy Flow Feature Flags (can be toggled per environment)
-VITE_FEATURE_ENABLE_FIAT=true
-VITE_FEATURE_ENABLE_GAS_SPONSORSHIP=true
+# Feature flags
+VITE_FEATURE_ENABLE_FIAT=false
+VITE_FEATURE_ENABLE_GAS_SPONSORSHIP=false
 VITE_FEATURE_ENABLE_CROSS_CHAIN=false
 
-# Server-side (Supabase secrets) - stored in Supabase dashboard
-ZEROX_API_KEY=your_0x_api_key
-TRANSAK_API_KEY=your_transak_api_key
-BICONOMY_API_KEY=your_biconomy_api_key
-BICONOMY_PAYMASTER_ID=your_paymaster_id
-REF_POOL_ADDRESS=quickswap_weth_neyxt_pool
-ALLOWED_ROUTERS=0x_router,quickswap_router
+# Buy Flow (contracts & DEX)
+VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=
+VITE_POLYGON_WETH_CONTRACT_ADDRESS=
+VITE_POLYGON_USDC_CONTRACT_ADDRESS=
+VITE_POLYGON_QUICKSWAP_FACTORY=
+VITE_POLYGON_QUICKSWAP_ROUTER=
+VITE_POLYGON_REF_POOL_ADDRESS=
+VITE_POLYGON_BICONOMY_PAYMASTER=
+VITE_POLYGON_ALLOWED_ROUTERS=0x...,0x...
+
+# Server-only (Supabase secrets)
+ZEROX_API_KEY=
+TRANSAK_API_KEY=
+BICONOMY_API_KEY=
+BICONOMY_PAYMASTER_ID=
+RESEND_API_KEY=
+OPENAI_API_KEY=
+# Optional
+ONRAMP_WEBHOOK_SECRET=
+ALCHEMY_OR_RPC_URL_POLYGON=
+```
+
+Sync env files to Supabase secrets per project:
+
+```bash
+npm run secrets:dev   # uses .env.development → dev project
+npm run secrets:prod  # uses .env.production → prod project
 ```
 
 ## 🧪 Development Features
