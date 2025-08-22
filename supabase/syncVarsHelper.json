@@ -1,0 +1,6 @@
+{
+    "scripts": {
+      "secrets:dev": "supabase secrets set --project-ref kxepoivhqnurxmkgiojo --env-file .env.development",
+      "secrets:prod": "supabase secrets set --project-ref mnmlmectnlcrbnlhxyrp --env-file .env.production"
+    }
+  }

@@ -1,5 +1,8 @@
 import { currentNetwork, type NetworkConfig } from './networks';
 
+// Resolve Supabase URL once from generic key
+const resolvedSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || '';
+
 interface Config {
   web3AuthClientId: string;
   appName: string;
@@ -56,29 +59,18 @@ const config: Config = {
   chainId: currentNetwork.chainId, // Legacy compatibility
   neyxtContractAddress: currentNetwork.contracts.neyxt,
   web3AuthNetwork: currentNetwork.web3AuthNetwork,
-  // Auto-select Supabase environment
+  // Supabase environment
   supabase: {
-    url: import.meta.env.DEV 
-      ? (import.meta.env.VITE_SUPABASE_DEV_URL || '')
-      : (import.meta.env.VITE_SUPABASE_PROD_URL || ''),
-    anonKey: import.meta.env.DEV
-      ? (import.meta.env.VITE_SUPABASE_DEV_ANON_KEY || '')
-      : (import.meta.env.VITE_SUPABASE_PROD_ANON_KEY || ''),
-    projectId: import.meta.env.DEV
-      ? (import.meta.env.VITE_SUPABASE_DEV_PROJECT_ID || '')
-      : (import.meta.env.VITE_SUPABASE_PROD_PROJECT_ID || ''),
+    url: import.meta.env.VITE_SUPABASE_URL || '',
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    projectId: import.meta.env.VITE_SUPABASE_PROJECT_ID || '',
   },
   // AI service configuration - auto-selects based on environment
   ai: {
-    supabaseEdgeUrl: import.meta.env.DEV
-      ? `${import.meta.env.VITE_SUPABASE_DEV_URL || ''}/functions/v1/openai-chat`
-      : `${import.meta.env.VITE_SUPABASE_PROD_URL || ''}/functions/v1/openai-chat`,
+    // Build from resolved Supabase URL so generic keys work
+    supabaseEdgeUrl: `${resolvedSupabaseUrl}/functions/v1/openai-chat`,
     fallbackApiUrl: '/api/chat',
-    useSupabase: Boolean(
-      import.meta.env.DEV 
-        ? (import.meta.env.VITE_SUPABASE_DEV_URL && import.meta.env.VITE_SUPABASE_DEV_ANON_KEY)
-        : (import.meta.env.VITE_SUPABASE_PROD_URL && import.meta.env.VITE_SUPABASE_PROD_ANON_KEY)
-    ),
+    useSupabase: Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY),
   },
   // Buy flow configuration
   buyFlow: {
@@ -90,29 +82,15 @@ const config: Config = {
     apiBaseUrl: import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api',
     chainId: currentNetwork.chainId,
     neyxtAddress: currentNetwork.contracts.neyxt, // Auto-selects testnet/mainnet based on environment
-    // All contract addresses (auto-switching based on environment)
+    // All contract addresses (environment-specific via env files)
     contracts: {
-      weth: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS || ''),
-      usdc: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS || ''),
-      quickswapFactory: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_FACTORY || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY || ''),
-      quickswapRouter: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER || ''),
-      refPoolAddress: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_REF_POOL_ADDRESS || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_REF_POOL_ADDRESS || ''),
-      biconomyPaymaster: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER || '')
-        : (import.meta.env.VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER || ''),
-      allowedRouters: import.meta.env.DEV
-        ? (import.meta.env.VITE_POLYGON_TESTNET_ALLOWED_ROUTERS?.split(',') || [])
-        : (import.meta.env.VITE_POLYGON_MAINNET_ALLOWED_ROUTERS?.split(',') || []),
+      weth: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS || '',
+      usdc: import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS || '',
+      quickswapFactory: import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY || '',
+      quickswapRouter: import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER || '',
+      refPoolAddress: import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS || '',
+      biconomyPaymaster: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER || '',
+      allowedRouters: import.meta.env.VITE_POLYGON_ALLOWED_ROUTERS?.split(',') || [],
     },
   },
 };

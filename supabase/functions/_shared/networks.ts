@@ -1,5 +1,11 @@
 // Network configuration for Edge Functions (Deno)
 // Mirrors the configuration from src/config/networks.ts but in a Deno-compatible format
+// Minimal Deno typing for linting in Node tooling
+declare const Deno: {
+  env: {
+    get: (key: string) => string | undefined;
+  };
+};
 
 interface NetworkConfig {
   chainId: string;
@@ -59,7 +65,7 @@ const POLYGON_AMOY_TESTNET: NetworkConfig = {
     'https://polygon-amoy.blockscout.com',
   ],
   contracts: {
-    neyxt: Deno.env.get('VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS') || '',
+    neyxt: Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   faucets: [
@@ -102,7 +108,7 @@ const POLYGON_MAINNET: NetworkConfig = {
     'https://polygon.blockscout.com',
   ],
   contracts: {
-    neyxt: Deno.env.get('VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS') || '',
+    neyxt: Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
     ensRegistry: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
     ensUniversalResolver: '0xE4395e13d3c8f7F8895D4c3DA9a7e3c89e50AB95',
@@ -121,8 +127,9 @@ const POLYGON_MAINNET: NetworkConfig = {
 export function getCurrentNetwork(): NetworkConfig {
   // In Edge Functions, we need to determine environment differently
   // We can use the presence of testnet vs mainnet contract addresses
-  const hasTestnetNeyxt = Boolean(Deno.env.get('VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS'));
-  const hasMainnetNeyxt = Boolean(Deno.env.get('VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS'));
+  const hasGeneric = Boolean(Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS'));
+  const hasTestnetNeyxt = hasGeneric;
+  const hasMainnetNeyxt = hasGeneric;
   
   // If both are present, prefer testnet for development
   // If only one is present, use that one
@@ -143,17 +150,11 @@ export function getContractAddresses() {
   const network = getCurrentNetwork();
   const isTestnet = network.features.isTestnet;
   
-  const wethAddress = isTestnet 
-    ? Deno.env.get('VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS')
-    : Deno.env.get('VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS');
+  const wethAddress = Deno.env.get('VITE_POLYGON_WETH_CONTRACT_ADDRESS');
     
-  const usdcAddress = isTestnet
-    ? Deno.env.get('VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS')
-    : Deno.env.get('VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS');
+  const usdcAddress = Deno.env.get('VITE_POLYGON_USDC_CONTRACT_ADDRESS');
     
-  const refPoolAddress = isTestnet
-    ? Deno.env.get('VITE_POLYGON_TESTNET_REF_POOL_ADDRESS')
-    : Deno.env.get('VITE_POLYGON_MAINNET_REF_POOL_ADDRESS');
+  const refPoolAddress = Deno.env.get('VITE_POLYGON_REF_POOL_ADDRESS');
 
   return {
     neyxt: network.contracts.neyxt,
