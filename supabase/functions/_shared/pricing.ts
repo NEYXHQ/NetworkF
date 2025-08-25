@@ -39,6 +39,10 @@ interface PriceData {
   token1: TokenInfo;
   blockTimestamp: number;
   isNeyxtToken0: boolean; // True if NEYXT is token0, false if token1
+  liquidityWeth: number; // WETH liquidity in human readable format
+  liquidityNeyxt: number; // NEYXT liquidity in human readable format
+  priceImpact1Weth: number; // Price impact for 1 WETH trade
+  priceImpact1Neyxt: number; // Price impact for 1 NEYXT trade
 }
 
 interface PricingPolicy {
@@ -75,22 +79,55 @@ function getRpcProvider(): ethers.JsonRpcProvider {
 }
 
 /**
+ * Validate contract addresses before attempting to fetch data
+ */
+function validateContractAddresses(): void {
+  const contracts = getContractAddresses();
+  
+  if (!contracts.refPool) {
+    throw new Error('REF_POOL_ADDRESS not configured in environment variables');
+  }
+  
+  if (!contracts.neyxt) {
+    throw new Error('NEYXT contract address not configured in environment variables');
+  }
+  
+  if (!contracts.weth) {
+    throw new Error('WETH contract address not configured in environment variables');
+  }
+  
+  // Validate address format
+  if (!ethers.isAddress(contracts.refPool)) {
+    throw new Error(`Invalid REF_POOL_ADDRESS format: ${contracts.refPool}`);
+  }
+  
+  if (!ethers.isAddress(contracts.neyxt)) {
+    throw new Error(`Invalid NEYXT address format: ${contracts.neyxt}`);
+  }
+  
+  if (!ethers.isAddress(contracts.weth)) {
+    throw new Error(`Invalid WETH address format: ${contracts.weth}`);
+  }
+}
+
+/**
  * Fetch current pool reserves and metadata
  */
 export async function fetchPoolData(): Promise<PriceData> {
+  // Validate addresses first
+  validateContractAddresses();
+  
   const provider = getRpcProvider();
   const contracts = getContractAddresses();
   const { refPool: refPoolAddress, neyxt: neyxtAddress, weth: wethAddress } = contracts;
 
-  if (!refPoolAddress || !neyxtAddress || !wethAddress) {
-    throw new Error('Missing required contract addresses in environment variables');
-  }
-
   try {
+    console.log(`Fetching pool data from ${refPoolAddress} on ${getCurrentNetwork().displayName}`);
+    
     // Create contract instances
     const pairContract = new ethers.Contract(refPoolAddress, PAIR_ABI, provider);
     
-    // Fetch pool data
+    // Fetch pool data with timeout
     const [reserves, token0Address, token1Address] = await Promise.all([
       pairContract.getReserves(),
       pairContract.token0(),
@@ -105,7 +142,7 @@ export async function fetchPoolData(): Promise<PriceData> {
 
     // Validate this is actually a NEYXT/WETH pair
     if (!((isNeyxtToken0 && isWethToken1) || (isNeyxtToken1 && isWethToken0))) {
-      throw new Error(`Pool at ${refPoolAddress} is not a NEYXT/WETH pair`);
+      throw new Error(`Pool at ${refPoolAddress} is not a NEYXT/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
     }
 
     // Get token metadata
@@ -137,23 +174,29 @@ export async function fetchPoolData(): Promise<PriceData> {
     const blockTimestampLast = reserves[2];
 
     let spotPrice: number;
+    let liquidityWeth: number;
+    let liquidityNeyxt: number;
+    
     if (isNeyxtToken0) {
       // NEYXT is token0, WETH is token1
-      // Price = reserve1 / reserve0 (WETH per NEYXT)
-      // We want NEYXT per WETH, so invert: reserve0 / reserve1
+      // Price = reserve0 / reserve1 (NEYXT per WETH)
       const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
       const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
       spotPrice = token0Formatted / token1Formatted;
+      liquidityNeyxt = token0Formatted;
+      liquidityWeth = token1Formatted;
     } else {
       // WETH is token0, NEYXT is token1
-      // Price = reserve0 / reserve1 (WETH per NEYXT)
-      // We want NEYXT per WETH, so: reserve1 / reserve0
+      // Price = reserve1 / reserve0 (NEYXT per WETH)
       const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
       const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
       spotPrice = token1Formatted / token0Formatted;
+      liquidityWeth = token0Formatted;
+      liquidityNeyxt = token1Formatted;
     }
 
-    return {
+    // Create temporary pool data for price impact calculation
+    const tempPoolData: PriceData = {
       spotPrice,
       reserve0: reserve0.toString(),
       reserve1: reserve1.toString(),
@@ -161,9 +204,93 @@ export async function fetchPoolData(): Promise<PriceData> {
       token1,
       blockTimestamp: blockTimestampLast,
       isNeyxtToken0,
+      liquidityWeth: 0, // Will be set below
+      liquidityNeyxt: 0, // Will be set below
+      priceImpact1Weth: 0, // Will be set below
+      priceImpact1Neyxt: 0, // Will be set below
     };
+
+    // Calculate price impact for 1 WETH and 1 NEYXT trades
+    const priceImpact1Weth = calculatePriceImpactForAmount(tempPoolData, '1', true);
+    const priceImpact1Neyxt = calculatePriceImpactForAmount(tempPoolData, '1', false);
+
+    const poolData: PriceData = {
+      spotPrice,
+      reserve0: reserve0.toString(),
+      reserve1: reserve1.toString(),
+      token0,
+      token1,
+      blockTimestamp: blockTimestampLast,
+      isNeyxtToken0,
+      liquidityWeth,
+      liquidityNeyxt,
+      priceImpact1Weth,
+      priceImpact1Neyxt,
+    };
+
+    console.log(`Pool data fetched successfully: ${spotPrice.toFixed(6)} NEYXT per WETH, ${liquidityWeth.toFixed(4)} WETH liquidity`);
+    
+    return poolData;
   } catch (error) {
-    throw new Error(`Failed to fetch pool data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Failed to fetch pool data: ${errorMessage}`);
+    throw new Error(`Failed to fetch pool data: ${errorMessage}`);
+  }
+}
+
+/**
+ * Calculate price impact for a specific amount
+ */
+function calculatePriceImpactForAmount(
+  poolData: PriceData,
+  amountIn: string,
+  isWethIn: boolean
+): number {
+  try {
+    const amountInBigInt = ethers.parseEther(amountIn);
+    
+    // Determine which reserves to use
+    let reserveIn: bigint, reserveOut: bigint;
+    if (isWethIn) {
+      if (poolData.isNeyxtToken0) {
+        // WETH in, NEYXT out
+        reserveIn = BigInt(poolData.reserve1); // WETH reserve
+        reserveOut = BigInt(poolData.reserve0); // NEYXT reserve
+      } else {
+        // WETH in, NEYXT out
+        reserveIn = BigInt(poolData.reserve0); // WETH reserve
+        reserveOut = BigInt(poolData.reserve1); // NEYXT reserve
+      }
+    } else {
+      if (poolData.isNeyxtToken0) {
+        // NEYXT in, WETH out
+        reserveIn = BigInt(poolData.reserve0); // NEYXT reserve
+        reserveOut = BigInt(poolData.reserve1); // WETH reserve
+      } else {
+        // NEYXT in, WETH out
+        reserveIn = BigInt(poolData.reserve1); // NEYXT reserve
+        reserveOut = BigInt(poolData.reserve0); // WETH reserve
+      }
+    }
+
+    // Calculate output using constant product formula (with 0.3% fee)
+    // amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
+    const amountInWithFee = amountInBigInt * 997n;
+    const numerator = amountInWithFee * reserveOut;
+    const denominator = reserveIn * 1000n + amountInWithFee;
+    const amountOut = numerator / denominator;
+
+    // Calculate price impact
+    // Price impact = 1 - (amountOut / (amountIn * spotPrice))
+    const expectedOut = isWethIn 
+      ? amountInBigInt * BigInt(Math.floor(poolData.spotPrice * 1e18)) / BigInt(1e18)
+      : amountInBigInt / BigInt(Math.floor(poolData.spotPrice * 1e18)) * BigInt(1e18);
+
+    const priceImpact = 1 - Number(amountOut) / Number(expectedOut);
+    return Math.max(0, priceImpact); // Ensure non-negative
+  } catch (error) {
+    console.error('Error calculating price impact:', error);
+    return 0; // Return 0 impact on error
   }
 }
 
@@ -175,47 +302,7 @@ export function calculatePriceImpact(
   amountIn: string,
   isWethIn: boolean
 ): number {
-  const amountInBigInt = ethers.parseEther(amountIn);
-  
-  // Determine which reserves to use
-  let reserveIn: bigint, reserveOut: bigint;
-  if (isWethIn) {
-    if (poolData.isNeyxtToken0) {
-      // WETH in, NEYXT out
-      reserveIn = BigInt(poolData.reserve1); // WETH reserve
-      reserveOut = BigInt(poolData.reserve0); // NEYXT reserve
-    } else {
-      // WETH in, NEYXT out
-      reserveIn = BigInt(poolData.reserve0); // WETH reserve
-      reserveOut = BigInt(poolData.reserve1); // NEYXT reserve
-    }
-  } else {
-    if (poolData.isNeyxtToken0) {
-      // NEYXT in, WETH out
-      reserveIn = BigInt(poolData.reserve0); // NEYXT reserve
-      reserveOut = BigInt(poolData.reserve1); // WETH reserve
-    } else {
-      // NEYXT in, WETH out
-      reserveIn = BigInt(poolData.reserve1); // NEYXT reserve
-      reserveOut = BigInt(poolData.reserve0); // WETH reserve
-    }
-  }
-
-  // Calculate output using constant product formula (with 0.3% fee)
-  // amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
-  const amountInWithFee = amountInBigInt * 997n;
-  const numerator = amountInWithFee * reserveOut;
-  const denominator = reserveIn * 1000n + amountInWithFee;
-  const amountOut = numerator / denominator;
-
-  // Calculate price impact
-  // Price impact = 1 - (amountOut / (amountIn * spotPrice))
-  const expectedOut = isWethIn 
-    ? amountInBigInt * BigInt(Math.floor(poolData.spotPrice * 1e18)) / BigInt(1e18)
-    : amountInBigInt / BigInt(Math.floor(poolData.spotPrice * 1e18)) * BigInt(1e18);
-
-  const priceImpact = 1 - Number(amountOut) / Number(expectedOut);
-  return Math.max(0, priceImpact); // Ensure non-negative
+  return calculatePriceImpactForAmount(poolData, amountIn, isWethIn);
 }
 
 /**
@@ -259,7 +346,13 @@ export function validateQuote(
       errors.push(`Trade size ${tradeNotional.toFixed(4)} WETH exceeds maximum ${maxTradeNotional} WETH`);
     }
 
-    // 4. Check minimum gas coverage (will be validated later with actual gas estimates)
+    // 4. Check liquidity constraints
+    const liquidityCheck = isWethIn ? poolData.liquidityWeth : poolData.liquidityNeyxt;
+    if (parseFloat(amountIn) > liquidityCheck * 0.1) { // Max 10% of liquidity
+      warnings.push(`Trade size ${parseFloat(amountIn).toFixed(4)} represents more than 10% of available liquidity`);
+    }
+
+    // 5. Check minimum gas coverage (will be validated later with actual gas estimates)
     // This is a placeholder - actual validation happens in the quote endpoint
 
     return {
@@ -303,4 +396,29 @@ export function formatPrice(price: number, decimals: number = 6): string {
  */
 export function bpsToPercent(bps: number): number {
   return bps / 100;
+}
+
+/**
+ * Get pool health metrics
+ */
+export function getPoolHealthMetrics(poolData: PriceData): {
+  liquidityScore: number; // 0-100
+  priceStability: number; // 0-100
+  overallHealth: number; // 0-100
+} {
+  // Liquidity score based on total value locked
+  const totalValueWeth = poolData.liquidityWeth + (poolData.liquidityNeyxt / poolData.spotPrice);
+  const liquidityScore = Math.min(100, (totalValueWeth / 100) * 100); // 100 WETH = 100% score
+  
+  // Price stability (placeholder - would need historical data for real calculation)
+  const priceStability = 85; // Assume stable for now
+  
+  // Overall health is average of scores
+  const overallHealth = (liquidityScore + priceStability) / 2;
+  
+  return {
+    liquidityScore: Math.round(liquidityScore),
+    priceStability: Math.round(priceStability),
+    overallHealth: Math.round(overallHealth),
+  };
 }

@@ -166,7 +166,7 @@ export const TokenBalance = () => {
             </div>
             <div>
               <p className="font-medium text-gray-900">NEYXT</p>
-              <p className="text-sm text-gray-500">Custom Token</p>
+              <p className="text-sm text-gray-500">Founders Token</p>
             </div>
           </div>
           <div className="text-right">
