@@ -194,6 +194,94 @@ export const EnvironmentChecker = () => {
     }
   };
 
+  const handleTestQuickSwapQuote = async () => {
+    try {
+      // Test the QuickSwap quote endpoint
+      const testRequest = {
+        payAsset: 'USDC' as const,
+        payChain: 'polygon' as const,
+        amountIn: '100', // 100 USDC
+        receiveAsset: 'NEYXT' as const,
+        receiveChain: 'polygon' as const,
+        userAddress: '0x1234567890123456789012345678901234567890', // Test address
+        slippagePercentage: 1.0, // 1% slippage
+      };
+
+      console.log('Testing QuickSwap quote with:', testRequest);
+      console.log('Config values:', {
+        apiBaseUrl: config.buyFlow.apiBaseUrl,
+        supabaseUrl: config.supabase.url,
+        resolvedSupabaseUrl: config.supabase.url,
+      });
+
+      // Call the quote endpoint directly
+      const apiUrl = `${config.buyFlow.apiBaseUrl}/quote?${new URLSearchParams({
+        payAsset: testRequest.payAsset,
+        amountIn: testRequest.amountIn,
+        receiveAsset: testRequest.receiveAsset,
+        userAddress: testRequest.userAddress,
+        slippagePercentage: testRequest.slippagePercentage.toString(),
+      })}`;
+
+      console.log('Calling API URL:', apiUrl);
+
+      // Include Supabase anon key for authentication
+      const response = await fetch(apiUrl, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZXBvaXZocW51cnhta2dpb2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjEwMzYsImV4cCI6MjA2OTQzNzAzNn0.f_GUBRAHJypHPXXOD8JAW7okAuhPUpQDvfFl9_JqK4Q',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZXBvaXZocW51cnhta2dpb2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjEwMzYsImV4cCI6MjA2OTQzNzAzNn0.f_GUBRAHJypHPXXOD8JAW7okAuhPUpQDvfFl9_JqK4Q`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const quoteData = await response.json();
+      
+      const quoteInfo = `🧪 QUICKSWAP QUOTE TEST - SUCCESS!
+
+📊 QUOTE DATA
+=====================
+🆔 Route ID: ${quoteData.routeId}
+💰 Amount Out: ${quoteData.amountOutEst} NEYXT
+💵 Price: ${quoteData.price}
+⛽ Gas in NEYXT: ${quoteData.fees.gasInNeyxtEst}
+📉 Slippage: ${quoteData.slippageBps / 100}%
+⏱️ Estimated Time: ${quoteData.estimatedTimeSec}s
+⏰ TTL: ${quoteData.ttlSec}s
+🔍 Sources: ${quoteData.sources.join(', ')}
+📊 Price Impact: ${quoteData.priceImpact}%
+⛽ Gas Estimate: ${quoteData.gasEstimate}
+
+✅ M4 Implementation: QuickSwap API integration working!`;
+
+      setPoolInfo(quoteInfo);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      const errorInfo = `🧪 QUICKSWAP QUOTE TEST - FAILED!
+
+❌ Error: ${errorMessage}
+
+🔍 This could mean:
+• QuickSwap API integration not yet implemented
+• Network connectivity issues
+• Invalid request parameters
+• Supabase function errors
+
+📋 Check:
+• Function deployment status
+• Network connectivity
+• Request parameters
+• Supabase function logs`;
+
+      setPoolInfo(errorInfo);
+    }
+  };
+
   if (!config.isDevelopment) {
     return null; // Only show in development
   }
@@ -275,6 +363,14 @@ export const EnvironmentChecker = () => {
         >
           <Database className="w-3 h-3" />
           <span>{isLoadingPool ? 'Loading...' : 'Pool Info'}</span>
+        </button>
+
+        <button
+          onClick={handleTestQuickSwapQuote}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 transition-colors mt-2"
+        >
+          <span>🧪</span>
+          <span>Test QuickSwap Quote</span>
         </button>
       </div>
 
