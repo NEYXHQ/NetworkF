@@ -240,14 +240,15 @@ Pool data fetching works perfectly on mainnet and validates M3.2 implementation.
 ⸻
 
 M4 – Quote Endpoint
-	•	⬜ GET /api/quote with 0x (Polygon-only v1) - TODO: Replace health check with actual 0x API calls
+	•	⬜ GET /api/quote with QuickSwap API (Polygon-only) - TODO: Implement QuickSwap subgraph/REST integration
 	•	⬜ swapService.ts + useQuote.ts in FE - TODO: Connect frontend hooks to backend API
 	•	⬜ QuoteBreakdown.tsx UI - TODO: Connect UI to actual quote data
 	•	⬜ Return gas_in_neyxt_est and warnings for min purchase - TODO: Calculate actual gas estimates
 	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est) - TODO: Add validation logic
 	•	⬜ Apply per-trade cap (≤ max_trade_notional_base) - TODO: Add trade size limits
 
-Exit: Valid quotes for USDC/POL/ETH.
+Note: Switched from 0x API to QuickSwap API due to NEYXT's low liquidity. QuickSwap has an active WETH/NEYXT pool, making it more suitable for direct integration.
+Next steps: Implement QuickSwap subgraph queries and REST API calls for real-time pricing and liquidity data.
 
 ⸻
 
