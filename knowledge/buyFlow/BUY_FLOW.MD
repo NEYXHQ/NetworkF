@@ -240,15 +240,40 @@ Pool data fetching works perfectly on mainnet and validates M3.2 implementation.
 ⸻
 
 M4 – Quote Endpoint
-	•	✅ GET /api/quote with QuickSwap API (Polygon-only) - COMPLETE: QuickSwap subgraph integration implemented
-	•	⬜ swapService.ts + useQuote.ts in FE - TODO: Connect frontend hooks to backend API
+	•	✅ GET /api/quote with DEX Aggregator APIs (Polygon-only) - COMPLETE: Multi-aggregator implementation with intelligent fallbacks
+	•	⬜ swapService.ts + useQuote.ts in FE - TODO: Connect frontend hooks to backend API  
 	•	⬜ QuoteBreakdown.tsx UI - TODO: Connect UI to actual quote data
-	•	⬜ Return gas_in_neyxt_est and warnings for min purchase - TODO: Calculate actual gas estimates
+	•	✅ Return gas_in_neyxt_est and warnings for min purchase - COMPLETE: Real gas estimation with NEYXT conversion
 	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est) - TODO: Add validation logic
 	•	⬜ Apply per-trade cap (≤ max_trade_notional_base) - TODO: Add trade size limits
 
-Note: QuickSwap integration implemented with REAL blockchain data fetching using direct RPC calls to Polygon mainnet. Quote generation working successfully with live pool reserves, real-time swap calculations using constant product formula, accurate price impact calculations, and USD equivalent pricing. Pool Info button enhanced to show real-time WETH price and NEYXT spot price in USD. No more mock data - all quotes are based on actual blockchain state with real-time USD conversions.
-Next steps: Implement quote validation logic, add min purchase checks, and apply trade size limits.
+M4.1 - Enhanced DEX Aggregator Integration:
+	•	✅ 1inch API v6 (primary) with auth-free public endpoints - Replaces direct QuickSwap integration
+	•	✅ ParaSwap API (fallback) with high price impact data extraction - Extracts quotes even from rejected trades
+	•	✅ OpenOcean API (backup) for redundancy - No authentication required
+	•	✅ Smart fallback chain: 1inch → ParaSwap → OpenOcean → Enhanced error reporting
+
+M4.2 - Advanced Price Impact & Liquidity Analysis:
+	•	✅ Real-time price impact calculation from API responses - Uses actual aggregator data vs manual calculations
+	•	✅ Low liquidity pool detection via price distortion analysis - Detects when output USD > input USD significantly  
+	•	✅ Dynamic pool TVL estimation from trade impact data - Calculates actual pool size from price behavior
+	•	✅ Intelligent warnings system with confidence levels - Progressive alerts based on impact severity
+	•	✅ Liquidity crisis detection for inflated token pricing - Identifies when NEYXT price is unrealistic ($4000+ vs $0.01)
+
+M4.3 - Comprehensive Error Handling & Debugging:
+	•	✅ Enhanced debug information for failed quotes - Includes pool addresses, token addresses, amounts, errors
+	•	✅ API-specific error handling and logging - Different strategies for each aggregator's response format
+	•	✅ Price impact override for extreme scenarios - Forces realistic impact when calculations seem too low
+
+Implementation Notes: 
+- Evolved from manual QuickSwap calculations to professional DEX aggregator integration
+- Significantly reduced code complexity (800+ lines → 350 lines) while improving accuracy
+- Now handles edge cases like 98.94% price impact scenarios in low liquidity pools
+- Provides realistic warnings: "LIQUIDITY CRISIS: NEYXT price inflated to $4347.83 (should be ~$0.01)"
+- Pool TVL estimation: "Pool has insufficient liquidity (estimated $0.52 TVL, medium confidence)"
+- Better route discovery through aggregation (finds multi-hop paths like USDC→WETH→NEYXT automatically)
+
+Next steps: Connect frontend components to the enhanced quote API, implement trade size validation.
 
 ⸻
 
