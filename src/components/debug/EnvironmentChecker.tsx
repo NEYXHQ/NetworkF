@@ -150,15 +150,56 @@ export const EnvironmentChecker = () => {
       // Calculate total value locked in WETH
       const totalValueWeth = liquidityWeth + (liquidityNeyxt / spotPrice);
 
+      // Get current WETH price in USD from a reliable source
+      let wethPriceUsd = 0;
+      try {
+        // Try CoinGecko API first
+        const coingeckoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+        if (coingeckoResponse.ok) {
+          const coingeckoData = await coingeckoResponse.json();
+          wethPriceUsd = coingeckoData.ethereum?.usd || 0;
+        }
+        
+        // If CoinGecko fails, try alternative source
+        if (!wethPriceUsd) {
+          const alternativeResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+          if (alternativeResponse.ok) {
+            const alternativeData = await alternativeResponse.json();
+            wethPriceUsd = parseFloat(alternativeData.price);
+          }
+        }
+        
+        // If no price could be fetched, throw an error
+        if (!wethPriceUsd) {
+          throw new Error('Failed to fetch WETH price from all available sources');
+        }
+        
+        console.log('WETH price fetched:', wethPriceUsd);
+      } catch (error) {
+        console.error('Failed to fetch WETH price from external APIs:', error);
+        throw new Error(`Unable to get current WETH price: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Calculate NEYXT spot price in USD
+      const neyxtSpotPriceUsd = wethPriceUsd / spotPrice;
+
+      // Check if pool has low liquidity
+      const poolValueUsd = totalValueWeth * wethPriceUsd;
+      const liquidityWarning = poolValueUsd < 10 ? 
+        `\n⚠️  WARNING: Pool has very low liquidity ($${poolValueUsd.toFixed(2)}). Trades will have extreme price impact!` : '';
+
       // Format the pool info
       const poolInfoText = `${networkInfo}✅ SUCCESS: Pool data retrieved from mainnet!
 
 🏊 POOL DATA
 =====================
 💰 Spot Price: 1 WETH = ${spotPrice.toFixed(6)} NEYXT
+💲 WETH Price: $${wethPriceUsd.toFixed(2)} USD
+🪙 NEYXT Price: $${neyxtSpotPriceUsd.toFixed(6)} USD per token
 💎 NEYXT Liquidity: ${liquidityNeyxt.toLocaleString()} NEYXT
 💎 WETH Liquidity: ${liquidityWeth.toFixed(4)} WETH
 💎 Total Value Locked: ${totalValueWeth.toFixed(4)} WETH
+💎 Total Value Locked: $${poolValueUsd.toFixed(2)} USD${liquidityWarning}
 ⏰ Last Update: ${new Date(Number(blockTimestampLast) * 1000).toISOString()}
 🔗 Block Number: ${Number(blockTimestampLast)}
 📝 Token Details:
@@ -200,7 +241,7 @@ export const EnvironmentChecker = () => {
       const testRequest = {
         payAsset: 'USDC' as const,
         payChain: 'polygon' as const,
-        amountIn: '100', // 100 USDC
+        amountIn: '1', // 1 USDC
         receiveAsset: 'NEYXT' as const,
         receiveChain: 'polygon' as const,
         userAddress: '0x1234567890123456789012345678901234567890', // Test address
@@ -247,12 +288,14 @@ export const EnvironmentChecker = () => {
 🆔 Route ID: ${quoteData.routeId}
 💰 Amount Out: ${quoteData.amountOutEst} NEYXT
 💵 Price: ${quoteData.price}
+💲 USD Equivalent: $${quoteData.usdEquivalent || 'N/A'}
+🪙 NEYXT Price (ETH): $${quoteData.neyxtPriceUsd || 'N/A'} per token
 ⛽ Gas in NEYXT: ${quoteData.fees.gasInNeyxtEst}
 📉 Slippage: ${quoteData.slippageBps / 100}%
 ⏱️ Estimated Time: ${quoteData.estimatedTimeSec}s
 ⏰ TTL: ${quoteData.ttlSec}s
 🔍 Sources: ${quoteData.sources.join(', ')}
-📊 Price Impact: ${quoteData.priceImpact}%
+📊 Price Impact: ${quoteData.priceImpact}
 ⛽ Gas Estimate: ${quoteData.gasEstimate}
 
 ✅ M4 Implementation: QuickSwap API integration working!`;
