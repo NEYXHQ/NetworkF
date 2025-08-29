@@ -241,8 +241,8 @@ Pool data fetching works perfectly on mainnet and validates M3.2 implementation.
 
 M4 – Quote Endpoint
 	•	✅ GET /api/quote with DEX Aggregator APIs (Polygon-only) - COMPLETE: Multi-aggregator implementation with intelligent fallbacks
-	•	⬜ swapService.ts + useQuote.ts in FE - TODO: Connect frontend hooks to backend API  
-	•	⬜ QuoteBreakdown.tsx UI - TODO: Connect UI to actual quote data
+	•	✅ swapService.ts + useQuote.ts in FE - COMPLETE: Frontend hooks connected to backend API with validation
+	•	✅ QuoteBreakdown.tsx UI - COMPLETE: UI displays real quote data with warnings and price impact
 	•	✅ Return gas_in_neyxt_est and warnings for min purchase - COMPLETE: Real gas estimation with NEYXT conversion
 	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est) - TODO: Add validation logic
 	•	⬜ Apply per-trade cap (≤ max_trade_notional_base) - TODO: Add trade size limits
@@ -290,12 +290,44 @@ Exit: Swap executes gasless (for user); clear insufficient NEYXT message.
 ⸻
 
 M6 – Frontend Modal UX
-	•	⬜ Add CTA in HomePage.tsx - TODO: Add "Buy NEYXT" button to homepage
-	•	⬜ BuyNeyxtModal.tsx (3 steps) - TODO: Connect modal to actual quote/execute flow
+	•	✅ Add CTA in HomePage.tsx - COMPLETE: "Buy NEYXT" button added to wallet section
+	•	✅ BuyNeyxtModal.tsx (3 steps) - COMPLETE: Functional 3-step modal connected to real API
+	•	✅ Asset disable logic - COMPLETE: FIAT & POL disabled with "Coming Soon" status
+	•	✅ Scrollable modal design - COMPLETE: Handles all content sizes gracefully
+	•	✅ Dynamic minimum amounts - COMPLETE: ETH 0.00001, USDC 0.01, disabled assets handled
 	•	⬜ GaslessBadge.tsx - TODO: Show actual gas estimates in NEYXT
 	•	⬜ analytics.ts events - TODO: Track user interactions and conversion funnel
 
+M6.1 - Functional Buy Flow Implementation:
+	•	✅ Asset selection step with smart disable logic - Users can select USDC, ETH only (FIAT & POL disabled)
+	•	✅ Quote step with amount input and real API calls - Live quote fetching with loading states
+	•	✅ Real quote display with QuoteBreakdown component - Shows price impact, warnings, gas fees
+	•	✅ Confirmation step with trade summary - Final review before execution (execution pending M5)
+	•	✅ Progressive UI with step indicators - Visual progress tracking through the flow
+	•	✅ Error handling and validation - Minimum amount validation, API error display
+	•	✅ Gas fee validation - Warns if insufficient NEYXT for gas (1.25x requirement)
+	•	✅ Responsive design with scrollable content - Modal works on all screen sizes
+	•	✅ Asset-specific minimums - ETH: 0.00001, USDC: 0.01, with proper input validation
+
 Exit: 3-step flow functional on DEV.
+
+M6.2 - Complete Frontend-Backend Integration (Dec 2024):
+	•	✅ SwapService API Client - Real Supabase Edge Function integration with authentication
+	•	✅ useQuote Hook - Comprehensive validation, error handling, gas coverage checks
+	•	✅ QuoteBreakdown UI - Live display of price impact, warnings, liquidity analysis
+	•	✅ Asset Management System - Smart disable logic for problematic assets (POL quote issues)
+	•	✅ Minimum Amount Validation - Dynamic minimums: ETH (0.00001), USDC (0.01)
+	•	✅ Responsive Modal Design - Scrollable content, fixed header/footer, mobile-friendly
+	•	✅ Error Boundary Handling - Frontend + backend validation with clear user messaging
+	•	✅ Real-time Quote Display - Shows actual DEX aggregator data with confidence indicators
+
+Implementation Details:
+- Frontend calls `${supabaseUrl}/functions/v1/quote` with proper headers and auth
+- Backend responds with sophisticated liquidity analysis and price impact calculations  
+- UI gracefully handles edge cases like low liquidity pools and extreme price impacts
+- Asset selection intelligently disables problematic tokens (POL, FIAT) with clear messaging
+- Progressive UX with 3 distinct steps: Select → Quote → Confirm (execution pending M5)
+- All validation happens on both frontend and backend for robust error handling
 
 ⸻
 
@@ -373,4 +405,5 @@ RPC degraded
 
 Owner: Stephane
 Last updated: 2024-12-19
-Next action: M3 ✅ Complete - pool data fetching implemented, pricing utilities ready. Proceed to M4 (Quote Endpoint).
+Current Status: M6.2 ✅ Complete - Full frontend-backend integration operational with live DEX aggregator quotes
+Next action: M5 (Execute & Status) - Implement gasless trade execution via Biconomy Token Paymaster
