@@ -6,8 +6,9 @@ import { TokenBalance } from '../components/wallet/TokenBalance';
 import { UserProfile } from '../components/user/UserProfile';
 import { SurveyModal } from '../components/user/SurveyModal';
 import { ProfileCompletionModal } from '../components/user/ProfileCompletionModal';
+import { BuyNeyxtModal } from '../components/wallet/BuyNeyxtModal';
 import { Header } from '../components/layout/Header';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingCart } from 'lucide-react';
 
 export const HomePage = () => {
   const { isConnected, login, isRestoringSession } = useWeb3Auth();
@@ -15,6 +16,7 @@ export const HomePage = () => {
   const [showWallet, setShowWallet] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [showBuyNeyxt, setShowBuyNeyxt] = useState(false);
   
   // Track if user has skipped for this session
   const [surveySkipped, setSurveySkipped] = useState(false);
@@ -96,9 +98,18 @@ export const HomePage = () => {
           {showWallet && (
             <section className="py-12 md:py-20" style={{ backgroundColor: 'rgba(2, 48, 71, 0.6)' }}>
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-center text-white mb-6 md:mb-8">
-                  Your Wallet & NEYXT Tokens
-                </h2>
+                <div className="flex items-center justify-between mb-6 md:mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white">
+                    Your Wallet & NEYXT Tokens
+                  </h2>
+                  <Button
+                    onClick={() => setShowBuyNeyxt(true)}
+                    className="px-4 py-2 bg-teal-blue text-charcoal-black hover:bg-teal-blue/80 transition-colors font-medium"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Buy NEYXT
+                  </Button>
+                </div>
                 <TokenBalance />
               </div>
             </section>
@@ -129,6 +140,12 @@ export const HomePage = () => {
           onClose={handleProfileSkip}
           onComplete={handleProfileComplete}
           userName={supabaseUser?.name || undefined}
+        />
+
+        {/* Buy NEYXT Modal */}
+        <BuyNeyxtModal
+          isOpen={showBuyNeyxt}
+          onClose={() => setShowBuyNeyxt(false)}
         />
       </div>
     );

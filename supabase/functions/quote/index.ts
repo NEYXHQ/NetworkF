@@ -757,6 +757,54 @@ serve(async (req) => {
         );
       }
 
+      // Validate minimum purchase amount
+      const amountNum = parseFloat(amountIn);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid amount',
+            message: 'Amount must be a positive number' 
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400 
+          }
+        );
+      }
+
+      // Check if POL is being used (currently disabled)
+      if (payAsset.toUpperCase() === 'POL') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Asset temporarily disabled',
+            message: 'POL payments are currently disabled due to quote issues' 
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400 
+          }
+        );
+      }
+
+      // Set minimum amounts based on asset type
+      let minAmount = 0.01; // Default for USDC
+      if (payAsset.toUpperCase() === 'ETH' || payAsset.toUpperCase() === 'WETH') {
+        minAmount = 0.00001; // Much lower minimum for ETH
+      }
+
+      if (amountNum < minAmount) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Amount too small',
+            message: `Minimum purchase amount is ${minAmount} ${payAsset}` 
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400 
+          }
+        );
+      }
+
       // Get quote using DEX aggregator APIs
       const response = await getQuote(payAsset, amountIn, receiveAsset);
       
