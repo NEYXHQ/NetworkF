@@ -9,12 +9,15 @@ interface QuoteBreakdownProps {
   quote?: {
     amountOutEst: string;
     price: string;
+    usdEquivalent?: string; // USD value of the purchase
+    neyxtPriceUsd?: string; // USD price for 1 NEYXT token
     fees: {
       protocol: string;
       gasInNeyxtEst: string;
     };
     slippageBps: number;
     warnings: string[];
+    priceImpact?: string; // Add price impact
   };
   className?: string;
 }
@@ -45,6 +48,27 @@ export const QuoteBreakdown: React.FC<QuoteBreakdownProps> = ({
           <span className="text-gray-600">Price:</span>
           <span className="font-medium">{quote.price}</span>
         </div>
+        
+        {quote.usdEquivalent && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Total cost:</span>
+            <span className="font-medium">${quote.usdEquivalent}</span>
+          </div>
+        )}
+        
+        {quote.neyxtPriceUsd && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">NEYXT price:</span>
+            <span className="font-medium">${quote.neyxtPriceUsd} per token</span>
+          </div>
+        )}
+        
+        {quote.priceImpact && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Price impact:</span>
+            <span className="font-medium">{quote.priceImpact}</span>
+          </div>
+        )}
         
         <div className="flex justify-between">
           <span className="text-gray-600">Protocol fees:</span>

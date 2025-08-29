@@ -16,6 +16,8 @@ interface QuoteResponse {
   routeId: string;
   amountOutEst: string;
   price: string;
+  usdEquivalent?: string; // USD value of the purchase
+  neyxtPriceUsd?: string; // USD price for 1 NEYXT token
   fees: {
     protocol: string;
     gasInNeyxtEst: string;
@@ -24,6 +26,9 @@ interface QuoteResponse {
   estimatedTimeSec: number;
   ttlSec: number;
   warnings: string[];
+  sources?: string[]; // Add sources field
+  priceImpact?: string; // Add price impact field
+  gasEstimate?: string; // Add gas estimate field
 }
 
 export const useQuote = () => {
