@@ -241,7 +241,7 @@ export const EnvironmentChecker = () => {
       const testRequest = {
         payAsset: 'USDC' as const,
         payChain: 'polygon' as const,
-        amountIn: '1', // 1 USDC
+        amountIn: '0.01', // 1 USDC
         receiveAsset: 'NEYXT' as const,
         receiveChain: 'polygon' as const,
         userAddress: '0x1234567890123456789012345678901234567890', // Test address
@@ -287,7 +287,7 @@ export const EnvironmentChecker = () => {
 =====================
 🆔 Route ID: ${quoteData.routeId}
 💰 Amount Out: ${quoteData.amountOutEst} NEYXT
-💵 Price: ${quoteData.price}
+💵 Amount In: ${quoteData.amountIn} USDC
 💲 USD Equivalent: $${quoteData.usdEquivalent || 'N/A'}
 🪙 NEYXT Price (ETH): $${quoteData.neyxtPriceUsd || 'N/A'} per token
 ⛽ Gas in NEYXT: ${quoteData.fees.gasInNeyxtEst}
