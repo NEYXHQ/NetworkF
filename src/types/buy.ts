@@ -19,7 +19,7 @@ export interface QuoteResponse {
   neyxtPriceUsd?: string; // USD price for 1 NEYXT token
   fees: {
     protocol: string;
-    gasInNeyxtEst: string;
+    gasInPolEst: string;
   };
   slippageBps: number;
   estimatedTimeSec: number;
@@ -33,18 +33,38 @@ export interface QuoteResponse {
 export interface ExecuteRequest {
   routeId: string;
   userAddress: string;
-  sponsorGas: boolean;
+  payAsset: string;
+  receiveAsset: string;
+  amountIn: string;
+  slippagePercentage?: number;
 }
 
 export interface ExecuteResponse {
-  txIds: string[];
+  txData: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
   statusUrl: string;
+  estimatedGas: string;
+  route: {
+    source: string;
+    routeId: string;
+  };
 }
 
 export interface StatusResponse {
   state: 'PENDING' | 'CONFIRMED' | 'FAILED';
-  txIds: string[];
+  txId?: string;
+  blockNumber?: number;
+  confirmations?: number;
   details: string;
+  route?: {
+    source: string;
+    routeId: string;
+  };
 }
 
 export interface OnrampWebhookEvent {
@@ -68,10 +88,9 @@ export interface BuyFlowState {
 }
 
 export interface GasEstimate {
-  gasInNeyxt: string;
+  gasInPol: string;
   gasInUsd: string;
   gasLimit: string;
-  paymasterAddress: string;
 }
 
 export interface PricingValidation {
@@ -100,7 +119,9 @@ export const validateExecuteRequest = (data: any): data is ExecuteRequest => {
     typeof data === 'object' &&
     typeof data.routeId === 'string' &&
     typeof data.userAddress === 'string' &&
-    typeof data.sponsorGas === 'boolean'
+    typeof data.payAsset === 'string' &&
+    typeof data.receiveAsset === 'string' &&
+    typeof data.amountIn === 'string'
   );
 };
 

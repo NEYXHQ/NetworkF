@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuote } from '../../hooks/useQuote';
+import { useBuyNeyxt } from '../../hooks/useBuyNeyxt';
+import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { QuoteBreakdown } from '../ui/QuoteBreakdown';
 import config from '../../config/env';
 
@@ -14,20 +16,49 @@ interface BuyNeyxtModalProps {
 }
 
 type PayAsset = 'USDC' | 'POL' | 'ETH' | 'FIAT';
-type Step = 'select' | 'quote' | 'confirm';
+type Step = 'select' | 'quote' | 'confirm' | 'executing' | 'success' | 'error';
 
 export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState<Step>('select');
   const [selectedAsset, setSelectedAsset] = useState<PayAsset | null>(null);
   const [amount, setAmount] = useState('');
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [userAddress, setUserAddress] = useState<string | null>(null);
   const { quote, loading, error, getQuote, clearQuote } = useQuote();
+  const { buying, status, error: buyError, executeBuy, checkStatus, updateRouteStatus, clearBuyState } = useBuyNeyxt();
+  const { provider, getAccounts, isConnected } = useWeb3Auth();
+
+  // Get user address when wallet is connected
+  React.useEffect(() => {
+    const getUserAddress = async () => {
+      if (isConnected && provider) {
+        try {
+          const accounts = await getAccounts();
+          console.log('Got accounts:', accounts);
+          if (accounts.length > 0) {
+            console.log('Setting user address:', accounts[0]);
+            setUserAddress(accounts[0]);
+          }
+        } catch (error) {
+          console.error('Error getting user address:', error);
+        }
+      } else {
+        console.log('Web3Auth not connected:', { isConnected, hasProvider: !!provider });
+        setUserAddress(null);
+      }
+    };
+
+    getUserAddress();
+  }, [isConnected, provider, getAccounts]);
 
   // Reset state when modal closes
   const handleClose = () => {
     setCurrentStep('select');
     setSelectedAsset(null);
     setAmount('');
+    setTxHash(null);
     clearQuote();
+    clearBuyState();
     onClose();
   };
 
@@ -73,6 +104,88 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
     }
   };
 
+  // Handle execution
+  const handleExecute = async () => {
+    if (!selectedAsset || !amount || !quote || !userAddress || !provider) {
+      console.error('Missing required data for execution');
+      return;
+    }
+
+    try {
+      setCurrentStep('executing');
+
+      // Prepare execution request
+      const executeRequest = {
+        routeId: quote.routeId,
+        userAddress: userAddress,
+        payAsset: selectedAsset,
+        receiveAsset: 'NEYXT',
+        amountIn: amount,
+        slippagePercentage: 1 // 1% slippage
+      };
+
+      console.log('Executing trade with:', executeRequest);
+
+      // Get transaction data from backend
+      const executeResponse = await executeBuy(executeRequest);
+      
+      if (!executeResponse) {
+        setCurrentStep('error');
+        return;
+      }
+
+      console.log('Transaction data received:', executeResponse);
+
+      // Send transaction via Web3Auth provider
+      const ethersProvider = new (await import('ethers')).BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+
+      const tx = {
+        to: executeResponse.txData.to,
+        data: executeResponse.txData.data,
+        value: executeResponse.txData.value,
+        gasLimit: executeResponse.txData.gasLimit,
+        gasPrice: executeResponse.txData.gasPrice
+      };
+
+      console.log('Sending transaction:', tx);
+      const txResponse = await signer.sendTransaction(tx);
+      console.log('Transaction sent:', txResponse.hash);
+
+      setTxHash(txResponse.hash);
+
+      // Update route status with transaction hash
+      await updateRouteStatus(executeResponse.route.routeId, txResponse.hash, userAddress);
+
+      // Start polling for transaction status
+      setCurrentStep('success');
+
+      // Poll for status updates
+      const pollStatus = async () => {
+        if (txResponse.hash) {
+          const statusResult = await checkStatus(undefined, txResponse.hash);
+          if (statusResult?.state === 'CONFIRMED') {
+            console.log('Transaction confirmed!');
+          } else if (statusResult?.state === 'FAILED') {
+            console.log('Transaction failed');
+            setCurrentStep('error');
+          } else {
+            // Continue polling
+            setTimeout(pollStatus, 5000);
+          }
+        }
+      };
+
+      // Wait for transaction to be included
+      await txResponse.wait();
+      pollStatus();
+
+    } catch (error) {
+      console.error('Error executing trade:', error);
+      setCurrentStep('error');
+    }
+  };
+
   // Get minimum amount for selected asset
   const getMinAmount = () => {
     if (selectedAsset === 'ETH') return '0.00001';
@@ -81,10 +194,13 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
 
   const getProgressPercentage = () => {
     switch (currentStep) {
-      case 'select': return 33;
-      case 'quote': return 66;
-      case 'confirm': return 100;
-      default: return 33;
+      case 'select': return 25;
+      case 'quote': return 50;
+      case 'confirm': return 75;
+      case 'executing': return 90;
+      case 'success': 
+      case 'error': return 100;
+      default: return 25;
     }
   };
 
@@ -93,8 +209,15 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
       case 'select': return 1;
       case 'quote': return 2;
       case 'confirm': return 3;
+      case 'executing': return 4;
+      case 'success': 
+      case 'error': return 4;
       default: return 1;
     }
+  };
+
+  const getTotalSteps = () => {
+    return currentStep === 'executing' || currentStep === 'success' || currentStep === 'error' ? 4 : 3;
   };
 
   if (!isOpen) return null;
@@ -129,7 +252,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-soft-white/80">Progress</span>
-              <span className="text-xs text-soft-white/60">Step {getStepNumber()} of 3</span>
+              <span className="text-xs text-soft-white/60">Step {getStepNumber()} of {getTotalSteps()}</span>
             </div>
             <div className="flex space-x-2">
               <div className="flex-1 h-2 bg-teal-blue/20 rounded-full overflow-hidden">
@@ -232,36 +355,112 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
                 {/* Final Quote Summary */}
                 <QuoteBreakdown quote={quote} className="mb-4 bg-soft-white/5" />
                 
+                {/* Wallet Connection Check */}
+                {!userAddress ? (
+                  <div className="mb-4 p-3 bg-princeton-orange/10 border border-princeton-orange/20 rounded-lg">
+                    <p className="text-princeton-orange text-sm">Please connect your wallet to continue</p>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-3 bg-teal-blue/10 border border-teal-blue/20 rounded-lg">
+                    <p className="text-teal-blue text-sm">Wallet connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}</p>
+                  </div>
+                )}
+                
                 {/* Execution Button */}
                 <button
-                  disabled
-                  className="w-full px-4 py-2 bg-soft-white/10 text-soft-white/60 rounded-lg cursor-not-allowed text-sm font-medium"
+                  onClick={handleExecute}
+                  disabled={!userAddress || !provider || buying}
+                  className="w-full px-4 py-2 bg-teal-blue text-charcoal-black rounded-lg hover:bg-teal-blue/80 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Execute Trade (Not Implemented)
+                  {buying ? 'Preparing Transaction...' : 'Execute Trade'}
                 </button>
                 
                 <p className="text-xs text-soft-white/60 mt-2 text-center">
-                  Trade execution will be implemented in M5
+                  You will be prompted to sign the transaction in your wallet
                 </p>
+              </div>
+            )}
+
+            {/* Step 4: Executing */}
+            {currentStep === 'executing' && (
+              <div className="bg-charcoal-black/30 rounded-lg p-4 border border-teal-blue/10">
+                <h3 className="text-lg font-medium text-soft-white mb-3">4. Executing Trade</h3>
+                
+                <div className="flex items-center justify-center mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-blue"></div>
+                </div>
+                
+                <p className="text-soft-white/80 text-center mb-2">Processing your transaction...</p>
+                <p className="text-xs text-soft-white/60 text-center">
+                  Please confirm the transaction in your wallet and wait for network confirmation
+                </p>
+              </div>
+            )}
+
+            {/* Step 4: Success */}
+            {currentStep === 'success' && txHash && (
+              <div className="bg-charcoal-black/30 rounded-lg p-4 border border-teal-blue/10">
+                <h3 className="text-lg font-medium text-soft-white mb-3">🎉 Trade Successful!</h3>
+                
+                <div className="mb-4 p-3 bg-teal-blue/10 border border-teal-blue/20 rounded-lg">
+                  <p className="text-teal-blue text-sm mb-1">Transaction Hash:</p>
+                  <p className="text-xs text-soft-white/80 font-mono break-all">{txHash}</p>
+                </div>
+                
+                {status && (
+                  <div className="mb-4 p-3 bg-soft-white/5 rounded-lg">
+                    <p className="text-soft-white text-sm mb-1">Status: {status.state}</p>
+                    {status.confirmations && (
+                      <p className="text-xs text-soft-white/60">Confirmations: {status.confirmations}</p>
+                    )}
+                  </div>
+                )}
+                
+                <p className="text-soft-white/80 text-center">
+                  Your NEYXT tokens will be available in your wallet shortly
+                </p>
+              </div>
+            )}
+
+            {/* Step 4: Error */}
+            {currentStep === 'error' && (
+              <div className="bg-charcoal-black/30 rounded-lg p-4 border border-princeton-orange/30">
+                <h3 className="text-lg font-medium text-soft-white mb-3">❌ Transaction Failed</h3>
+                
+                <div className="mb-4 p-3 bg-princeton-orange/10 border border-princeton-orange/20 rounded-lg">
+                  <p className="text-princeton-orange text-sm mb-1">Error:</p>
+                  <p className="text-xs text-princeton-orange/80">
+                    {buyError || error || 'An unknown error occurred'}
+                  </p>
+                </div>
+                
+                <button
+                  onClick={() => setCurrentStep('confirm')}
+                  className="w-full px-4 py-2 bg-soft-white/10 text-soft-white rounded-lg hover:bg-soft-white/20 transition-colors text-sm font-medium"
+                >
+                  Try Again
+                </button>
               </div>
             )}
           </div>
 
-          {/* Development Notice */}
-          <div className="mt-6 p-4 bg-princeton-orange/10 border border-princeton-orange/20 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-princeton-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-princeton-orange text-xs font-bold">!</span>
-              </div>
-              <div className="text-sm">
-                <p className="text-princeton-orange font-medium mb-1">Development Mode</p>
-                <p className="text-princeton-orange/80 text-xs">
-                  This is a scaffolded UI for testing the buy flow. No actual transactions will be executed.
-                  Implementation will connect to 0x API, Biconomy paymaster, and QuickSwap reference pool.
-                </p>
+          {/* Development Notice - only show during early steps */}
+          {(currentStep === 'select' || currentStep === 'quote') && (
+            <div className="mt-6 p-4 bg-teal-blue/10 border border-teal-blue/20 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="w-5 h-5 bg-teal-blue/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-teal-blue text-xs font-bold">✓</span>
+                </div>
+                <div className="text-sm">
+                  <p className="text-teal-blue font-medium mb-1">Live Trading Enabled</p>
+                  <p className="text-teal-blue/80 text-xs">
+                    This connects to real DEX aggregators (1inch, ParaSwap, OpenOcean) and executes actual swaps.
+                    Ensure you have sufficient POL for gas fees.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         
         {/* Footer - Fixed at bottom */}
@@ -269,25 +468,40 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
           <button
             onClick={handleClose}
             className="px-4 py-2 text-soft-white/60 hover:text-soft-white transition-colors"
+            disabled={currentStep === 'executing'}
           >
-            Close
+            {currentStep === 'executing' ? 'Processing...' : 'Close'}
           </button>
-          <div className="flex space-x-3">
+          
+          {/* Navigation buttons - only show for select, quote, confirm steps */}
+          {(['select', 'quote', 'confirm'] as Step[]).includes(currentStep) && (
+            <div className="flex space-x-3">
+              <button
+                onClick={handleBack}
+                disabled={currentStep === 'select'}
+                className="px-4 py-2 bg-soft-white/10 text-soft-white rounded-lg hover:bg-soft-white/20 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={currentStep !== 'quote' || !quote}
+                className="px-4 py-2 bg-teal-blue text-charcoal-black rounded-lg hover:bg-teal-blue/80 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+          
+          {/* Success/Error actions */}
+          {currentStep === 'success' && (
             <button
-              onClick={handleBack}
-              disabled={currentStep === 'select'}
-              className="px-4 py-2 bg-soft-white/10 text-soft-white rounded-lg hover:bg-soft-white/20 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleClose}
+              className="px-4 py-2 bg-teal-blue text-charcoal-black rounded-lg hover:bg-teal-blue/80 transition-colors text-sm font-medium"
             >
-              Previous
+              Done
             </button>
-            <button
-              onClick={handleNext}
-              disabled={currentStep !== 'quote' || !quote}
-              className="px-4 py-2 bg-teal-blue text-charcoal-black rounded-lg hover:bg-teal-blue/80 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {currentStep === 'confirm' ? 'Execute' : 'Next'}
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

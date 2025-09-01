@@ -21,7 +21,7 @@ export interface SwapQuoteResponse {
   neyxtPriceUsd?: string; // USD price for 1 NEYXT token
   fees: {
     protocol: string;
-    gasInNeyxtEst: string;
+    gasInPolEst: string;
   };
   slippageBps: number;
   estimatedTimeSec: number;
@@ -35,12 +35,38 @@ export interface SwapQuoteResponse {
 export interface SwapExecuteRequest {
   routeId: string;
   userAddress: string;
-  sponsorGas: boolean;
+  payAsset: string;
+  receiveAsset: string;
+  amountIn: string;
+  slippagePercentage?: number;
 }
 
 export interface SwapExecuteResponse {
-  txIds: string[];
+  txData: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
   statusUrl: string;
+  estimatedGas: string;
+  route: {
+    source: string;
+    routeId: string;
+  };
+}
+
+export interface SwapStatusResponse {
+  state: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  txId?: string;
+  blockNumber?: number;
+  confirmations?: number;
+  details: string;
+  route?: {
+    source: string;
+    routeId: string;
+  };
 }
 
 class SwapService {
@@ -108,26 +134,122 @@ class SwapService {
   }
 
   async executeSwap(request: SwapExecuteRequest): Promise<SwapExecuteResponse> {
-    // TODO: Implement actual API call to ${this.apiBaseUrl}/execute
     console.log('Executing swap:', request);
     
-    // Placeholder response
-    return {
-      txIds: ['mock-tx-id'],
-      statusUrl: `${this.apiBaseUrl}/status?route_id=mock-route-id`
-    };
+    try {
+      const url = `${this.apiBaseUrl}/execute`;
+      console.log('Calling execute endpoint:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(config.supabase.anonKey && {
+            'Authorization': `Bearer ${config.supabase.anonKey}`,
+            'apikey': config.supabase.anonKey
+          })
+        },
+        body: JSON.stringify(request)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Execute API error:', response.status, errorText);
+        throw new Error(`Execute API error: ${response.status} - ${errorText}`);
+      }
+      
+      const result: SwapExecuteResponse = await response.json();
+      console.log('Execute response:', result);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error executing swap:', error);
+      throw error instanceof Error ? error : new Error('Failed to execute swap');
+    }
   }
 
-  async getSwapStatus(routeId: string): Promise<{ state: string; txIds: string[]; details: string }> {
-    // TODO: Implement actual API call to ${this.apiBaseUrl}/status
-    console.log('Getting swap status for route:', routeId);
+  async getSwapStatus(routeId?: string, txId?: string): Promise<SwapStatusResponse> {
+    console.log('Getting swap status for:', { routeId, txId });
     
-    // Placeholder response
-    return {
-      state: 'PENDING',
-      txIds: ['mock-tx-id'],
-      details: 'Mock status - not for production use'
-    };
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (routeId) params.append('route_id', routeId);
+      if (txId) params.append('tx_id', txId);
+      
+      if (!routeId && !txId) {
+        throw new Error('Either routeId or txId is required');
+      }
+      
+      const url = `${this.apiBaseUrl}/status?${params.toString()}`;
+      console.log('Calling status endpoint:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          ...(config.supabase.anonKey && {
+            'Authorization': `Bearer ${config.supabase.anonKey}`,
+            'apikey': config.supabase.anonKey
+          })
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Status API error:', response.status, errorText);
+        throw new Error(`Status API error: ${response.status} - ${errorText}`);
+      }
+      
+      const result: SwapStatusResponse = await response.json();
+      console.log('Status response:', result);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error getting swap status:', error);
+      throw error instanceof Error ? error : new Error('Failed to get swap status');
+    }
+  }
+
+  async updateRouteStatus(routeId: string, txId: string, userAddress: string): Promise<void> {
+    console.log('Updating route status:', { routeId, txId, userAddress });
+    
+    try {
+      const url = `${this.apiBaseUrl}/status`;
+      console.log('Updating status endpoint:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(config.supabase.anonKey && {
+            'Authorization': `Bearer ${config.supabase.anonKey}`,
+            'apikey': config.supabase.anonKey
+          })
+        },
+        body: JSON.stringify({
+          routeId,
+          txId,
+          userAddress
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Status update API error:', response.status, errorText);
+        throw new Error(`Status update API error: ${response.status} - ${errorText}`);
+      }
+      
+      console.log('Route status updated successfully');
+      
+    } catch (error) {
+      console.error('Error updating route status:', error);
+      throw error instanceof Error ? error : new Error('Failed to update route status');
+    }
   }
 }
 

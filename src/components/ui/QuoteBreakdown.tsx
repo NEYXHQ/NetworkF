@@ -13,7 +13,7 @@ interface QuoteBreakdownProps {
     neyxtPriceUsd?: string; // USD price for 1 NEYXT token
     fees: {
       protocol: string;
-      gasInNeyxtEst: string;
+      gasInPolEst: string;
     };
     slippageBps: number;
     warnings: string[];
@@ -76,8 +76,8 @@ export const QuoteBreakdown: React.FC<QuoteBreakdownProps> = ({
         </div>
         
         <div className="flex justify-between">
-          <span className="text-gray-600">Gas fees (NEYXT):</span>
-          <span className="font-medium">{quote.fees.gasInNeyxtEst}</span>
+          <span className="text-gray-600">Gas fees (POL):</span>
+          <span className="font-medium">{quote.fees.gasInPolEst}</span>
         </div>
         
         <div className="flex justify-between">

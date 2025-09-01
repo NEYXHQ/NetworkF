@@ -47,7 +47,7 @@ interface QuoteResponse {
   neyxtPriceUsd?: string; // Add NEYXT price in USD
   fees: {
     protocol: string;
-    gasInNeyxtEst: string;
+    gasInPolEst: string;
   };
   slippageBps: number;
   estimatedTimeSec: number;
@@ -580,7 +580,7 @@ async function getQuote(
     gasEstimate = '150000'; // Default for ParaSwap
   }
   
-  const gasInNeyxtEst = await estimateGasInNeyxt(gasEstimate);
+  const gasInPolEst = await estimateGasInPol(gasEstimate);
   
   // Calculate price impact using smart extraction
   const priceImpact = calculatePriceImpact(quote, source, amountIn);
@@ -649,7 +649,7 @@ async function getQuote(
     neyxtPriceUsd: neyxtPriceUsd.toFixed(6),
     fees: {
       protocol: source === '1inch' ? '0.3' : '0.25',
-      gasInNeyxtEst,
+      gasInPolEst,
     },
     slippageBps: 100, // 1% default
     estimatedTimeSec: 30,
@@ -678,17 +678,16 @@ async function calculateUsdEquivalent(payAsset: string, amountIn: string): Promi
   }
 }
 
-// Simplified gas estimation
-async function estimateGasInNeyxt(gasEstimate: string): Promise<string> {
+// Simplified gas estimation in POL
+async function estimateGasInPol(gasEstimate: string): Promise<string> {
   try {
     const gas = parseInt(gasEstimate);
-    // Simplified calculation: assume 30 gwei gas price and 300k NEYXT per ETH
-    const gasCostEth = (gas * 30e9) / 1e18;
-    const gasCostNeyxt = gasCostEth * 300000;
-    return gasCostNeyxt.toFixed(6);
+    // Calculate gas cost in POL: gas units * gas price (30 gwei) / 1e18
+    const gasCostPol = (gas * 30e9) / 1e18;
+    return gasCostPol.toFixed(6);
   } catch (error) {
-    console.error('Error estimating gas in NEYXT:', error);
-    return '0.1'; // Default estimate
+    console.error('Error estimating gas in POL:', error);
+    return '0.001'; // Default estimate (small amount of POL)
   }
 }
 
