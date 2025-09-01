@@ -41,14 +41,15 @@ export const useQuote = () => {
       // Call the real API
       const quote = await swapService.getQuote(request);
       
-      // Validate gas coverage (M4.3 requirement: NEYXT_out ≥ 1.25× gas_in_neyxt_est)
-      const neyxtOut = parseFloat(quote.amountOutEst);
-      const gasInNeyxt = parseFloat(quote.fees.gasInNeyxtEst);
-      const minRequiredNeyxt = gasInNeyxt * 1.25;
+      // Note: With traditional gas approach, users need POL for gas fees
+      // In a real implementation, you'd check the user's POL balance here
+      const gasInPol = parseFloat(quote.fees.gasInPolEst);
+      console.log(`Transaction will require ${gasInPol} POL for gas fees`);
       
-      if (neyxtOut < minRequiredNeyxt) {
+      // Add a note about POL requirement to warnings if gas cost is significant
+      if (gasInPol > 0.001) {
         quote.warnings.push(
-          `Insufficient NEYXT for gas fees: Need ${minRequiredNeyxt.toFixed(6)} NEYXT, getting ${neyxtOut.toFixed(6)} NEYXT. Increase amount.`
+          `This transaction will require approximately ${gasInPol} POL for gas fees. Ensure you have sufficient POL in your wallet.`
         );
       }
       

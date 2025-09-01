@@ -1,25 +1,36 @@
 import { useState, useCallback } from 'react';
+import { swapService, type SwapExecuteRequest, type SwapStatusResponse } from '../services/swapService';
 
-// TODO [M5.5] - Orchestrate quote → execute → status
-// TODO [M5.4] - Handle gas estimation and paymaster integration
-// TODO [M6.4] - Analytics tracking for buy flow events
+// M5.5 - Orchestrate quote → execute → status - IN PROGRESS
+// M5.4 - Handle traditional gas payment (no paymaster) - COMPLETE
+// M6.4 - Analytics tracking for buy flow events - TODO
 
 interface BuyRequest {
   routeId: string;
   userAddress: string;
-  sponsorGas: boolean;
+  payAsset: string;
+  receiveAsset: string;
+  amountIn: string;
+  slippagePercentage?: number;
 }
 
 interface BuyResponse {
-  txIds: string[];
+  txData: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
   statusUrl: string;
+  estimatedGas: string;
+  route: {
+    source: string;
+    routeId: string;
+  };
 }
 
-interface BuyStatus {
-  state: 'PENDING' | 'CONFIRMED' | 'FAILED';
-  txIds: string[];
-  details: string;
-}
+type BuyStatus = SwapStatusResponse;
 
 export const useBuyNeyxt = () => {
   const [buying, setBuying] = useState(false);
@@ -31,16 +42,22 @@ export const useBuyNeyxt = () => {
     setError(null);
     
     try {
-      // TODO: Implement actual API call to /api/execute
       console.log('Executing buy with:', request);
       
-      // Placeholder response for now
-      const mockResponse: BuyResponse = {
-        txIds: ['mock-tx-id'],
-        statusUrl: '/api/status?route_id=mock-route-id'
+      // Call the swap service to prepare transaction
+      const executeRequest: SwapExecuteRequest = {
+        routeId: request.routeId,
+        userAddress: request.userAddress,
+        payAsset: request.payAsset,
+        receiveAsset: request.receiveAsset,
+        amountIn: request.amountIn,
+        slippagePercentage: request.slippagePercentage
       };
       
-      return mockResponse;
+      const response = await swapService.executeSwap(executeRequest);
+      console.log('Execute response:', response);
+      
+      return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to execute buy';
       setError(errorMessage);
@@ -50,24 +67,31 @@ export const useBuyNeyxt = () => {
     }
   }, []);
 
-  const checkStatus = useCallback(async (routeId: string): Promise<BuyStatus | null> => {
+  const checkStatus = useCallback(async (routeId?: string, txId?: string): Promise<BuyStatus | null> => {
     try {
-      // TODO: Implement actual API call to /api/status
-      console.log('Checking status for route:', routeId);
+      console.log('Checking status for:', { routeId, txId });
       
-      // Placeholder status for now
-      const mockStatus: BuyStatus = {
-        state: 'PENDING',
-        txIds: ['mock-tx-id'],
-        details: 'Mock status - not for production use'
-      };
+      const status = await swapService.getSwapStatus(routeId, txId);
+      console.log('Status response:', status);
       
-      setStatus(mockStatus);
-      return mockStatus;
+      setStatus(status);
+      return status;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to check status';
       setError(errorMessage);
       return null;
+    }
+  }, []);
+
+  const updateRouteStatus = useCallback(async (routeId: string, txId: string, userAddress: string): Promise<void> => {
+    try {
+      console.log('Updating route status:', { routeId, txId, userAddress });
+      
+      await swapService.updateRouteStatus(routeId, txId, userAddress);
+      console.log('Route status updated');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update route status';
+      setError(errorMessage);
     }
   }, []);
 
@@ -82,6 +106,7 @@ export const useBuyNeyxt = () => {
     error,
     executeBuy,
     checkStatus,
+    updateRouteStatus,
     clearBuyState
   };
 };
