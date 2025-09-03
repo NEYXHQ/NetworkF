@@ -1,5 +1,5 @@
 // M5.1 - POST /api/execute with traditional gas payment (no paymaster)
-// M5.2 - Basic swap execution using DEX aggregator APIs
+// M5.2 - Basic swap execution using QuickSwap Router
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
@@ -12,24 +12,8 @@ const POLYGON_TOKENS = {
   pol: '0x0000000000000000000000000000000000001010', // Native POL token
 };
 
-// DEX Aggregator APIs for swap execution
-const DEX_APIS = {
-  oneinch: 'https://api.1inch.dev/swap/v6.0/137',
-  paraswap: 'https://apiv5.paraswap.io',
-  openocean: 'https://open-api.openocean.finance/v3/137'
-};
-
-// 1inch API v6 Swap Response Interface
-interface OneinchSwapResponse {
-  tx: {
-    from: string;
-    to: string;
-    data: string;
-    value: string;
-    gasPrice: string;
-    gas: number;
-  };
-}
+// QuickSwap Router Address on Polygon
+const QUICKSWAP_ROUTER = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
 
 // Execute request interface
 interface ExecuteRequest {
@@ -101,45 +85,60 @@ function convertToSmallestUnits(amount: string, asset: string): string {
   return Math.floor(numAmount * Math.pow(10, decimals)).toString();
 }
 
-// Fetch swap transaction data from 1inch API
-async function fetchSwapFrom1inch(
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  amount: string,
-  fromAddress: string,
-  slippage: number = 1
-): Promise<OneinchSwapResponse> {
-  const url = `${DEX_APIS.oneinch}/swap?src=${fromTokenAddress}&dst=${toTokenAddress}&amount=${amount}&from=${fromAddress}&slippage=${slippage}`;
+
+
+// Find optimal route path between tokens
+async function findBestRoute(fromToken: string, toToken: string): Promise<string[]> {
+  const WETH = POLYGON_TOKENS.weth;
   
-  console.log('Fetching swap from 1inch v6:', url);
-  
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-    }
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('1inch swap API error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: url,
-      errorText: errorText
-    });
-    throw new Error(`1inch swap API error: ${response.status} - ${errorText}`);
+  // Direct pair exists?
+  try {
+    await getPairAddress(fromToken, toToken);
+    console.log('Direct pair found:', fromToken, '→', toToken);
+    return [fromToken, toToken];
+  } catch (error) {
+    console.log('No direct pair, trying via WETH...');
   }
   
-  const result = await response.json();
-  console.log('1inch swap result:', result);
+  // Try route via WETH (most common intermediate token)
+  try {
+    if (fromToken.toLowerCase() !== WETH.toLowerCase() && toToken.toLowerCase() !== WETH.toLowerCase()) {
+      // Check if both pairs exist: fromToken → WETH and WETH → toToken
+      await getPairAddress(fromToken, WETH);
+      await getPairAddress(WETH, toToken);
+      console.log('Route via WETH found:', fromToken, '→', WETH, '→', toToken);
+      return [fromToken, WETH, toToken];
+    }
+  } catch (error) {
+    console.log('Route via WETH not available');
+  }
   
-  return result;
+  throw new Error(`No route found between ${fromToken} and ${toToken}. Available routes: direct pair or via WETH.`);
 }
 
-// QuickSwap Router Address on Polygon
-const QUICKSWAP_ROUTER = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
+// Calculate quote for multi-hop path
+async function getQuoteForPath(path: string[], amountIn: string): Promise<string> {
+  let currentAmount = amountIn;
+  
+  console.log('Calculating quote for path:', path, 'starting with:', currentAmount);
+  
+  // For each hop in the path
+  for (let i = 0; i < path.length - 1; i++) {
+    const tokenIn = path[i];
+    const tokenOut = path[i + 1];
+    
+    console.log(`Hop ${i + 1}: ${tokenIn} → ${tokenOut}, amount: ${currentAmount}`);
+    
+    // Get quote for this hop
+    currentAmount = await getQuoteFromQuickSwap(tokenIn, tokenOut, currentAmount);
+    
+    console.log(`Output from hop ${i + 1}: ${currentAmount}`);
+  }
+  
+  return currentAmount;
+}
 
-// Build QuickSwap transaction using UniswapV2Router interface
+// Build QuickSwap transaction using optimal routing
 async function getSwapTransaction(
   payAsset: string,
   receiveAsset: string,
@@ -151,7 +150,7 @@ async function getSwapTransaction(
   const toTokenAddress = getTokenAddress(receiveAsset);
   const amountInSmallestUnits = convertToSmallestUnits(amountIn, payAsset);
   
-  console.log('Building QuickSwap transaction:', {
+  console.log('Building QuickSwap transaction with routing:', {
     payAsset,
     receiveAsset,
     amountIn,
@@ -162,26 +161,37 @@ async function getSwapTransaction(
     slippagePercentage
   });
   
-  // Get quote first to calculate minimum amount out
-  const quoteAmount = await getQuoteFromQuickSwap(fromTokenAddress, toTokenAddress, amountInSmallestUnits);
+  // Find the best route
+  const path = await findBestRoute(fromTokenAddress, toTokenAddress);
+  console.log('Optimal route found:', path);
+  
+  // Get quote for the full path
+  const quoteAmount = await getQuoteForPath(path, amountInSmallestUnits);
   
   // Calculate minimum amount out with slippage protection
   const slippageMultiplier = (100 - slippagePercentage) / 100;
   const amountOutMin = Math.floor(parseFloat(quoteAmount) * slippageMultiplier).toString();
   
+  console.log('Route calculation:', {
+    path,
+    amountIn: amountInSmallestUnits,
+    expectedOut: quoteAmount,
+    amountOutMin,
+    slippagePercentage
+  });
+  
   // Build the swap transaction data
   const deadline = Math.floor(Date.now() / 1000) + 1800; // 30 minutes from now
-  const path = [fromTokenAddress, toTokenAddress];
   
   // Encode the function call for swapExactTokensForTokens
   const functionSignature = 'swapExactTokensForTokens(uint256,uint256,address[],address,uint256)';
   const functionSelector = '0x38ed1739'; // First 4 bytes of keccak256(functionSignature)
   
-  // Encode parameters (simplified - in production you'd use proper ABI encoding)
+  // Encode parameters with the optimal path
   const encodedParams = encodeSwapParams(amountInSmallestUnits, amountOutMin, path, userAddress, deadline);
   const txData = functionSelector + encodedParams;
   
-  const routeId = `quickswap-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const routeId = `quickswap-route-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const statusUrl = `/api/status?route_id=${routeId}`;
   
   return {
@@ -189,55 +199,182 @@ async function getSwapTransaction(
       to: QUICKSWAP_ROUTER,
       data: txData,
       value: '0', // ERC20 to ERC20 swap
-      gasLimit: '300000', // Higher gas limit for DEX swaps
+      gasLimit: '400000', // Higher gas limit for multi-hop swaps
       gasPrice: '30000000000' // 30 gwei
     },
     statusUrl,
-    estimatedGas: '300000',
+    estimatedGas: '400000',
     route: {
-      source: 'QuickSwap',
+      source: `QuickSwap-${path.length - 1}hop`,
       routeId
     }
   };
 }
 
-// Get quote from QuickSwap (simplified version - would need proper implementation)
-async function getQuoteFromQuickSwap(fromToken: string, toToken: string, amountIn: string): Promise<string> {
-  // This is a simplified version - in production you would:
-  // 1. Call QuickSwap factory to get pair address
-  // 2. Get reserves from the pair contract
-  // 3. Calculate output using constant product formula
+// QuickSwap Factory and Router constants
+const QUICKSWAP_FACTORY = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
+const POLYGON_RPC = 'https://polygon-rpc.com';
+
+// Get pair address from QuickSwap factory
+async function getPairAddress(tokenA: string, tokenB: string): Promise<string> {
+  const methodId = '0xe6a43905'; // getPair(address,address)
+  const encodedTokenA = encodeAddress(tokenA);
+  const encodedTokenB = encodeAddress(tokenB);
+  const data = methodId + encodedTokenA + encodedTokenB;
   
-  console.log('Getting QuickSwap quote for:', { fromToken, toToken, amountIn });
+  const response = await fetch(POLYGON_RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_call',
+      params: [{
+        to: QUICKSWAP_FACTORY,
+        data: data
+      }, 'latest'],
+      id: 1
+    })
+  });
   
-  // For now, return a calculated estimate based on typical conversion rates
-  // This should be replaced with actual QuickSwap contract calls
-  const amountInNum = parseFloat(amountIn);
-  
-  // Rough conversion estimate (replace with real calculation)
-  if (fromToken.toLowerCase() === POLYGON_TOKENS.usdc.toLowerCase()) {
-    // USDC to NEYXT: assuming 1 USDC = ~100 NEYXT (adjust based on your tokenomics)
-    return (amountInNum * 100 * 1e12).toString(); // Account for decimal difference (6->18)
-  } else if (fromToken.toLowerCase() === POLYGON_TOKENS.weth.toLowerCase()) {
-    // WETH to NEYXT: assuming 1 WETH = ~300,000 NEYXT (adjust based on your tokenomics)
-    return (amountInNum * 300000).toString();
+  const result = await response.json();
+  if (result.error) {
+    throw new Error(`Failed to get pair address: ${result.error.message}`);
   }
   
-  throw new Error('Unsupported token pair for QuickSwap quote');
+  const pairAddress = '0x' + result.result.slice(-40); // Last 20 bytes as address
+  console.log('Pair address for', tokenA, '-', tokenB, ':', pairAddress);
+  
+  if (pairAddress === '0x0000000000000000000000000000000000000000') {
+    throw new Error(`No pair exists for ${tokenA}/${tokenB}`);
+  }
+  
+  return pairAddress;
 }
 
-// Encode swap parameters (simplified - use proper ABI encoding in production)
+// Get reserves from pair contract
+async function getReserves(pairAddress: string): Promise<{ reserve0: string; reserve1: string }> {
+  const methodId = '0x0902f1ac'; // getReserves()
+  
+  const response = await fetch(POLYGON_RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_call',
+      params: [{
+        to: pairAddress,
+        data: methodId
+      }, 'latest'],
+      id: 1
+    })
+  });
+  
+  const result = await response.json();
+  if (result.error) {
+    throw new Error(`Failed to get reserves: ${result.error.message}`);
+  }
+  
+  // Parse the returned data: reserve0 (32 bytes) + reserve1 (32 bytes) + blockTimestampLast (32 bytes)
+  const data = result.result.slice(2); // Remove 0x prefix
+  const reserve0 = BigInt('0x' + data.slice(0, 64)).toString();
+  const reserve1 = BigInt('0x' + data.slice(64, 128)).toString();
+  
+  console.log('Reserves:', { reserve0, reserve1 });
+  return { reserve0, reserve1 };
+}
+
+// Calculate output amount using constant product formula
+function calculateAmountOut(amountIn: string, reserveIn: string, reserveOut: string): string {
+  const amountInBig = BigInt(amountIn);
+  const reserveInBig = BigInt(reserveIn);
+  const reserveOutBig = BigInt(reserveOut);
+  
+  // UniswapV2 formula: amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
+  // 997/1000 = 0.3% fee
+  const amountInWithFee = amountInBig * BigInt(997);
+  const numerator = amountInWithFee * reserveOutBig;
+  const denominator = reserveInBig * BigInt(1000) + amountInWithFee;
+  
+  return (numerator / denominator).toString();
+}
+
+// Get quote from QuickSwap using real pair contracts
+async function getQuoteFromQuickSwap(fromToken: string, toToken: string, amountIn: string): Promise<string> {
+  console.log('Getting QuickSwap quote for:', { fromToken, toToken, amountIn });
+  
+  try {
+    // Get pair address
+    const pairAddress = await getPairAddress(fromToken, toToken);
+    
+    // Get reserves
+    const { reserve0, reserve1 } = await getReserves(pairAddress);
+    
+    // Determine which token is token0 and token1 (QuickSwap sorts them)
+    const token0 = fromToken.toLowerCase() < toToken.toLowerCase() ? fromToken : toToken;
+    const isToken0Input = fromToken.toLowerCase() === token0.toLowerCase();
+    
+    // Calculate output amount
+    const reserveIn = isToken0Input ? reserve0 : reserve1;
+    const reserveOut = isToken0Input ? reserve1 : reserve0;
+    
+    const amountOut = calculateAmountOut(amountIn, reserveIn, reserveOut);
+    
+    console.log('QuickSwap quote calculation:', {
+      amountIn,
+      reserveIn,
+      reserveOut,
+      amountOut,
+      isToken0Input
+    });
+    
+    return amountOut;
+    
+  } catch (error) {
+    console.error('Error getting QuickSwap quote:', error);
+    throw new Error(`Failed to get QuickSwap quote: ${error.message}`);
+  }
+}
+
+// ABI encoding utilities for QuickSwap router calls
+function padLeft(str: string, length: number): string {
+  while (str.length < length) {
+    str = '0' + str;
+  }
+  return str;
+}
+
+function encodeAddress(address: string): string {
+  // Remove 0x prefix and pad to 32 bytes (64 hex chars)
+  return padLeft(address.replace('0x', ''), 64);
+}
+
+function encodeUint256(value: string): string {
+  // Convert to hex and pad to 32 bytes
+  const hex = BigInt(value).toString(16);
+  return padLeft(hex, 64);
+}
+
+
+
+// Encode swap parameters for swapExactTokensForTokens
 function encodeSwapParams(amountIn: string, amountOutMin: string, path: string[], to: string, deadline: number): string {
-  // This is a very simplified encoding - in production you should use:
-  // - ethers.js ABI encoding
-  // - or web3.js ABI encoding
-  // - or a proper encoding library
+  console.log('Encoding swap parameters:', { amountIn, amountOutMin, path, to, deadline });
   
-  console.warn('⚠️ Using simplified parameter encoding - implement proper ABI encoding for production');
+  // swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
+  const encodedAmountIn = encodeUint256(amountIn);
+  const encodedAmountOutMin = encodeUint256(amountOutMin);
+  const encodedTo = encodeAddress(to);
+  const encodedDeadline = encodeUint256(deadline.toString());
   
-  // Return empty data for now - this will cause the transaction to fail
-  // which is what we want until proper implementation
-  throw new Error('QuickSwap transaction encoding not yet implemented - needs proper ABI encoding');
+  // For the array, we need to handle dynamic array encoding
+  const pathOffset = encodeUint256('160'); // Offset to where array data starts
+  const pathLength = encodeUint256(path.length.toString());
+  const pathData = path.map(addr => encodeAddress(addr)).join('');
+  
+  const result = encodedAmountIn + encodedAmountOutMin + pathOffset + encodedTo + encodedDeadline + pathLength + pathData;
+  
+  console.log('Encoded parameters:', result);
+  return result;
 }
 
 serve(async (req) => {
