@@ -296,7 +296,7 @@ M6 – Frontend Modal UX
 	•	✅ Asset disable logic - COMPLETE: FIAT & POL disabled as payment options (POL reserved for gas)
 	•	✅ Scrollable modal design - COMPLETE: Handles all content sizes gracefully
 	•	✅ Dynamic minimum amounts - COMPLETE: ETH 0.00001, USDC 0.01, disabled assets handled
-	•	⬜ GasEstimate.tsx - TODO: Show gas estimates in POL (traditional approach)
+	•	✅ GasEstimate.tsx - TODO: Show gas estimates in POL (traditional approach)
 	•	⬜ analytics.ts events - TODO: Track user interactions and conversion funnel
 
 M6.1 - Functional Buy Flow Implementation:
