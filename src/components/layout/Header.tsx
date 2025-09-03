@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { useAdmin } from '../../hooks/useAdmin';
 import { Button } from '../ui/Button';
-import config from '../../config/env';
 import { EnvironmentChecker } from '../debug/EnvironmentChecker';
 import { User, LogOut, Settings, Wallet, ChevronDown, Bug, Shield } from 'lucide-react';
 
@@ -129,8 +128,8 @@ export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
                         <span>Settings</span>
                       </button>
                       
-                      {/* Dev-only Environment Debugger toggle */}
-                      {config.isDevelopment && (
+                      {/* Environment Debugger toggle - temporarily enabled in production */}
+                      {/* {config.isDevelopment && ( */}
                         <button
                           onClick={toggleEnvironmentDebugger}
                           className="w-full text-left px-4 py-2 text-sm text-soft-white hover:bg-teal-blue/20 flex items-center space-x-2"
@@ -138,7 +137,7 @@ export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
                           <Bug className="w-3 h-3" />
                           <span>{showEnvironmentDebugger ? 'Hide' : 'Show'} Debug Panel</span>
                         </button>
-                      )}
+                      {/* )} */}
                       
                       {/* Admin-only Admin Link */}
                       {isAdmin && (
@@ -192,12 +191,12 @@ export const Header = ({ showWallet = false, onToggleWallet }: HeaderProps) => {
         </div>
       </header>
 
-      {/* Environment Debugger - Only show when toggled in dev mode */}
-      {config.isDevelopment && showEnvironmentDebugger && (
+      {/* Environment Debugger - temporarily enabled in production */}
+      {/* {config.isDevelopment && */ showEnvironmentDebugger && (
         <div className="fixed bottom-4 right-4 z-40">
           <EnvironmentChecker />
         </div>
-      )}
+      )/* } */}
     </>
   );
 }; 
