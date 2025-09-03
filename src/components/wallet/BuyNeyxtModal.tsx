@@ -160,13 +160,25 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
         };
 
         console.log('Sending approval transaction:', approvalTx);
-        const approvalResponse = await signer.sendTransaction(approvalTx);
-        console.log('Approval transaction sent:', approvalResponse.hash);
+        
+        try {
+          const approvalResponse = await signer.sendTransaction(approvalTx);
+          console.log('Approval transaction sent:', approvalResponse.hash);
 
-        // Wait for approval to be confirmed
-        console.log('Waiting for approval confirmation...');
-        await approvalResponse.wait();
-        console.log('Approval confirmed!');
+          // Wait for approval to be confirmed
+          console.log('Waiting for approval confirmation...');
+          const approvalReceipt = await approvalResponse.wait();
+          console.log('Approval confirmed!', approvalReceipt);
+        } catch (approvalError: any) {
+          if (approvalError.code === -32603 && approvalError.message === 'already known') {
+            console.log('Approval transaction already pending, continuing...');
+            // Wait a bit for the pending transaction to process
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          } else {
+            console.error('Approval failed:', approvalError);
+            throw approvalError;
+          }
+        }
       }
 
       // Step 2: Send the swap transaction
@@ -179,14 +191,27 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
       };
 
       console.log('Sending swap transaction:', swapTx);
-      const txResponse = await signer.sendTransaction(swapTx);
-      console.log('Swap transaction sent:', txResponse.hash);
+      
+      try {
+        const txResponse = await signer.sendTransaction(swapTx);
+        console.log('Swap transaction sent:', txResponse.hash);
+        
+        finalTxHash = txResponse.hash;
+        setTxHash(finalTxHash);
 
-      finalTxHash = txResponse.hash;
-      setTxHash(finalTxHash);
-
-      // Update route status with transaction hash
-      await updateRouteStatus(executeResponse.route.routeId, finalTxHash, userAddress);
+        // Update route status with transaction hash
+        await updateRouteStatus(executeResponse.route.routeId, finalTxHash, userAddress);
+      } catch (swapError: any) {
+        if (swapError.code === -32603 && swapError.message === 'already known') {
+          console.log('Swap transaction already pending, check transaction status...');
+          // For now, just show success but without a hash
+          setCurrentStep('success');
+          return;
+        } else {
+          console.error('Swap transaction failed:', swapError);
+          throw swapError;
+        }
+      }
 
       // Start polling for transaction status
       setCurrentStep('success');
