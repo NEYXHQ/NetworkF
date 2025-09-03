@@ -41,14 +41,36 @@ export const useTokenService = () => {
     }
   };
 
+  const getUSDCBalance = async (): Promise<string> => {
+    checkConnection();
+    try {
+      return await ethersRPC.getUSDCBalance(provider!);
+    } catch (error) {
+      console.error('Error getting USDC balance:', error);
+      throw new Error('Failed to get USDC token balance');
+    }
+  };
+
+  const getWETHBalance = async (): Promise<string> => {
+    checkConnection();
+    try {
+      return await ethersRPC.getWETHBalance(provider!);
+    } catch (error) {
+      console.error('Error getting wETH balance:', error);
+      throw new Error('Failed to get wETH token balance');
+    }
+  };
+
   const getTokenBalances = async (): Promise<TokenBalance> => {
     checkConnection();
     try {
-      const [neyxt, native] = await Promise.all([
+      const [neyxt, native, usdc, weth] = await Promise.all([
         getNEYXTBalance(),
         getNativeBalance(),
+        getUSDCBalance(),
+        getWETHBalance(),
       ]);
-      return { neyxt, native };
+      return { neyxt, native, usdc, weth };
     } catch (error) {
       console.error('Error getting token balances:', error);
       throw new Error('Failed to get token balances');
@@ -144,6 +166,8 @@ export const useTokenService = () => {
     getChainId,
     getNEYXTBalance,
     getNativeBalance,
+    getUSDCBalance,
+    getWETHBalance,
     getTokenBalances,
     sendNEYXT,
     sendNative,
