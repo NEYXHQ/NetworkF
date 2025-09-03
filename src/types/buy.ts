@@ -40,6 +40,15 @@ export interface ExecuteRequest {
 }
 
 export interface ExecuteResponse {
+  // If approval is needed, this will be the approval transaction
+  approvalTx?: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
+  // The main swap transaction
   txData: {
     to: string;
     data: string;
@@ -53,6 +62,9 @@ export interface ExecuteResponse {
     source: string;
     routeId: string;
   };
+  // Approval info
+  requiresApproval?: boolean;
+  approvalToken?: string;
 }
 
 export interface StatusResponse {

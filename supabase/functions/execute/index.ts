@@ -27,6 +27,15 @@ interface ExecuteRequest {
 
 // Execute response interface
 interface ExecuteResponse {
+  // If approval is needed, this will be the approval transaction
+  approvalTx?: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
+  // The main swap transaction
   txData: {
     to: string;
     data: string;
@@ -40,6 +49,9 @@ interface ExecuteResponse {
     source: string;
     routeId: string;
   };
+  // Approval info
+  requiresApproval?: boolean;
+  approvalToken?: string;
 }
 
 // Helper function to get token address from asset name
@@ -85,6 +97,89 @@ function convertToSmallestUnits(amount: string, asset: string): string {
   return Math.floor(numAmount * Math.pow(10, decimals)).toString();
 }
 
+// Check if token approval is needed
+async function checkApprovalNeeded(
+  tokenAddress: string, 
+  userAddress: string, 
+  spenderAddress: string, 
+  amount: string
+): Promise<boolean> {
+  // For native tokens (POL), no approval needed
+  if (tokenAddress === POLYGON_TOKENS.pol) {
+    return false;
+  }
+
+  try {
+    // Get current allowance
+    const methodId = '0xdd62ed3e'; // allowance(address,address)
+    const encodedOwner = encodeAddress(userAddress);
+    const encodedSpender = encodeAddress(spenderAddress);
+    const data = methodId + encodedOwner + encodedSpender;
+
+    const response = await fetch(POLYGON_RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        params: [{ to: tokenAddress, data }, 'latest'],
+        id: 1
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.error) {
+      console.warn('Failed to check allowance, assuming approval needed:', result.error);
+      return true;
+    }
+
+    const allowance = BigInt(result.result || '0x0');
+    const requiredAmount = BigInt(amount);
+    
+    console.log('Approval check:', {
+      tokenAddress,
+      userAddress,
+      spenderAddress,
+      currentAllowance: allowance.toString(),
+      requiredAmount: requiredAmount.toString(),
+      needsApproval: allowance < requiredAmount
+    });
+
+    return allowance < requiredAmount;
+  } catch (error) {
+    console.warn('Error checking allowance, assuming approval needed:', error);
+    return true;
+  }
+}
+
+// Create ERC20 approval transaction
+function createApprovalTransaction(
+  tokenAddress: string,
+  spenderAddress: string,
+  amount: string
+): {
+  to: string;
+  data: string;
+  value: string;
+  gasLimit: string;
+  gasPrice: string;
+} {
+  // approve(address spender, uint256 amount)
+  const methodId = '0x095ea7b3';
+  const encodedSpender = encodeAddress(spenderAddress);
+  const encodedAmount = encodeUint256(amount);
+  const data = methodId + encodedSpender + encodedAmount;
+
+  return {
+    to: tokenAddress,
+    data,
+    value: '0x0',
+    gasLimit: '0x15F90', // 90k gas for approval
+    gasPrice: '0x4A817C800' // 20 Gwei
+  };
+}
+
 
 
 // Find optimal route path between tokens
@@ -96,7 +191,7 @@ async function findBestRoute(fromToken: string, toToken: string): Promise<string
     await getPairAddress(fromToken, toToken);
     console.log('Direct pair found:', fromToken, '→', toToken);
     return [fromToken, toToken];
-  } catch (error) {
+  } catch {
     console.log('No direct pair, trying via WETH...');
   }
   
@@ -109,7 +204,7 @@ async function findBestRoute(fromToken: string, toToken: string): Promise<string
       console.log('Route via WETH found:', fromToken, '→', WETH, '→', toToken);
       return [fromToken, WETH, toToken];
     }
-  } catch (error) {
+  } catch {
     console.log('Route via WETH not available');
   }
   
@@ -180,11 +275,29 @@ async function getSwapTransaction(
     slippagePercentage
   });
   
+  // Check if approval is needed for the input token
+  const needsApproval = await checkApprovalNeeded(
+    fromTokenAddress, 
+    userAddress, 
+    QUICKSWAP_ROUTER, 
+    amountInSmallestUnits
+  );
+
+  let approvalTx;
+  if (needsApproval) {
+    console.log('Approval needed for token:', fromTokenAddress);
+    approvalTx = createApprovalTransaction(
+      fromTokenAddress,
+      QUICKSWAP_ROUTER,
+      amountInSmallestUnits
+    );
+  }
+  
   // Build the swap transaction data
   const deadline = Math.floor(Date.now() / 1000) + 1800; // 30 minutes from now
   
   // Encode the function call for swapExactTokensForTokens
-  const functionSignature = 'swapExactTokensForTokens(uint256,uint256,address[],address,uint256)';
+  // swapExactTokensForTokens(uint256,uint256,address[],address,uint256)
   const functionSelector = '0x38ed1739'; // First 4 bytes of keccak256(functionSignature)
   
   // Encode parameters with the optimal path
@@ -194,7 +307,7 @@ async function getSwapTransaction(
   const routeId = `quickswap-route-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const statusUrl = `/api/status?route_id=${routeId}`;
   
-  return {
+  const response: ExecuteResponse = {
     txData: {
       to: QUICKSWAP_ROUTER,
       data: txData,
@@ -207,8 +320,16 @@ async function getSwapTransaction(
     route: {
       source: `QuickSwap-${path.length - 1}hop`,
       routeId
-    }
+    },
+    requiresApproval: needsApproval,
+    approvalToken: needsApproval ? payAsset : undefined
   };
+
+  if (approvalTx) {
+    response.approvalTx = approvalTx;
+  }
+
+  return response;
 }
 
 // QuickSwap Factory and Router constants

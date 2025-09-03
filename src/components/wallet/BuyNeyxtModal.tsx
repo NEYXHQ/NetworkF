@@ -136,11 +136,36 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
 
       console.log('Transaction data received:', executeResponse);
 
-      // Send transaction via Web3Auth provider
+      // Setup ethers provider
       const ethersProvider = new (await import('ethers')).BrowserProvider(provider);
       const signer = await ethersProvider.getSigner();
 
-      const tx = {
+      let finalTxHash: string;
+
+      // Step 1: Handle approval if needed
+      if (executeResponse.requiresApproval && executeResponse.approvalTx) {
+        console.log('Approval required for', executeResponse.approvalToken);
+        
+        const approvalTx = {
+          to: executeResponse.approvalTx.to,
+          data: executeResponse.approvalTx.data,
+          value: executeResponse.approvalTx.value,
+          gasLimit: executeResponse.approvalTx.gasLimit,
+          gasPrice: executeResponse.approvalTx.gasPrice
+        };
+
+        console.log('Sending approval transaction:', approvalTx);
+        const approvalResponse = await signer.sendTransaction(approvalTx);
+        console.log('Approval transaction sent:', approvalResponse.hash);
+
+        // Wait for approval to be confirmed
+        console.log('Waiting for approval confirmation...');
+        await approvalResponse.wait();
+        console.log('Approval confirmed!');
+      }
+
+      // Step 2: Send the swap transaction
+      const swapTx = {
         to: executeResponse.txData.to,
         data: executeResponse.txData.data,
         value: executeResponse.txData.value,
@@ -148,22 +173,23 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
         gasPrice: executeResponse.txData.gasPrice
       };
 
-      console.log('Sending transaction:', tx);
-      const txResponse = await signer.sendTransaction(tx);
-      console.log('Transaction sent:', txResponse.hash);
+      console.log('Sending swap transaction:', swapTx);
+      const txResponse = await signer.sendTransaction(swapTx);
+      console.log('Swap transaction sent:', txResponse.hash);
 
-      setTxHash(txResponse.hash);
+      finalTxHash = txResponse.hash;
+      setTxHash(finalTxHash);
 
       // Update route status with transaction hash
-      await updateRouteStatus(executeResponse.route.routeId, txResponse.hash, userAddress);
+      await updateRouteStatus(executeResponse.route.routeId, finalTxHash, userAddress);
 
       // Start polling for transaction status
       setCurrentStep('success');
 
       // Poll for status updates
       const pollStatus = async () => {
-        if (txResponse.hash) {
-          const statusResult = await checkStatus(undefined, txResponse.hash);
+        if (finalTxHash) {
+          const statusResult = await checkStatus(undefined, finalTxHash);
           if (statusResult?.state === 'CONFIRMED') {
             console.log('Transaction confirmed!');
           } else if (statusResult?.state === 'FAILED') {

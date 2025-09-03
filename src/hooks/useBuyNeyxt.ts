@@ -15,6 +15,15 @@ interface BuyRequest {
 }
 
 interface BuyResponse {
+  // If approval is needed, this will be the approval transaction
+  approvalTx?: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+  };
+  // The main swap transaction
   txData: {
     to: string;
     data: string;
@@ -28,6 +37,9 @@ interface BuyResponse {
     source: string;
     routeId: string;
   };
+  // Approval info
+  requiresApproval?: boolean;
+  approvalToken?: string;
 }
 
 type BuyStatus = SwapStatusResponse;

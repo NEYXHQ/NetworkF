@@ -115,13 +115,13 @@ async function fetchQuoteFrom1inch(
   console.log('Fetching quote from 1inch v6:', url);
   
   const response = await fetch(url, {
-    headers: {
+      headers: {
       'Accept': 'application/json',
     }
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
     console.error('1inch API error:', {
       status: response.status,
       statusText: response.statusText,
@@ -675,7 +675,7 @@ async function calculateUsdEquivalent(payAsset: string, amountIn: string): Promi
       return (amountNum * 0.5).toFixed(2); // Approximate POL price
     default:
       return '0.00';
-  }
+    }
 }
 
 // Simplified gas estimation in POL
