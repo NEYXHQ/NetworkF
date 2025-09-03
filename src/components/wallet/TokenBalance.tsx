@@ -8,7 +8,7 @@ export const TokenBalance = () => {
   const { isConnected, user, getAccounts } = useWeb3Auth();
   const { getTokenBalances, formatBalance, formatNativeBalance } = useTokenService();
   
-  const [balances, setBalances] = useState({ neyxt: '0', native: '0' });
+  const [balances, setBalances] = useState({ neyxt: '0', native: '0', usdc: '0', weth: '0' });
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
@@ -199,6 +199,54 @@ export const TokenBalance = () => {
             ) : showBalances ? (
               <p className="font-semibold text-gray-900">
                 {formatNativeBalance(balances.native)} POL
+              </p>
+            ) : (
+              <p className="font-semibold text-gray-900">••••••</p>
+            )}
+          </div>
+        </div>
+
+        {/* USDC Token */}
+        <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">$</span>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">USDC</p>
+              <p className="text-sm text-gray-500">USD Coin</p>
+            </div>
+          </div>
+          <div className="text-right">
+            {isLoading ? (
+              <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+            ) : showBalances ? (
+              <p className="font-semibold text-gray-900">
+                {formatBalance(balances.usdc, 2)} USDC
+              </p>
+            ) : (
+              <p className="font-semibold text-gray-900">••••••</p>
+            )}
+          </div>
+        </div>
+
+        {/* wETH Token */}
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">Ξ</span>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">wETH</p>
+              <p className="text-sm text-gray-500">Wrapped Ethereum</p>
+            </div>
+          </div>
+          <div className="text-right">
+            {isLoading ? (
+              <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+            ) : showBalances ? (
+              <p className="font-semibold text-gray-900">
+                {formatBalance(balances.weth)} wETH
               </p>
             ) : (
               <p className="font-semibold text-gray-900">••••••</p>

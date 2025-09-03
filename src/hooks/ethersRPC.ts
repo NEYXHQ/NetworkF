@@ -150,6 +150,41 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
   }
 };
 
+// ✅ Generic ERC20 Token Balance
+const getERC20Balance = async (provider: IProvider, contractAddress: string, decimals: number): Promise<string> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const address = await getAccounts(provider);
+
+    const contract = new ethers.Contract(contractAddress, ERC20_ABI, ethersProvider);
+    const balance = await contract.balanceOf(address);
+
+    console.log(`balance = ${ethers.formatUnits(balance, decimals)} for contract ${contractAddress}`)
+
+    return ethers.formatUnits(balance, decimals);
+  } catch (error) {
+    return `Error: ${error}`;
+  }
+};
+
+// ✅ Get USDC Token Balance (ERC-20)
+const getUSDCBalance = async (provider: IProvider): Promise<string> => {
+  try {
+    return await getERC20Balance(provider, config.buyFlow.contracts.usdc, 6); // USDC has 6 decimals
+  } catch (error) {
+    return `Error: ${error}`;
+  }
+};
+
+// ✅ Get wETH Token Balance (ERC-20)
+const getWETHBalance = async (provider: IProvider): Promise<string> => {
+  try {
+    return await getERC20Balance(provider, config.buyFlow.contracts.weth, 18); // wETH has 18 decimals
+  } catch (error) {
+    return `Error: ${error}`;
+  }
+};
+
 const ensureApproval = async (
   signer: ethers.JsonRpcSigner,
   userAddress: string,
@@ -188,6 +223,9 @@ export default {
   getBalance,
   getNetworkBalance,
   getNEYXTBalance,
+  getERC20Balance,
+  getUSDCBalance,
+  getWETHBalance,
   sendTransaction,
   sendToken,
   signMessage,
