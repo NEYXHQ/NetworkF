@@ -232,8 +232,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
         }
       };
 
-      // Wait for transaction to be included
-      await txResponse.wait();
+      // Start polling for transaction status
       pollStatus();
 
     } catch (error) {
