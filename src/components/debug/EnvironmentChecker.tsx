@@ -18,6 +18,8 @@ export const EnvironmentChecker = () => {
   const [isLoadingPool, setIsLoadingPool] = useState(false);
   const [approvalInfo, setApprovalInfo] = useState<string>('');
   const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
+  const [pendingTxInfo, setPendingTxInfo] = useState<string>('');
+  const [isLoadingPendingTx, setIsLoadingPendingTx] = useState(false);
   
   // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
@@ -378,6 +380,111 @@ If you see ❌ for USDC → QuickSwap Router, you'll need approval before swappi
     }
   };
 
+  const handleCheckPendingTransactions = async () => {
+    if (!isConnected || !provider) {
+      setPendingTxInfo('❌ Wallet not connected. Please connect your wallet first.');
+      return;
+    }
+
+    setIsLoadingPendingTx(true);
+    setPendingTxInfo('');
+
+    try {
+      // Get user's wallet address
+      const accounts = await getAccounts();
+      if (accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+      const userAddress = accounts[0];
+
+      // Create ethers provider and signer from Web3Auth
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+      const signerAddress = await signer.getAddress();
+
+      // Get transaction counts
+      const [latestNonce, pendingNonce] = await Promise.all([
+        ethersProvider.getTransactionCount(userAddress, 'latest'),
+        ethersProvider.getTransactionCount(userAddress, 'pending')
+      ]);
+
+      // Calculate pending transactions
+      const pendingTxCount = pendingNonce - latestNonce;
+
+      // Get current block number
+      const currentBlock = await ethersProvider.getBlockNumber();
+
+      // Get current gas price
+      const gasPrice = await ethersProvider.getFeeData();
+
+      let txReport = `⏳ PENDING TRANSACTIONS TRACKER
+============================
+👤 Wallet: ${userAddress}
+🌐 Network: ${config.network.displayName} (${config.network.chainId})
+📦 Current Block: ${currentBlock}
+
+📊 TRANSACTION NONCES
+====================
+📋 Latest Nonce: ${latestNonce}
+⏳ Pending Nonce: ${pendingNonce}
+🔄 Pending TXs: ${pendingTxCount}
+
+⛽ CURRENT GAS PRICES
+====================
+💰 Gas Price: ${gasPrice.gasPrice ? ethers.formatUnits(gasPrice.gasPrice, 'gwei') : 'N/A'} Gwei
+💰 Max Fee: ${gasPrice.maxFeePerGas ? ethers.formatUnits(gasPrice.maxFeePerGas, 'gwei') : 'N/A'} Gwei
+💰 Priority Fee: ${gasPrice.maxPriorityFeePerGas ? ethers.formatUnits(gasPrice.maxPriorityFeePerGas, 'gwei') : 'N/A'} Gwei
+
+📈 TRANSACTION STATUS
+====================`;
+
+      if (pendingTxCount === 0) {
+        txReport += `\n✅ No pending transactions
+🚀 All transactions have been confirmed
+🎯 Ready to submit new transactions`;
+      } else {
+        txReport += `\n⚠️ ${pendingTxCount} transaction(s) pending
+⏰ Waiting for confirmation
+🔄 New transactions may fail with nonce issues`;
+        
+        // Add warning about potential issues
+        if (pendingTxCount > 3) {
+          txReport += `\n\n🚨 HIGH PENDING COUNT WARNING
+Too many pending transactions may cause:
+• New transactions to fail
+• Wallet to become unresponsive
+• Need to wait for confirmations`;
+        }
+      }
+
+      txReport += `\n\n📋 EXPLANATION
+==============
+📋 Latest Nonce = Last confirmed transaction
+⏳ Pending Nonce = Next transaction to send
+🔄 Pending TXs = Difference between the two
+
+💡 TIPS:
+• If pending > 0, wait before sending new transactions
+• High gas prices may help speed up confirmations
+• "Already known" errors often mean transactions are pending`;
+
+      // Additional checks
+      if (userAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+        txReport += `\n\n⚠️ ADDRESS MISMATCH WARNING:
+Web3Auth Account: ${userAddress}
+Signer Address: ${signerAddress}`;
+      }
+
+      setPendingTxInfo(txReport);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setPendingTxInfo(`❌ Error checking pending transactions: ${errorMessage}\n\nMake sure your wallet is connected and on the correct network.`);
+    } finally {
+      setIsLoadingPendingTx(false);
+    }
+  };
+
   const handleTestQuickSwapQuote = async () => {
     try {
       // Test the QuickSwap quote endpoint
@@ -568,6 +675,15 @@ If you see ❌ for USDC → QuickSwap Router, you'll need approval before swappi
           <Shield className="w-3 h-3" />
           <span>{isLoadingApprovals ? 'Checking...' : 'Check Approvals'}</span>
         </button>
+
+        <button
+          onClick={handleCheckPendingTransactions}
+          disabled={isLoadingPendingTx || !isConnected}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          <span>⏳</span>
+          <span>{isLoadingPendingTx ? 'Checking...' : 'Pending TXs'}</span>
+        </button>
       </div>
 
       {/* Pool Info Display */}
@@ -584,6 +700,15 @@ If you see ❌ for USDC → QuickSwap Router, you'll need approval before swappi
         <div className="border-t border-teal-blue/20 pt-4 mb-4">
           <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
             {approvalInfo}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Transactions Info Display */}
+      {pendingTxInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {pendingTxInfo}
           </div>
         </div>
       )}
