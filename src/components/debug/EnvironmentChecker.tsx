@@ -8,12 +8,16 @@ import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
 import { BuyNeyxtModal } from '../wallet/BuyNeyxtModal';
 import { emailService } from '../../services/emailService';
-import { Server, Mail, CheckCircle, ShoppingCart, Database } from 'lucide-react';
+import { useWeb3Auth } from '../../hooks/useWeb3Auth';
+import { Server, Mail, CheckCircle, ShoppingCart, Database, Shield } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
+  const { isConnected, getAccounts, provider } = useWeb3Auth();
   const [showBuyFlowModal, setShowBuyFlowModal] = useState(false);
   const [poolInfo, setPoolInfo] = useState<string>('');
   const [isLoadingPool, setIsLoadingPool] = useState(false);
+  const [approvalInfo, setApprovalInfo] = useState<string>('');
+  const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
   
   // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
@@ -235,6 +239,145 @@ export const EnvironmentChecker = () => {
     }
   };
 
+  const handleCheckApprovals = async () => {
+    if (!isConnected || !provider) {
+      setApprovalInfo('❌ Wallet not connected. Please connect your wallet first.');
+      return;
+    }
+
+    setIsLoadingApprovals(true);
+    setApprovalInfo('');
+
+    try {
+      // Get user's wallet address
+      const accounts = await getAccounts();
+      if (accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+      const userAddress = accounts[0];
+
+      // Contract addresses based on current network
+      const contracts = {
+        // Tokens
+        usdc: config.buyFlow.contracts.usdc || '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+        weth: config.buyFlow.contracts.weth || '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+        neyxt: config.buyFlow.neyxtAddress || '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761',
+        
+        // Routers/Spenders
+        quickswapRouter: config.buyFlow.contracts.quickswapRouter || '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
+        // Add other potential spenders
+        uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // If used
+        oneinchRouter: '0x1111111254EEB25477B68fb85Ed929f73A960582', // 1inch v5
+        paraswapRouter: '0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57', // ParaSwap
+      };
+
+      // ERC20 ABI for allowance and token info
+      const ERC20_ABI = [
+        'function allowance(address owner, address spender) external view returns (uint256)',
+        'function symbol() external view returns (string)',
+        'function decimals() external view returns (uint8)',
+        'function balanceOf(address account) external view returns (uint256)'
+      ];
+
+      // Create ethers provider
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      
+      // Token contracts
+      const usdcContract = new ethers.Contract(contracts.usdc, ERC20_ABI, ethersProvider);
+      const wethContract = new ethers.Contract(contracts.weth, ERC20_ABI, ethersProvider);
+      const neyxtContract = new ethers.Contract(contracts.neyxt, ERC20_ABI, ethersProvider);
+
+      // Get token symbols and decimals
+      const [usdcSymbol, usdcDecimals, wethSymbol, wethDecimals, neyxtSymbol, neyxtDecimals] = await Promise.all([
+        usdcContract.symbol(),
+        usdcContract.decimals(),
+        wethContract.symbol(), 
+        wethContract.decimals(),
+        neyxtContract.symbol(),
+        neyxtContract.decimals()
+      ]);
+
+      // Get balances
+      const [usdcBalance, wethBalance, neyxtBalance] = await Promise.all([
+        usdcContract.balanceOf(userAddress),
+        wethContract.balanceOf(userAddress),
+        neyxtContract.balanceOf(userAddress)
+      ]);
+
+      // Format balances
+      const formatBalance = (balance: bigint, decimals: number) => {
+        return parseFloat(ethers.formatUnits(balance, decimals)).toFixed(6);
+      };
+
+      let approvalReport = `🛡️ TOKEN APPROVAL TRACKER
+========================
+👤 Wallet: ${userAddress}
+🌐 Network: ${config.network.displayName} (${config.network.chainId})
+
+💰 TOKEN BALANCES
+=================
+${usdcSymbol}: ${formatBalance(usdcBalance, usdcDecimals)}
+${wethSymbol}: ${formatBalance(wethBalance, wethDecimals)}
+${neyxtSymbol}: ${formatBalance(neyxtBalance, neyxtDecimals)}
+
+🔐 APPROVAL STATUS
+==================\n`;
+
+      // Check approvals for each token against each router
+      const tokens = [
+        { name: usdcSymbol, address: contracts.usdc, contract: usdcContract, decimals: usdcDecimals },
+        { name: wethSymbol, address: contracts.weth, contract: wethContract, decimals: wethDecimals },
+        { name: neyxtSymbol, address: contracts.neyxt, contract: neyxtContract, decimals: neyxtDecimals }
+      ];
+
+      const spenders = [
+        { name: 'QuickSwap Router', address: contracts.quickswapRouter, category: '🔄 DEX' },
+        { name: '1inch Router', address: contracts.oneinchRouter, category: '🔗 Aggregator' },
+        { name: 'ParaSwap Router', address: contracts.paraswapRouter, category: '🔗 Aggregator' },
+        { name: 'Uniswap V2 Router', address: contracts.uniswapV2Router, category: '🔄 DEX' }
+      ];
+
+      for (const token of tokens) {
+        approvalReport += `\n📊 ${token.name} (${token.address}):\n`;
+        
+        for (const spender of spenders) {
+          try {
+            const allowance = await token.contract.allowance(userAddress, spender.address);
+            const allowanceFormatted = parseFloat(ethers.formatUnits(allowance, token.decimals));
+            
+            const status = allowanceFormatted > 0 
+              ? `✅ ${allowanceFormatted.toFixed(6)} ${token.name}`
+              : '❌ Not Approved';
+              
+            approvalReport += `  ${spender.category} ${spender.name}: ${status}\n`;
+          } catch (error) {
+            approvalReport += `  ${spender.category} ${spender.name}: ⚠️ Error checking\n`;
+          }
+        }
+      }
+
+      approvalReport += `\n📋 EXPLANATION
+==============
+✅ = Router has approval to spend tokens
+❌ = No approval (will need approval transaction)
+⚠️ = Error checking (router may not exist on this network)
+
+🔄 DEX = Direct exchange protocols
+🔗 Aggregator = Multi-DEX routing protocols
+
+💡 TIP: QuickSwap Router is the main one used for NEYXT swaps.
+If you see ❌ for USDC → QuickSwap Router, you'll need approval before swapping.`;
+
+      setApprovalInfo(approvalReport);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setApprovalInfo(`❌ Error checking approvals: ${errorMessage}\n\nMake sure your wallet is connected and on the correct network.`);
+    } finally {
+      setIsLoadingApprovals(false);
+    }
+  };
+
   const handleTestQuickSwapQuote = async () => {
     try {
       // Test the QuickSwap quote endpoint
@@ -325,9 +468,10 @@ export const EnvironmentChecker = () => {
     }
   };
 
-  if (!config.isDevelopment) {
-    return null; // Only show in development
-  }
+  // Temporarily enabled in production for debugging
+  // if (!config.isDevelopment) {
+  //   return null; // Only show in development
+  // }
 
   return (
     <>
@@ -415,6 +559,15 @@ export const EnvironmentChecker = () => {
           <span>🧪</span>
           <span>Test QuickSwap Quote</span>
         </button>
+
+        <button
+          onClick={handleCheckApprovals}
+          disabled={isLoadingApprovals || !isConnected}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          <Shield className="w-3 h-3" />
+          <span>{isLoadingApprovals ? 'Checking...' : 'Check Approvals'}</span>
+        </button>
       </div>
 
       {/* Pool Info Display */}
@@ -422,6 +575,15 @@ export const EnvironmentChecker = () => {
         <div className="border-t border-teal-blue/20 pt-4 mb-4">
           <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
             {poolInfo}
+          </div>
+        </div>
+      )}
+
+      {/* Approval Info Display */}
+      {approvalInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {approvalInfo}
           </div>
         </div>
       )}
