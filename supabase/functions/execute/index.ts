@@ -176,7 +176,7 @@ function createApprovalTransaction(
     data,
     value: '0x0',
     gasLimit: '0x15F90', // 90k gas for approval
-    gasPrice: '0x4A817C800' // 20 Gwei
+    gasPrice: '0x5D21DBA00' // 25 Gwei (minimum required)
   };
 }
 
@@ -276,12 +276,22 @@ async function getSwapTransaction(
   });
   
   // Check if approval is needed for the input token
+  console.log('🔍 Checking approval for:', {
+    fromTokenAddress,
+    userAddress,
+    router: QUICKSWAP_ROUTER,
+    amount: amountInSmallestUnits,
+    payAsset
+  });
+  
   const needsApproval = await checkApprovalNeeded(
     fromTokenAddress, 
     userAddress, 
     QUICKSWAP_ROUTER, 
     amountInSmallestUnits
   );
+  
+  console.log('✅ Approval check result:', needsApproval);
 
   let approvalTx;
   if (needsApproval) {
@@ -313,7 +323,7 @@ async function getSwapTransaction(
       data: txData,
       value: '0', // ERC20 to ERC20 swap
       gasLimit: '400000', // Higher gas limit for multi-hop swaps
-      gasPrice: '30000000000' // 30 gwei
+      gasPrice: '25000000000' // 25 gwei (minimum required)
     },
     statusUrl,
     estimatedGas: '400000',

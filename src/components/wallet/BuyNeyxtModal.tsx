@@ -135,6 +135,11 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
       }
 
       console.log('Transaction data received:', executeResponse);
+      console.log('Approval check:', {
+        requiresApproval: executeResponse.requiresApproval,
+        approvalToken: executeResponse.approvalToken,
+        hasApprovalTx: !!executeResponse.approvalTx
+      });
 
       // Setup ethers provider
       const ethersProvider = new (await import('ethers')).BrowserProvider(provider);
