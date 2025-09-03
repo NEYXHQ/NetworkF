@@ -176,7 +176,7 @@ function createApprovalTransaction(
     data,
     value: '0x0',
     gasLimit: '0x15F90', // 90k gas for approval
-    gasPrice: '0x5D21DBA00' // 25 Gwei (minimum required)
+    gasPrice: '0x0' // Will be set dynamically
   };
 }
 
@@ -323,7 +323,7 @@ async function getSwapTransaction(
       data: txData,
       value: '0', // ERC20 to ERC20 swap
       gasLimit: '400000', // Higher gas limit for multi-hop swaps
-      gasPrice: '25000000000' // 25 gwei (minimum required)
+      gasPrice: '0' // Will be set dynamically by frontend
     },
     statusUrl,
     estimatedGas: '400000',

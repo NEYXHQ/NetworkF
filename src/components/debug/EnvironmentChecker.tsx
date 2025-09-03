@@ -20,6 +20,8 @@ export const EnvironmentChecker = () => {
   const [isLoadingApprovals, setIsLoadingApprovals] = useState(false);
   const [pendingTxInfo, setPendingTxInfo] = useState<string>('');
   const [isLoadingPendingTx, setIsLoadingPendingTx] = useState(false);
+  const [cancelTxInfo, setCancelTxInfo] = useState<string>('');
+  const [isLoadingCancelTx, setIsLoadingCancelTx] = useState(false);
   
   // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
@@ -485,6 +487,139 @@ Signer Address: ${signerAddress}`;
     }
   };
 
+  const handleCancelPendingTransaction = async () => {
+    if (!isConnected || !provider) {
+      setCancelTxInfo('❌ Wallet not connected. Please connect your wallet first.');
+      return;
+    }
+
+    setIsLoadingCancelTx(true);
+    setCancelTxInfo('');
+
+    try {
+      // Get user's wallet address
+      const accounts = await getAccounts();
+      if (accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+      const userAddress = accounts[0];
+
+      // Create ethers provider and signer from Web3Auth
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+
+      // Get transaction counts
+      const [latestNonce, pendingNonce] = await Promise.all([
+        ethersProvider.getTransactionCount(userAddress, 'latest'),
+        ethersProvider.getTransactionCount(userAddress, 'pending')
+      ]);
+
+      // Calculate pending transactions
+      const pendingTxCount = pendingNonce - latestNonce;
+
+      if (pendingTxCount === 0) {
+        setCancelTxInfo('✅ No pending transactions to cancel.');
+        return;
+      }
+
+      // Get current gas price and increase it by 20% to ensure replacement
+      const feeData = await ethersProvider.getFeeData();
+      const currentGasPrice = feeData.gasPrice || feeData.maxFeePerGas;
+      if (!currentGasPrice) {
+        throw new Error('Could not get current gas price');
+      }
+      
+      // Increase gas price by 20% to ensure transaction replacement
+      const higherGasPrice = (currentGasPrice * BigInt(120)) / BigInt(100);
+
+      setCancelTxInfo(`🔄 CANCELING PENDING TRANSACTIONS
+===============================
+👤 Wallet: ${userAddress}
+📋 Latest Nonce: ${latestNonce}
+⏳ Pending Nonce: ${pendingNonce}
+🔄 Pending TXs: ${pendingTxCount}
+
+💰 Gas Price Strategy:
+Current: ${ethers.formatUnits(currentGasPrice, 'gwei')} Gwei
+Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
+
+🚀 Sending cancellation transactions...`);
+
+      const cancelResults = [];
+
+      // Send cancellation transactions for each pending nonce
+      for (let nonce = latestNonce; nonce < pendingNonce; nonce++) {
+        try {
+          // Create 0 ETH transaction to self with higher gas price
+          const cancelTx = {
+            to: userAddress, // Send to self
+            value: '0', // 0 ETH
+            gasLimit: '21000', // Standard transfer gas limit
+            gasPrice: higherGasPrice.toString(),
+            nonce: nonce // Use the specific nonce to replace
+          };
+
+          console.log(`Sending cancellation transaction for nonce ${nonce}:`, cancelTx);
+          
+          const txResponse = await signer.sendTransaction(cancelTx);
+          
+          cancelResults.push({
+            nonce,
+            hash: txResponse.hash,
+            status: 'sent'
+          });
+
+          console.log(`Cancellation tx sent for nonce ${nonce}:`, txResponse.hash);
+          
+        } catch (error) {
+          console.error(`Failed to send cancellation for nonce ${nonce}:`, error);
+          cancelResults.push({
+            nonce,
+            hash: null,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      // Update the info with results
+      let resultReport = `🔄 CANCELLATION RESULTS
+=======================
+👤 Wallet: ${userAddress}
+💰 Cancel Gas Price: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei
+
+📊 RESULTS:
+`;
+
+      cancelResults.forEach((result) => {
+        if (result.status === 'sent') {
+          resultReport += `\n✅ Nonce ${result.nonce}: ${result.hash}`;
+        } else {
+          resultReport += `\n❌ Nonce ${result.nonce}: ${result.error}`;
+        }
+      });
+
+      resultReport += `\n\n📋 NEXT STEPS:
+• Wait for cancellation transactions to confirm
+• Check "Pending TXs" again in 30-60 seconds
+• Original transactions should be replaced
+• You can now send new transactions safely
+
+⚠️ IMPORTANT:
+• Only the first transaction to confirm wins
+• Original transactions may still confirm if they have higher gas
+• Check transaction status on block explorer`;
+
+      setCancelTxInfo(resultReport);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setCancelTxInfo(`❌ Error canceling transactions: ${errorMessage}\n\nMake sure your wallet is connected and you have enough POL for gas fees.`);
+    } finally {
+      setIsLoadingCancelTx(false);
+    }
+  };
+
   const handleTestQuickSwapQuote = async () => {
     try {
       // Test the QuickSwap quote endpoint
@@ -684,6 +819,15 @@ Signer Address: ${signerAddress}`;
           <span>⏳</span>
           <span>{isLoadingPendingTx ? 'Checking...' : 'Pending TXs'}</span>
         </button>
+
+        <button
+          onClick={handleCancelPendingTransaction}
+          disabled={isLoadingCancelTx || !isConnected}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          <span>🚫</span>
+          <span>{isLoadingCancelTx ? 'Canceling...' : 'Cancel TXs'}</span>
+        </button>
       </div>
 
       {/* Pool Info Display */}
@@ -709,6 +853,15 @@ Signer Address: ${signerAddress}`;
         <div className="border-t border-teal-blue/20 pt-4 mb-4">
           <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
             {pendingTxInfo}
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Transactions Info Display */}
+      {cancelTxInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {cancelTxInfo}
           </div>
         </div>
       )}

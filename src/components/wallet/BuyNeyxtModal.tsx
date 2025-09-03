@@ -145,6 +145,10 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
       const ethersProvider = new (await import('ethers')).BrowserProvider(provider);
       const signer = await ethersProvider.getSigner();
 
+      // Get current gas price from network
+      const feeData = await ethersProvider.getFeeData();
+      const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || parseFloat('25000000000'); // 25 Gwei fallback
+
       let finalTxHash: string;
 
       // Step 1: Handle approval if needed
@@ -156,7 +160,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
           data: executeResponse.approvalTx.data,
           value: executeResponse.approvalTx.value,
           gasLimit: executeResponse.approvalTx.gasLimit,
-          gasPrice: executeResponse.approvalTx.gasPrice
+          gasPrice: gasPrice.toString()
         };
 
         console.log('Sending approval transaction:', approvalTx);
@@ -187,7 +191,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
         data: executeResponse.txData.data,
         value: executeResponse.txData.value,
         gasLimit: executeResponse.txData.gasLimit,
-        gasPrice: executeResponse.txData.gasPrice
+        gasPrice: gasPrice.toString()
       };
 
       console.log('Sending swap transaction:', swapTx);
