@@ -304,14 +304,16 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
   const getTokenBalances = async (): Promise<TokenBalance> => {
     if (!provider) throw new Error('Provider not available');
     try {
-      const [neyxt, native] = await Promise.all([
+      const [neyxt, native, usdc, weth] = await Promise.all([
         getNEYXTBalance(),
         getNativeBalance(),
+        ethersRPC.getUSDCBalance(provider),
+        ethersRPC.getWETHBalance(provider),
       ]);
-      return { neyxt, native };
+      return { neyxt, native, usdc, weth };
     } catch (error) {
       console.error('Error getting token balances:', error);
-      return { neyxt: '0', native: '0' };
+      return { neyxt: '0', native: '0', usdc: '0', weth: '0' };
     }
   };
 
