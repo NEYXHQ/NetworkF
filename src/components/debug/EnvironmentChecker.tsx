@@ -1,5 +1,5 @@
 // import { useState } from 'react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ethers } from 'ethers';
 import config from '../../config/env';
 import { NetworkIndicator } from '../ui/NetworkIndicator';
@@ -9,10 +9,11 @@ import { FaucetLinks } from '../wallet/FaucetLinks';
 import { BuyNeyxtModal } from '../wallet/BuyNeyxtModal';
 import { emailService } from '../../services/emailService';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
-import { Server, Mail, CheckCircle, ShoppingCart, Database, Shield } from 'lucide-react';
+import { Server, Mail, CheckCircle, ShoppingCart, Database, Shield, X } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
   const { isConnected, getAccounts, provider } = useWeb3Auth();
+  const [isOpen, setIsOpen] = useState(false);
   const [showBuyFlowModal, setShowBuyFlowModal] = useState(false);
   const [poolInfo, setPoolInfo] = useState<string>('');
   const [isLoadingPool, setIsLoadingPool] = useState(false);
@@ -22,6 +23,20 @@ export const EnvironmentChecker = () => {
   const [isLoadingPendingTx, setIsLoadingPendingTx] = useState(false);
   const [cancelTxInfo, setCancelTxInfo] = useState<string>('');
   const [isLoadingCancelTx, setIsLoadingCancelTx] = useState(false);
+  
+  const debugPanelRef = useRef<HTMLDivElement>(null);
+  
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && debugPanelRef.current && !debugPanelRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
   
   // const [showAIChat, setShowAIChat] = useState(false);
   const handleTestEmail = async () => {
@@ -717,14 +732,40 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
 
   return (
     <>
-    <div className="fixed bottom-4 right-4 bg-slate-gray border border-teal-blue/30 rounded-lg shadow-lg p-4 text-xs max-w-sm">
-      <div className="flex items-center space-x-2 mb-4">
-        <Server className="w-4 h-4 text-teal-blue" />
-        <span className="font-medium text-soft-white">Development Debug</span>
-      </div>
-      
-      {/* Environment Info */}
-      <div className="space-y-3 mb-4">
+    {/* Toggle Button - always visible */}
+    {!isOpen && (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 right-4 bg-slate-gray border border-teal-blue/30 rounded-lg shadow-lg p-3 text-xs hover:bg-slate-gray-700 transition-colors z-50"
+      >
+        <Server className="w-5 h-5 text-teal-blue" />
+      </button>
+    )}
+    
+    {/* Debug Panel - expandable and scrollable */}
+    {isOpen && (
+      <div 
+        ref={debugPanelRef}
+        className="fixed bottom-4 right-4 bg-slate-gray border border-teal-blue/30 rounded-lg shadow-lg text-xs w-80 max-h-[80vh] flex flex-col z-50"
+      >
+        {/* Header with close button */}
+        <div className="flex items-center justify-between p-4 border-b border-teal-blue/20">
+          <div className="flex items-center space-x-2">
+            <Server className="w-4 h-4 text-teal-blue" />
+            <span className="font-medium text-soft-white">Development Debug</span>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-soft-white/50 hover:text-soft-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto p-4 space-y-4">
+          {/* Environment Info */}
+          <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-soft-white/70">Environment:</span>
           <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -885,8 +926,10 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
         </button>
 
         {/* AI Chat test button removed for now */}
+          </div>
+        </div>
       </div>
-    </div>
+    )}
 
     {/* Buy Flow Modal */}
     <BuyNeyxtModal 
