@@ -251,15 +251,26 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
     return '0.01';
   };
 
-  const getProgressPercentage = () => {
+  const getProgressBars = () => {
+    // Returns [bar1%, bar2%, bar3%] for each of the 3 progress bars
     switch (currentStep) {
-      case 'select': return 25;
-      case 'quote': return 50;
-      case 'confirm': return 75;
-      case 'executing': return 90;
-      case 'success': 
-      case 'error': return 100;
-      default: return 25;
+      case 'select':
+        if (!selectedAsset) return [0, 0, 0]; // No token selected yet
+        return [50, 0, 0]; // Token selected
+      case 'quote':
+        if (!quote) return [100, 0, 0]; // Amount entered, getting quote
+        return [100, 50, 0]; // Quote received
+      case 'confirm':
+        return [100, 100, 0]; // Ready to confirm
+      case 'executing':
+        // During execution: start at 33%, then 66% while tx is running
+        if (!txHash) return [100, 100, 33]; // Execute trade clicked, starting
+        return [100, 100, 66]; // Transaction running
+      case 'success':
+      case 'error':
+        return [100, 100, 100]; // Complete
+      default:
+        return [0, 0, 0];
     }
   };
 
@@ -314,11 +325,14 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
               <span className="text-xs text-soft-white/60">Step {getStepNumber()} of {getTotalSteps()}</span>
             </div>
             <div className="flex space-x-2">
-              <div className="flex-1 h-2 bg-teal-blue/20 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-blue rounded-full" style={{ width: `${getProgressPercentage()}%` }}></div>
-              </div>
-              <div className="flex-1 h-2 bg-soft-white/10 rounded-full"></div>
-              <div className="flex-1 h-2 bg-soft-white/10 rounded-full"></div>
+              {getProgressBars().map((progress, index) => (
+                <div key={index} className="flex-1 h-2 bg-teal-blue/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-teal-blue rounded-full transition-all duration-300 ease-out" 
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              ))}
             </div>
           </div>
 
