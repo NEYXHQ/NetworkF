@@ -17,9 +17,6 @@ export interface ContractAddresses {
   
   // Paymaster
   BICONOMY_PAYMASTER: string;
-  
-  // Allowed routers for swaps
-  ALLOWED_ROUTERS: string[];
 }
 
 export interface PricingPolicy {
@@ -43,9 +40,7 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   
   // Biconomy uses singleton paymaster contracts per chain
   // Your instance is identified by API key + paymaster ID, not contract address
-  BICONOMY_PAYMASTER: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER as string,
-  
-  ALLOWED_ROUTERS: (import.meta.env.VITE_POLYGON_ALLOWED_ROUTERS as string | undefined)?.split(',') || []
+  BICONOMY_PAYMASTER: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER as string
 };
 
 // Helper function to get native token address (POL)
@@ -126,7 +121,6 @@ export const getAllContractAddresses = () => {
     quickswapRouter: CONTRACT_ADDRESSES.QUICKSWAP_ROUTER,
     refPoolAddress: CONTRACT_ADDRESSES.REF_POOL_ADDRESS,
     biconomyPaymaster: CONTRACT_ADDRESSES.BICONOMY_PAYMASTER,
-    allowedRouters: CONTRACT_ADDRESSES.ALLOWED_ROUTERS,
     // Native token (POL)
     nativeToken: getNativeTokenAddress(),
     // Environment info

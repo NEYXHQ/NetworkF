@@ -42,7 +42,6 @@ interface Config {
       quickswapRouter: string;
       refPoolAddress: string;
       biconomyPaymaster: string;
-      allowedRouters: string[];
     };
     // Provider API keys (stored in Supabase secrets)
     zeroXApiKey?: string; // Available in Edge Functions only
@@ -90,9 +89,8 @@ const config: Config = {
       quickswapRouter: import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER || '',
       refPoolAddress: import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS || '',
       biconomyPaymaster: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER || '',
-      allowedRouters: import.meta.env.VITE_POLYGON_ALLOWED_ROUTERS?.split(',') || [],
     },
-  },
+  }
 };
 
 export default config; 

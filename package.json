@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "secrets:dev": "supabase secrets set --project-ref kxepoivhqnurxmkgiojo --env-file .env.development",
+    "secrets:prod": "supabase secrets set --project-ref mnmlmectnlcrbnlhxyrp --env-file .env.production",
+    "env:validate": "node scripts/validate-env.js",
+    "env:sync": "node scripts/sync-env.js",
+    "env:check": "node scripts/env-check.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
