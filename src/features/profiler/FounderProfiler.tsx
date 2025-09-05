@@ -3,8 +3,9 @@ import { Button } from '../../components/ui/Button';
 import profilesConfig from '../../../knowledge/FounderProfiler/profiles_config.json';
 import questionsBank from '../../../knowledge/FounderProfiler/questions_bank.json';
 import { mapFreeTextToScale, summarizeResult, type LLMMapResponse } from '../../services/profilerLLM';
-import { saveProfilerResult, getProfilerResult, type ProfilerResult } from '../../services/profilerService';
+import { saveProfilerResult, getProfilerResult, triggerProfilerAirdrop, type ProfilerResult } from '../../services/profilerService';
 import { useSupabaseUser } from '../../hooks/useSupabaseUser';
+import { useAirdropService } from '../../hooks/useAirdropService';
 
 type DimensionKey = (typeof profilesConfig)["dimensions"][number]["key"];
 
@@ -55,6 +56,7 @@ function softmaxNegSquared(distances: Record<string, number>): Record<string, nu
 
 export const FounderProfiler = () => {
   const { supabaseUser } = useSupabaseUser();
+  const { claim: airdropClaim, claimAirdrop, isProcessing: isAirdropProcessing, airdropEnabled } = useAirdropService();
   
   // Build initial dimension state
   const initialDims: Record<DimensionKey, DimensionState> = useMemo(() => {
@@ -79,6 +81,8 @@ export const FounderProfiler = () => {
   const [finalNarrative, setFinalNarrative] = useState<string>('');
   const [existingProfile, setExistingProfile] = useState<ProfilerResult | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(false);
+  const [airdropTriggered, setAirdropTriggered] = useState<boolean>(false);
+  const [airdropStatus, setAirdropStatus] = useState<'none' | 'processing' | 'success' | 'error'>('none');
 
   // Heuristic: pick next question for dimension with highest variance not yet asked too many times
   const nextQuestion = useMemo((): QuestionItem | null => {
@@ -173,6 +177,20 @@ export const FounderProfiler = () => {
           };
           
           await saveProfilerResult(profilerResult);
+          
+          // Trigger airdrop if enabled and not already triggered
+          if (airdropEnabled && !airdropTriggered && !airdropClaim) {
+            setAirdropTriggered(true);
+            setAirdropStatus('processing');
+            
+            try {
+              const success = await claimAirdrop();
+              setAirdropStatus(success ? 'success' : 'error');
+            } catch (error) {
+              console.error('Airdrop claim error:', error);
+              setAirdropStatus('error');
+            }
+          }
         }
       } catch (e) {
         console.error('Error in profiler completion:', e);
@@ -302,8 +320,47 @@ export const FounderProfiler = () => {
   return (
     <div className="min-h-screen bg-slate-gray/20">
       <div className="max-w-3xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-soft-white mb-2">Founder Profiler (Adaptive)</h1>
-        <p className="text-soft-white/70 text-sm mb-6">Answer about {questionsBank.recommended_min_questions || 10}–{questionsBank.recommended_max_questions || 18} questions. We stop early if confidence ≥ 90%.</p>
+        <h1 className="text-2xl font-bold text-soft-white mb-2">Discover Your Entrepreneurial Profile</h1>
+        
+        {/* Gamified Introduction */}
+        {!existingProfile && !isLoadingProfile && answers.length === 0 && (
+          <div className="bg-gradient-to-br from-charcoal-black to-slate-gray/40 border border-teal-blue/30 rounded-lg p-6 mb-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-princeton-orange/20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">🎯</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-soft-white text-lg font-semibold mb-3">
+                  Welcome to Your Entrepreneurial Journey
+                </h3>
+                <p className="text-soft-white/80 mb-4 leading-relaxed">
+                  This personalized assessment will reveal your unique entrepreneurial style and help you connect with like-minded founders. 
+                  Answer about {questionsBank.recommended_min_questions || 10}–{questionsBank.recommended_max_questions || 18} questions, and we'll craft your profile.
+                </p>
+                <div className="bg-teal-blue/10 border border-teal-blue/20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-lg">🎁</span>
+                    <span className="text-soft-white font-medium">Complete & Earn</span>
+                  </div>
+                  <p className="text-soft-white/70 text-sm">
+                    Upon completion, you'll receive a welcome gift of NEYXT tokens to help you get started connecting 
+                    with other entrepreneurs in our community. These tokens power introductions, collaborations, and 
+                    meaningful connections—not transactions.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Progress indicator for ongoing assessment */}
+        {!existingProfile && !isLoadingProfile && answers.length > 0 && (
+          <p className="text-soft-white/70 text-sm mb-6">
+            Assessment in progress... We stop early when confidence reaches 90%.
+          </p>
+        )}
 
         {/* Existing Profile Display */}
         {isLoadingProfile && (
@@ -349,7 +406,7 @@ export const FounderProfiler = () => {
           <>
             <div className="mb-6 flex items-center justify-between">
               <div className="text-soft-white/80 text-sm">Questions answered: {progress.count}</div>
-              <div className="text-soft-white/80 text-sm">Top profile confidence: {(topProfile[1] * 100).toFixed(0)}%</div>
+              <div className="text-soft-white/60 text-sm">Building your profile...</div>
             </div>
 
             {/* Question Card or Result */}
@@ -437,6 +494,65 @@ export const FounderProfiler = () => {
                 <div className="bg-slate-gray/20 border border-teal-blue/20 rounded p-4 mb-4">
                   <div className="text-soft-white/90 text-base leading-relaxed whitespace-pre-wrap">{finalNarrative}</div>
                 </div>
+                
+                {/* Airdrop status display */}
+                {airdropEnabled && (
+                  <div className="bg-gradient-to-r from-princeton-orange/10 to-teal-blue/10 border border-princeton-orange/20 rounded-lg p-4 mb-4">
+                    {airdropStatus === 'processing' || (isAirdropProcessing && airdropStatus === 'none') ? (
+                      <>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-princeton-orange"></div>
+                          <span className="text-soft-white font-semibold">Processing Your Welcome Gift...</span>
+                        </div>
+                        <p className="text-soft-white/80 text-sm">
+                          We're sending your NEYXT tokens to your wallet. This may take a moment to complete.
+                        </p>
+                      </>
+                    ) : airdropStatus === 'success' || airdropClaim?.status === 'completed' ? (
+                      <>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-lg">🎉</span>
+                          <span className="text-soft-white font-semibold">Welcome Gift Delivered!</span>
+                        </div>
+                        <p className="text-soft-white/80 text-sm mb-2">
+                          Congratulations! Your NEYXT tokens have been sent to your wallet and are ready to use for connecting with other entrepreneurs in our community.
+                        </p>
+                        {airdropClaim?.transactionHash && (
+                          <p className="text-soft-white/60 text-xs">
+                            💫 Transaction: {airdropClaim.transactionHash.substring(0, 10)}...{airdropClaim.transactionHash.substring(-8)}
+                          </p>
+                        )}
+                      </>
+                    ) : airdropStatus === 'error' || airdropClaim?.status === 'failed' ? (
+                      <>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-lg">⚠️</span>
+                          <span className="text-soft-white font-semibold">Gift Processing Issue</span>
+                        </div>
+                        <p className="text-soft-white/80 text-sm mb-2">
+                          There was an issue processing your welcome gift. Don't worry - your profile is saved and our team will resolve this shortly.
+                        </p>
+                        <p className="text-soft-white/60 text-xs">
+                          💫 Contact support if you don't receive your tokens within 24 hours.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-lg">🎁</span>
+                          <span className="text-soft-white font-semibold">Welcome Gift Unlocked!</span>
+                        </div>
+                        <p className="text-soft-white/80 text-sm mb-2">
+                          Congratulations on completing your entrepreneurial profile! You've earned a welcome gift of NEYXT tokens 
+                          to start building connections with other founders in our community.
+                        </p>
+                        <p className="text-soft-white/60 text-xs">
+                          💫 These tokens will be available in your wallet shortly and can be used to facilitate introductions and collaborations with fellow entrepreneurs.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
                 
                 <div className="flex items-center space-x-2">
                   <Button onClick={reset} variant="outline">Take Assessment Again</Button>
