@@ -227,11 +227,24 @@ export const useAirdropService = () => {
       
       if (existingClaim) {
         console.log('🎯 AIRDROP SERVICE: Found existing claim:', existingClaim);
-        return { 
-          eligible: false, 
-          reason: 'User has already received an airdrop',
-          existingClaim 
-        };
+        
+        // Check if the existing claim is successful (completed with transaction hash)
+        const isSuccessful = existingClaim.status === 'completed' && existingClaim.transactionHash;
+        
+        if (isSuccessful) {
+          console.log('🎯 AIRDROP SERVICE: Existing successful claim found - user ineligible');
+          return { 
+            eligible: false, 
+            reason: 'User has already received an airdrop successfully',
+            existingClaim 
+          };
+        }
+        
+        // If claim exists but failed or has no transaction hash, user can retry
+        console.log('🎯 AIRDROP SERVICE: Existing claim is failed/incomplete - user eligible for retry:', {
+          status: existingClaim.status,
+          hasTransactionHash: !!existingClaim.transactionHash
+        });
       }
       
       console.log('🎯 AIRDROP SERVICE: No existing claim found');

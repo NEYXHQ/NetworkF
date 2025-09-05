@@ -117,25 +117,38 @@ serve(async (req) => {
       );
     }
 
-    // Check if user has already received an airdrop
+    // Check if user has already received a successful airdrop
     const { data: existingClaim } = await supabase
       .from('airdrop_claims')
-      .select('id, status')
+      .select('id, status, transaction_hash')
       .eq('user_id', userId)
       .single();
 
     if (existingClaim) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'User has already received an airdrop',
-          claimId: existingClaim.id
-        }),
-        { 
-          status: 409, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      console.log('🎯 AIRDROP EDGE FUNCTION: Found existing claim:', existingClaim);
+      
+      // Only block if the claim was successful (completed with transaction hash)
+      const isSuccessful = existingClaim.status === 'completed' && existingClaim.transaction_hash;
+      
+      if (isSuccessful) {
+        console.log('🎯 AIRDROP EDGE FUNCTION: User has successful airdrop - blocking');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'User has already received an airdrop successfully',
+            claimId: existingClaim.id
+          }),
+          { 
+            status: 409, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      console.log('🎯 AIRDROP EDGE FUNCTION: Existing claim is failed/incomplete - allowing retry:', {
+        status: existingClaim.status,
+        hasTransactionHash: !!existingClaim.transaction_hash
+      });
     }
 
     // Verify user has completed profiler
@@ -158,17 +171,47 @@ serve(async (req) => {
       );
     }
 
-    // Create initial airdrop claim record
-    const { data: claim, error: claimError } = await supabase
-      .from('airdrop_claims')
-      .insert({
-        user_id: userId,
-        wallet_address: walletAddress,
-        token_amount: parseFloat(tokenAmount),
-        status: 'processing'
-      })
-      .select('id')
-      .single();
+    // Create or update airdrop claim record
+    let claim;
+    let claimError;
+    
+    if (existingClaim) {
+      // Update existing failed claim
+      console.log('🎯 AIRDROP EDGE FUNCTION: Updating existing claim for retry');
+      const { data, error } = await supabase
+        .from('airdrop_claims')
+        .update({
+          wallet_address: walletAddress,
+          token_amount: parseFloat(tokenAmount),
+          status: 'processing',
+          error_message: null,
+          processed_at: null,
+          transaction_hash: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingClaim.id)
+        .select('id')
+        .single();
+      
+      claim = data;
+      claimError = error;
+    } else {
+      // Create new airdrop claim record
+      console.log('🎯 AIRDROP EDGE FUNCTION: Creating new claim record');
+      const { data, error } = await supabase
+        .from('airdrop_claims')
+        .insert({
+          user_id: userId,
+          wallet_address: walletAddress,
+          token_amount: parseFloat(tokenAmount),
+          status: 'processing'
+        })
+        .select('id')
+        .single();
+      
+      claim = data;
+      claimError = error;
+    }
 
     if (claimError || !claim) {
       console.error('Error creating airdrop claim:', claimError);
