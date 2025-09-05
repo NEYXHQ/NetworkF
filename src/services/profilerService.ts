@@ -5,6 +5,7 @@ export interface ProfilerResult {
   profileType: string
   confidence: number
   userId: string
+  triggerAirdrop?: boolean // Flag to trigger airdrop after saving
 }
 
 export interface ProfilerSession {
@@ -58,6 +59,69 @@ export async function saveProfilerResult(result: ProfilerResult): Promise<{ succ
   } catch (error) {
     console.error('💥 Unexpected error saving profiler result:', error);
     return { success: false, error: 'Unexpected error occurred' };
+  }
+}
+
+/**
+ * Trigger airdrop after successful profiler completion
+ */
+export async function triggerProfilerAirdrop(
+  userId: string, 
+  walletAddress: string
+): Promise<{ success: boolean; claimId?: string; error?: string }> {
+  try {
+    console.log('🎁 Triggering airdrop for user:', userId);
+    
+    // Get airdrop configuration
+    const { getAirdropConfig } = await import('../config/contracts');
+    const airdropConfig = getAirdropConfig();
+    
+    if (!airdropConfig.enableAirdrop) {
+      console.log('⚠️ Airdrops disabled in configuration');
+      return { success: false, error: 'Airdrops are currently disabled' };
+    }
+
+    // Call Supabase Edge Function for airdrop processing
+    const { data: { url }, error: urlError } = await supabase.functions.getUrl('airdrop-tokens');
+    
+    if (urlError) {
+      console.error('Error getting function URL:', urlError);
+      return { success: false, error: 'Airdrop service unavailable' };
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        userId,
+        walletAddress,
+        tokenAmount: airdropConfig.airdropAmount,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Airdrop request failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Airdrop triggered successfully:', result.claimId);
+      return { success: true, claimId: result.claimId };
+    } else {
+      console.error('❌ Airdrop failed:', result.error);
+      return { success: false, error: result.error };
+    }
+
+  } catch (error) {
+    console.error('💥 Unexpected error triggering airdrop:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to trigger airdrop' 
+    };
   }
 }
 

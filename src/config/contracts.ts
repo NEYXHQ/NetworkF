@@ -104,6 +104,14 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
   if (!import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS) missing.push('VITE_POLYGON_REF_POOL_ADDRESS');
   if (!import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER) missing.push('VITE_POLYGON_BICONOMY_PAYMASTER');
 
+  // Airdrop configuration (only required if airdrops are enabled)
+  const airdropEnabled = import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false';
+  if (airdropEnabled) {
+    if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS) missing.push('VITE_POLYGON_TREASURY_WALLET_ADDRESS');
+    if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY) missing.push('VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
+    // VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION is optional, defaults to '10'
+  }
+
   return {
     isValid: missing.length === 0,
     missing
@@ -129,11 +137,22 @@ export const getAllContractAddresses = () => {
   };
 };
 
+// Airdrop configuration helper
+export const getAirdropConfig = () => {
+  return {
+    airdropAmount: import.meta.env.VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION || '10',
+    treasuryWalletAddress: import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS as string,
+    treasuryWalletPrivateKey: import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY as string,
+    enableAirdrop: import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false', // Default enabled
+  };
+};
+
 // Feature flags helper
 export const getFeatureFlags = () => {
   return {
     enableFiat: import.meta.env.VITE_FEATURE_ENABLE_FIAT === 'true',
     enableGasSponsorship: import.meta.env.VITE_FEATURE_ENABLE_GAS_SPONSORSHIP === 'true',
     enableCrossChain: import.meta.env.VITE_FEATURE_ENABLE_CROSS_CHAIN === 'true',
+    enableAirdrop: getAirdropConfig().enableAirdrop,
   };
 };

@@ -9,10 +9,12 @@ import { FaucetLinks } from '../wallet/FaucetLinks';
 import { BuyNeyxtModal } from '../wallet/BuyNeyxtModal';
 import { emailService } from '../../services/emailService';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
-import { Server, Mail, CheckCircle, ShoppingCart, Database, Shield, X } from 'lucide-react';
+import { useAirdropService } from '../../hooks/useAirdropService';
+import { Server, Mail, CheckCircle, ShoppingCart, Database, Shield, X, Gift } from 'lucide-react';
 
 export const EnvironmentChecker = () => {
   const { isConnected, getAccounts, provider } = useWeb3Auth();
+  const { claimAirdrop, checkAirdropEligibility, airdropEnabled, airdropAmount } = useAirdropService();
   const [isOpen, setIsOpen] = useState(false);
   const [showBuyFlowModal, setShowBuyFlowModal] = useState(false);
   const [poolInfo, setPoolInfo] = useState<string>('');
@@ -23,6 +25,8 @@ export const EnvironmentChecker = () => {
   const [isLoadingPendingTx, setIsLoadingPendingTx] = useState(false);
   const [cancelTxInfo, setCancelTxInfo] = useState<string>('');
   const [isLoadingCancelTx, setIsLoadingCancelTx] = useState(false);
+  const [airdropInfo, setAirdropInfo] = useState<string>('');
+  const [isTestingAirdrop, setIsTestingAirdrop] = useState(false);
   
   const debugPanelRef = useRef<HTMLDivElement>(null);
   
@@ -39,6 +43,114 @@ export const EnvironmentChecker = () => {
   }, [isOpen]);
   
   // const [showAIChat, setShowAIChat] = useState(false);
+  
+  const handleTestAirdrop = async () => {
+    console.log('🎯 AIRDROP TEST: Starting airdrop test...');
+    
+    if (!isConnected) {
+      console.warn('🎯 AIRDROP TEST: Wallet not connected');
+      setAirdropInfo('❌ Wallet not connected. Please connect your wallet first.');
+      return;
+    }
+
+    setIsTestingAirdrop(true);
+    setAirdropInfo('');
+
+    try {
+      console.log('🎯 AIRDROP TEST: Checking eligibility...');
+      
+      // Check eligibility first
+      const eligibility = await checkAirdropEligibility();
+      console.log('🎯 AIRDROP TEST: Eligibility result:', eligibility);
+      
+      let testReport = `🎁 AIRDROP TEST RESULTS
+======================
+🌐 Network: ${config.network.displayName}
+💰 Airdrop Amount: ${airdropAmount} NEYXT
+✅ Airdrop Enabled: ${airdropEnabled ? 'Yes' : 'No'}
+
+🔍 ELIGIBILITY CHECK
+==================
+✅ Eligible: ${eligibility.eligible ? 'Yes' : 'No'}`;
+
+      if (!eligibility.eligible) {
+        testReport += `\n❌ Reason: ${eligibility.reason}`;
+        
+        if (eligibility.existingClaim) {
+          testReport += `\n📋 Existing Claim:
+   - ID: ${eligibility.existingClaim.id}
+   - Status: ${eligibility.existingClaim.status}
+   - Amount: ${eligibility.existingClaim.tokenAmount} NEYXT`;
+          
+          if (eligibility.existingClaim.transactionHash) {
+            testReport += `\n   - TX Hash: ${eligibility.existingClaim.transactionHash}`;
+          }
+        }
+        
+        setAirdropInfo(testReport);
+        return;
+      }
+
+      // If eligible, attempt the claim
+      console.log('🎯 AIRDROP TEST: User is eligible, attempting claim...');
+      testReport += `\n\n⏳ ATTEMPTING CLAIM
+===================
+🚀 Starting airdrop claim process...
+💾 Creating database record...
+🔗 Calling blockchain...`;
+      
+      setAirdropInfo(testReport);
+
+      const claimResult = await claimAirdrop();
+      console.log('🎯 AIRDROP TEST: Claim result:', claimResult);
+      
+      // Add a small delay to ensure database updates are complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Get updated claim status from database
+      const finalClaim = await checkAirdropEligibility();
+      console.log('🎯 AIRDROP TEST: Final claim status:', finalClaim);
+      
+      if (claimResult) {
+        testReport += `\n\n✅ CLAIM SUCCESSFUL!
+        
+📋 FINAL STATUS
+===============
+🎉 Airdrop claim completed successfully
+💰 ${airdropAmount} NEYXT tokens sent  
+🔗 Check your wallet for the tokens
+📊 Database record: COMPLETED`;
+        
+        if (finalClaim.existingClaim?.transactionHash) {
+          testReport += `\n🔗 Transaction Hash: ${finalClaim.existingClaim.transactionHash}`;
+        }
+      } else {
+        testReport += `\n\n❌ CLAIM FAILED!
+
+📋 FINAL STATUS  
+===============
+💥 Airdrop claim failed
+🔍 Check browser console for detailed error messages  
+🗄️ Check Supabase logs for backend errors
+📊 Database record: FAILED (for audit purposes)`;
+        
+        if (finalClaim.existingClaim?.errorMessage) {
+          testReport += `\n⚠️  Error: ${finalClaim.existingClaim.errorMessage}`;
+        }
+      }
+      
+      // Update the display with final status
+      setAirdropInfo(testReport);
+
+    } catch (error) {
+      console.error('🎯 AIRDROP TEST: Error during test:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setAirdropInfo(`❌ Airdrop test failed: ${errorMessage}\n\nCheck console for detailed error logs.`);
+    } finally {
+      setIsTestingAirdrop(false);
+    }
+  };
+
   const handleTestEmail = async () => {
     try {
       const result = await emailService.sendTestEmail('giloppe@gmail.com');
@@ -869,6 +981,15 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
           <span>🚫</span>
           <span>{isLoadingCancelTx ? 'Canceling...' : 'Cancel TXs'}</span>
         </button>
+
+        <button
+          onClick={handleTestAirdrop}
+          disabled={isTestingAirdrop || !isConnected}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          <Gift className="w-3 h-3" />
+          <span>{isTestingAirdrop ? 'Testing Airdrop...' : 'Test Airdrop'}</span>
+        </button>
       </div>
 
       {/* Pool Info Display */}
@@ -903,6 +1024,15 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
         <div className="border-t border-teal-blue/20 pt-4 mb-4">
           <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
             {cancelTxInfo}
+          </div>
+        </div>
+      )}
+
+      {/* Airdrop Test Info Display */}
+      {airdropInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {airdropInfo}
           </div>
         </div>
       )}
