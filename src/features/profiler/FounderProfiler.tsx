@@ -3,7 +3,7 @@ import { Button } from '../../components/ui/Button';
 import profilesConfig from '../../../knowledge/FounderProfiler/profiles_config.json';
 import questionsBank from '../../../knowledge/FounderProfiler/questions_bank.json';
 import { mapFreeTextToScale, summarizeResult, type LLMMapResponse } from '../../services/profilerLLM';
-import { saveProfilerResult, getProfilerResult, triggerProfilerAirdrop, type ProfilerResult } from '../../services/profilerService';
+import { saveProfilerResult, getProfilerResult, type ProfilerResult } from '../../services/profilerService';
 import { useSupabaseUser } from '../../hooks/useSupabaseUser';
 import { useAirdropService } from '../../hooks/useAirdropService';
 

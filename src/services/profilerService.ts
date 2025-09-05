@@ -82,38 +82,25 @@ export async function triggerProfilerAirdrop(
     }
 
     // Call Supabase Edge Function for airdrop processing
-    const { data: { url }, error: urlError } = await supabase.functions.getUrl('airdrop-tokens');
-    
-    if (urlError) {
-      console.error('Error getting function URL:', urlError);
-      return { success: false, error: 'Airdrop service unavailable' };
-    }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('airdrop-tokens', {
+      body: {
         userId,
         walletAddress,
         tokenAmount: airdropConfig.airdropAmount,
-      }),
+      },
     });
-
-    if (!response.ok) {
-      throw new Error(`Airdrop request failed: ${response.status}`);
-    }
-
-    const result = await response.json();
     
-    if (result.success) {
-      console.log('✅ Airdrop triggered successfully:', result.claimId);
-      return { success: true, claimId: result.claimId };
+    if (error) {
+      console.error('Error calling airdrop function:', error);
+      return { success: false, error: 'Airdrop service unavailable' };
+    }
+    
+    if (data?.success) {
+      console.log('✅ Airdrop triggered successfully:', data.claimId);
+      return { success: true, claimId: data.claimId };
     } else {
-      console.error('❌ Airdrop failed:', result.error);
-      return { success: false, error: result.error };
+      console.error('❌ Airdrop failed:', data?.error);
+      return { success: false, error: data?.error || 'Airdrop failed' };
     }
 
   } catch (error) {
