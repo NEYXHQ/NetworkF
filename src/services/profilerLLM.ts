@@ -43,7 +43,7 @@ export async function mapFreeTextToScale(params: {
   userText: string;
 }): Promise<LLMMapResponse> {
   const { url, anonKey } = getSupabaseEdge();
-  const system = `You are a professional entrepreneurial profiler. Map a user's free-text answer to a discrete scale among {-2,-1,0,1,2}. Do not invent scoring logic; use semantic closeness to options. If unclear, ask ONE clarifying question. Always return STRICT JSON with one of these shapes:\n\nSuccess: {"answer_value": -2| -1| 0| 1| 2, "confidence": 0..1, "notes": "..."}\nLow confidence: {"need_clarification": true, "clarifying_question": "..."}`;
+  const system = `You are a friendly business advisor helping understand entrepreneurial styles. Your job is to map a user's free-text answer to a scale from -2 to +2 based on how closely it matches the provided options. Be warm and understanding. If the answer is unclear, ask ONE friendly clarifying question. Always return STRICT JSON with one of these shapes:\n\nSuccess: {"answer_value": -2| -1| 0| 1| 2, "confidence": 0..1, "notes": "..."}\nLow confidence: {"need_clarification": true, "clarifying_question": "..."}`;
 
   const user = `Question: ${params.questionPrompt}\nOptions (value mapping):\n${params.options.map((o) => `- ${o.label} => ${o.value}`).join('\n')}\n\nUser answer: "${params.userText}"\n\nRespond with STRICT JSON only.`;
 
@@ -73,13 +73,13 @@ export async function mapFreeTextToScale(params: {
     const parsed = JSON.parse(content) as LLMMapResponse;
     // Basic shape validation
     if (
-      (typeof (parsed as any).answer_value === 'number' && typeof (parsed as any).confidence === 'number') ||
-      (parsed as any).need_clarification
+      (typeof (parsed as LLMMapSuccess).answer_value === 'number' && typeof (parsed as LLMMapSuccess).confidence === 'number') ||
+      (parsed as LLMMapClarify).need_clarification
     ) {
       return parsed;
     }
     throw new Error('Invalid JSON shape from LLM');
-  } catch (err) {
+  } catch {
     throw new Error('Failed to parse LLM JSON response');
   }
 }
@@ -93,7 +93,20 @@ export async function summarizeResult(params: {
   nClarifications: number;
 }): Promise<LLMSummary> {
   const { url, anonKey } = getSupabaseEdge();
-  const system = `You are a professional entrepreneurial profiler. Produce a concise final narrative. Return STRICT JSON:\n{"profile":"...","confidence":0..1,"alternatives":[{"profile":"...","prob":...}],"dimension_estimates":{...},"n_questions":N,"n_clarifications":M,"summary":"..."}`;
+  const system = `You are a warm, supportive business mentor writing a personal profile for an entrepreneur. Write EXCLUSIVELY in second person using "you" language. 
+
+MANDATORY: Your summary must start with "You are a [profile type]" and continue with phrases like:
+- "You prefer to..."
+- "You tend to..."
+- "When making decisions, you..."
+- "Your natural approach is..."
+- "You thrive when..."
+
+Write as if speaking directly to them as a friend who understands their entrepreneurial style. Be encouraging and specific about their strengths. Avoid clinical language completely.
+
+Example tone: "You are a Builder who thrives on turning ideas into reality. You prefer to dive deep into the details of your business operations rather than spending time on high-level networking. When faced with challenges, you tend to roll up your sleeves and find practical solutions..."
+
+Return STRICT JSON:\n{"profile":"...","confidence":0..1,"alternatives":[{"profile":"...","prob":...}],"dimension_estimates":{...},"n_questions":N,"n_clarifications":M,"summary":"..."}`;
   const user = `Profile: ${params.profile}\nConfidence: ${params.confidence}\nAlternatives: ${JSON.stringify(params.alternatives)}\nDimensions: ${JSON.stringify(params.dimensions)}\nQuestions: ${params.nQuestions}\nClarifications: ${params.nClarifications}\n\nRespond with STRICT JSON only.`;
 
   const res = await fetch(url, {

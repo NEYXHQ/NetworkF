@@ -1,19 +1,19 @@
 {
   "version": "1.0",
-  "updated_at": "2025-08-08T14:39:36.868468Z",
+  "updated_at": "2025-01-09T00:00:00.000Z",
   "questions": [
     {
       "id": "Q1",
       "style": "either_or",
-      "prompt": "When starting a venture, what draws you in first?",
+      "prompt": "When starting a new business venture, what draws you in first?",
       "dimension": "vision_execution",
       "options": [
         {
-          "label": "Strongly prefer: Crafting the plan to ship quickly",
+          "label": "Strongly prefer: Creating a plan to launch quickly",
           "value": -2
         },
         {
-          "label": "Prefer: Crafting the plan to ship quickly",
+          "label": "Prefer: Creating a plan to launch quickly",
           "value": -1
         },
         {
@@ -34,15 +34,15 @@
     {
       "id": "Q2",
       "style": "scenario",
-      "prompt": "Your team can ship an imperfect MVP this week or wait 4 weeks to refine the concept and pitch. What do you do?",
+      "prompt": "Your team can launch an imperfect first offering this week or wait 4 weeks to refine the concept and presentation. What do you do?",
       "dimension": "vision_execution",
       "options": [
         {
-          "label": "Ship now; iterate later",
+          "label": "Launch now; improve later",
           "value": -2
         },
         {
-          "label": "Probably ship; we\u2019ll fix it live",
+          "label": "Probably launch; we'll improve as we go",
           "value": -1
         },
         {
@@ -54,7 +54,7 @@
           "value": 1
         },
         {
-          "label": "Wait; vision-first then build",
+          "label": "Wait; perfect the vision first then execute",
           "value": 2
         }
       ],
@@ -125,11 +125,11 @@
       "dimension": "people_product",
       "options": [
         {
-          "label": "Strongly prefer: Deep product/tech work",
+          "label": "Strongly prefer: Deep work on offerings and operations",
           "value": -2
         },
         {
-          "label": "Prefer: Deep product/tech work",
+          "label": "Prefer: Deep work on offerings and operations",
           "value": -1
         },
         {
@@ -154,11 +154,11 @@
       "dimension": "people_product",
       "options": [
         {
-          "label": "Prototyping or code/design sprints",
+          "label": "Creating prototypes or developing new concepts",
           "value": -2
         },
         {
-          "label": "User tests with product tweaks",
+          "label": "Customer feedback sessions with service improvements",
           "value": -1
         },
         {
@@ -299,11 +299,11 @@
       "dimension": "sales_vs_product",
       "options": [
         {
-          "label": "Strongly prefer: Fix product until it sells itself",
+          "label": "Strongly prefer: Perfect the offering until it sells itself",
           "value": -2
         },
         {
-          "label": "Prefer: Fix product until it sells itself",
+          "label": "Prefer: Perfect the offering until it sells itself",
           "value": -1
         },
         {
@@ -328,11 +328,11 @@
       "dimension": "sales_vs_product",
       "options": [
         {
-          "label": "Ship features that move metrics",
+          "label": "Launch improvements that boost key numbers",
           "value": -2
         },
         {
-          "label": "Prototype + targeted fixes",
+          "label": "Test concepts + targeted improvements",
           "value": -1
         },
         {
@@ -440,15 +440,15 @@
     {
       "id": "Q16",
       "style": "scenario",
-      "prompt": "A founder conflict: ship now vs polish brand/UX. Your vote?",
+      "prompt": "A founder conflict: launch now vs polish brand and customer experience. Your vote?",
       "dimension": "innovation_style",
       "options": [
         {
-          "label": "Ship now; UX later",
+          "label": "Launch now; customer experience later",
           "value": -2
         },
         {
-          "label": "Ship with minimal UX polish",
+          "label": "Launch with minimal customer experience polish",
           "value": -1
         },
         {
@@ -456,7 +456,7 @@
           "value": 0
         },
         {
-          "label": "Polish UX first for trust",
+          "label": "Polish customer experience first for trust",
           "value": 1
         },
         {
@@ -469,15 +469,15 @@
     {
       "id": "Q17",
       "style": "scenario",
-      "prompt": "Recruiting a cofounder: strongest seller vs strongest engineer. Which do you prefer now?",
+      "prompt": "Recruiting a cofounder: strongest salesperson vs strongest operations expert. Which do you prefer now?",
       "dimension": "sales_vs_product",
       "options": [
         {
-          "label": "Engineer without hesitation",
+          "label": "Operations expert without hesitation",
           "value": -2
         },
         {
-          "label": "Likely engineer",
+          "label": "Likely operations expert",
           "value": -1
         },
         {
@@ -560,11 +560,11 @@
       "dimension": "people_product",
       "options": [
         {
-          "label": "70% product/tech, 30% people",
+          "label": "70% operations/offerings, 30% people",
           "value": -2
         },
         {
-          "label": "60/40 product",
+          "label": "60/40 operations",
           "value": -1
         },
         {
@@ -576,7 +576,7 @@
           "value": 1
         },
         {
-          "label": "70% people, 30% product/tech",
+          "label": "70% people, 30% operations/offerings",
           "value": 2
         }
       ],
@@ -647,7 +647,7 @@
       "dimension": "innovation_style",
       "options": [
         {
-          "label": "Build prototype quickly",
+          "label": "Create proof-of-concept quickly",
           "value": -2
         },
         {

@@ -22,12 +22,12 @@
     },
     {
       "key": "people_product",
-      "label": "People \u2194 Product",
+      "label": "People \u2194 Operations",
       "range": [
         -2,
         2
       ],
-      "desc": "-2=Product-first, +2=People-first"
+      "desc": "-2=Operations-first, +2=People-first"
     },
     {
       "key": "structure",
@@ -49,12 +49,12 @@
     },
     {
       "key": "sales_vs_product",
-      "label": "Sales/BD \u2194 Product/Eng",
+      "label": "Sales/BD \u2194 Operations",
       "range": [
         -2,
         2
       ],
-      "desc": "-2=Product/Engineering, +2=Sales/BD"
+      "desc": "-2=Operations, +2=Sales/BD"
     },
     {
       "key": "mission_profit",

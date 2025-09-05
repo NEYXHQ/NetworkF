@@ -67,6 +67,7 @@ export const FounderProfiler = () => {
 
   const [dimState, setDimState] = useState<Record<DimensionKey, DimensionState>>(initialDims);
   const [answers, setAnswers] = useState<AnswerEvent[]>([]);
+  const [questionHistory, setQuestionHistory] = useState<string[]>([]); // Track question IDs in order
   const questionList = questionsBank.questions as QuestionItem[];
   // LLM integration state
   const [freeText, setFreeText] = useState<string>('');
@@ -205,6 +206,7 @@ export const FounderProfiler = () => {
     // Update dimension mean via weighted running average; reduce variance
     const { dimension, weight } = q;
     setAnswers((prev) => [...prev, { qid: q.id, dimension, value, weight }]);
+    setQuestionHistory((prev) => [...prev, q.id]); // Track question order
     setDimState((prev) => {
       const current = prev[dimension];
       const w = Math.max(0.1, weight || 1.0);
@@ -251,16 +253,46 @@ export const FounderProfiler = () => {
       setClarifyPrompt('');
       setWaitingClarification(false);
       setLlmError('');
-    } catch (e) {
+    } catch {
       setLlmError('AI mapping failed. You can select an option or try again.');
     } finally {
       setIsMapping(false);
     }
   };
 
+  const handleGoBack = () => {
+    if (questionHistory.length === 0) return;
+    
+    // Get the last question ID and remove it from history
+    const lastQuestionId = questionHistory[questionHistory.length - 1];
+    setQuestionHistory((prev) => prev.slice(0, -1));
+    
+    // Remove the last answer from answers array
+    const lastAnswerIndex = answers.findIndex((answer, index) => 
+      answer.qid === lastQuestionId && index === answers.length - 1
+    );
+    
+    if (lastAnswerIndex !== -1) {
+      const lastAnswer = answers[lastAnswerIndex];
+      setAnswers((prev) => prev.slice(0, -1));
+      
+      // Revert the dimension state change (this is approximate since we used weighted averages)
+      setDimState((prev) => {
+        const current = prev[lastAnswer.dimension];
+        const w = Math.max(0.1, lastAnswer.weight || 1.0);
+        // Reverse the weighted average calculation (approximate)
+        const previousMean = (current.mean * (1 + w) - lastAnswer.value * w) / 1;
+        const revertedMean = clampToRange(previousMean, -2, 2);
+        const revertedVar = Math.min(1.0, current.variance / 0.8); // Reverse variance reduction
+        return { ...prev, [lastAnswer.dimension]: { mean: revertedMean, variance: revertedVar } };
+      });
+    }
+  };
+
   const reset = () => {
     setDimState(initialDims);
     setAnswers([]);
+    setQuestionHistory([]);
     setExistingProfile(null);
     setFinalNarrative('');
   };
@@ -370,36 +402,47 @@ export const FounderProfiler = () => {
                 {llmError && <span className="text-xs text-princeton-orange">{llmError}</span>}
               </div>
             </div>
+            
+            {/* Navigation buttons */}
+            <div className="mt-4 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleGoBack}
+                disabled={questionHistory.length === 0}
+                className="text-soft-white/60 hover:text-soft-white disabled:opacity-30"
+              >
+                ← Previous Question
+              </Button>
+              <div className="text-soft-white/40 text-xs">
+                {progress.count} of ~{progress.maxQ} questions
+              </div>
+            </div>
           </div>
         )}
 
         {(shouldStop || !nextQuestion) && (
           <div className="bg-charcoal-black border border-teal-blue/30 rounded-lg p-5">
-            <h3 className="text-soft-white text-xl font-semibold mb-2">Your preliminary profile</h3>
-            <p className="text-soft-white/80 mb-4">
-              {topProfile[0] ? `${topProfile[0]} — ${(topProfile[1] * 100).toFixed(0)}% confidence` : 'Not enough data'}
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {profilesConfig.dimensions.map((d) => (
-                <div key={d.key} className="bg-slate-gray/30 border border-teal-blue/20 rounded p-3">
-                  <div className="text-soft-white/70 text-xs mb-1">{d.label}</div>
-                  <div className="text-soft-white text-sm">{dimState[d.key as DimensionKey].mean.toFixed(2)} ({d.desc})</div>
-                </div>
-              ))}
-            </div>
-
-            {finalNarrative && (
-              <div className="bg-slate-gray/20 border border-teal-blue/20 rounded p-4 mb-3">
-                <div className="text-soft-white/80 text-sm whitespace-pre-wrap">{finalNarrative}</div>
+            <h3 className="text-soft-white text-xl font-semibold mb-4">Your Entrepreneurial Profile</h3>
+            
+            {!finalNarrative ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-princeton-orange mb-4"></div>
+                <p className="text-soft-white/80 text-center">
+                  Crafting your personalized profile...
+                </p>
               </div>
+            ) : (
+              <>
+                <div className="bg-slate-gray/20 border border-teal-blue/20 rounded p-4 mb-4">
+                  <div className="text-soft-white/90 text-base leading-relaxed whitespace-pre-wrap">{finalNarrative}</div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button onClick={reset} variant="outline">Take Assessment Again</Button>
+                </div>
+              </>
             )}
-
-
-
-            <div className="flex items-center space-x-2">
-              <Button onClick={reset} variant="outline">Restart</Button>
-            </div>
           </div>
         )}
           </>
