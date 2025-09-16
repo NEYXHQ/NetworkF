@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 *.env
 *.sql
+.env.production
+.env.development
+
