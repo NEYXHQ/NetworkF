@@ -1,5 +1,5 @@
 // Supabase Edge Function: OpenAI Chat proxy (Deno)
-// - Keeps OPENAI_API_KEY as a Supabase secret
+// - Keeps SUPA_OPENAI_API_KEY as a Supabase secret
 // - Usage: POST with { messages: [{ role, content }], model?, temperature? }
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -40,10 +40,10 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  const apiKey = Deno.env.get("SUPA_OPENAI_API_KEY");
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: "OPENAI_API_KEY missing" }),
+      JSON.stringify({ error: "SUPA_OPENAI_API_KEY missing" }),
       { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }

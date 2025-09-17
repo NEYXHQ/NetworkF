@@ -13,7 +13,7 @@ export interface AirdropSecurityConfig {
   requireWalletVerification: boolean;
   
   // Treasury monitoring
-  minTreasuryBalanceAlert: string; // in NEYXT tokens
+  minTreasuryBalanceAlert: string; // in WFOUNDER tokens
   maxSingleAirdropAmount: string;
   
   // Security flags
@@ -34,7 +34,7 @@ export const AIRDROP_SECURITY_CONFIG: AirdropSecurityConfig = {
   requireWalletVerification: true,
 
   // Treasury protection
-  minTreasuryBalanceAlert: '1000', // Alert when treasury < 1000 NEYXT
+  minTreasuryBalanceAlert: '1000', // Alert when treasury < 1000 WFOUNDER
   maxSingleAirdropAmount: '100', // Maximum tokens per airdrop
 
   // Security features

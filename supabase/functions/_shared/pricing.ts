@@ -1,4 +1,4 @@
-// Pricing utilities for QuickSwap v2 WETH/NEYXT reference pool validation
+// Pricing utilities for QuickSwap v2 WETH/WFOUNDER reference pool validation
 // Implements spot price, TWAP, and sanity checks for buy flow quotes
 
 import { ethers } from 'https://esm.sh/ethers@6.13.4';
@@ -32,17 +32,17 @@ interface TokenInfo {
 }
 
 interface PriceData {
-  spotPrice: number; // NEYXT per WETH
+  spotPrice: number; // WFOUNDER per WETH
   reserve0: string; // Raw reserve amount
   reserve1: string; // Raw reserve amount
   token0: TokenInfo;
   token1: TokenInfo;
   blockTimestamp: number;
-  isNeyxtToken0: boolean; // True if NEYXT is token0, false if token1
+  isWfounderToken0: boolean; // True if WFOUNDER is token0, false if token1
   liquidityWeth: number; // WETH liquidity in human readable format
-  liquidityNeyxt: number; // NEYXT liquidity in human readable format
+  liquidityWfounder: number; // WFOUNDER liquidity in human readable format
   priceImpact1Weth: number; // Price impact for 1 WETH trade
-  priceImpact1Neyxt: number; // Price impact for 1 NEYXT trade
+  priceImpact1Wfounder: number; // Price impact for 1 WFOUNDER trade
 }
 
 interface PricingPolicy {
@@ -88,8 +88,8 @@ function validateContractAddresses(): void {
     throw new Error('REF_POOL_ADDRESS not configured in environment variables');
   }
   
-  if (!contracts.neyxt) {
-    throw new Error('NEYXT contract address not configured in environment variables');
+  if (!contracts.wfounder) {
+    throw new Error('WFOUNDER contract address not configured in environment variables');
   }
   
   if (!contracts.weth) {
@@ -101,8 +101,8 @@ function validateContractAddresses(): void {
     throw new Error(`Invalid REF_POOL_ADDRESS format: ${contracts.refPool}`);
   }
   
-  if (!ethers.isAddress(contracts.neyxt)) {
-    throw new Error(`Invalid NEYXT address format: ${contracts.neyxt}`);
+  if (!ethers.isAddress(contracts.wfounder)) {
+    throw new Error(`Invalid WFOUNDER address format: ${contracts.wfounder}`);
   }
   
   if (!ethers.isAddress(contracts.weth)) {
@@ -119,7 +119,7 @@ export async function fetchPoolData(): Promise<PriceData> {
   
   const provider = getRpcProvider();
   const contracts = getContractAddresses();
-  const { refPool: refPoolAddress, neyxt: neyxtAddress, weth: wethAddress } = contracts;
+  const { refPool: refPoolAddress, wfounder: wfounderAddress, weth: wethAddress } = contracts;
 
   try {
     console.log(`Fetching pool data from ${refPoolAddress} on ${getCurrentNetwork().displayName}`);
@@ -134,15 +134,15 @@ export async function fetchPoolData(): Promise<PriceData> {
       pairContract.token1(),
     ]);
 
-    // Determine which token is NEYXT and which is WETH
-    const isNeyxtToken0 = token0Address.toLowerCase() === neyxtAddress.toLowerCase();
+    // Determine which token is WFOUNDER and which is WETH
+    const isWfounderToken0 = token0Address.toLowerCase() === wfounderAddress.toLowerCase();
     const isWethToken0 = token0Address.toLowerCase() === wethAddress.toLowerCase();
-    const isNeyxtToken1 = token1Address.toLowerCase() === neyxtAddress.toLowerCase();
+    const isWfounderToken1 = token1Address.toLowerCase() === wfounderAddress.toLowerCase();
     const isWethToken1 = token1Address.toLowerCase() === wethAddress.toLowerCase();
 
-    // Validate this is actually a NEYXT/WETH pair
-    if (!((isNeyxtToken0 && isWethToken1) || (isNeyxtToken1 && isWethToken0))) {
-      throw new Error(`Pool at ${refPoolAddress} is not a NEYXT/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
+    // Validate this is actually a WFOUNDER/WETH pair
+    if (!((isWfounderToken0 && isWethToken1) || (isWfounderToken1 && isWethToken0))) {
+      throw new Error(`Pool at ${refPoolAddress} is not a WFOUNDER/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
     }
 
     // Get token metadata
@@ -168,31 +168,31 @@ export async function fetchPoolData(): Promise<PriceData> {
       decimals: token1Decimals,
     };
 
-    // Calculate spot price (NEYXT per WETH)
+    // Calculate spot price (WFOUNDER per WETH)
     const reserve0 = reserves[0];
     const reserve1 = reserves[1];
     const blockTimestampLast = reserves[2];
 
     let spotPrice: number;
     let liquidityWeth: number;
-    let liquidityNeyxt: number;
+    let liquidityWfounder: number;
     
-    if (isNeyxtToken0) {
-      // NEYXT is token0, WETH is token1
-      // Price = reserve0 / reserve1 (NEYXT per WETH)
+    if (isWfounderToken0) {
+      // WFOUNDER is token0, WETH is token1
+      // Price = reserve0 / reserve1 (WFOUNDER per WETH)
       const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
       const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
       spotPrice = token0Formatted / token1Formatted;
-      liquidityNeyxt = token0Formatted;
+      liquidityWfounder = token0Formatted;
       liquidityWeth = token1Formatted;
     } else {
-      // WETH is token0, NEYXT is token1
-      // Price = reserve1 / reserve0 (NEYXT per WETH)
+      // WETH is token0, WFOUNDER is token1
+      // Price = reserve1 / reserve0 (WFOUNDER per WETH)
       const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
       const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
       spotPrice = token1Formatted / token0Formatted;
       liquidityWeth = token0Formatted;
-      liquidityNeyxt = token1Formatted;
+      liquidityWfounder = token1Formatted;
     }
 
     // Create temporary pool data for price impact calculation
@@ -203,16 +203,16 @@ export async function fetchPoolData(): Promise<PriceData> {
       token0,
       token1,
       blockTimestamp: blockTimestampLast,
-      isNeyxtToken0,
+      isWfounderToken0,
       liquidityWeth: 0, // Will be set below
-      liquidityNeyxt: 0, // Will be set below
+      liquidityWfounder: 0, // Will be set below
       priceImpact1Weth: 0, // Will be set below
-      priceImpact1Neyxt: 0, // Will be set below
+      priceImpact1Wfounder: 0, // Will be set below
     };
 
-    // Calculate price impact for 1 WETH and 1 NEYXT trades
+    // Calculate price impact for 1 WETH and 1 WFOUNDER trades
     const priceImpact1Weth = calculatePriceImpactForAmount(tempPoolData, '1', true);
-    const priceImpact1Neyxt = calculatePriceImpactForAmount(tempPoolData, '1', false);
+    const priceImpact1Wfounder = calculatePriceImpactForAmount(tempPoolData, '1', false);
 
     const poolData: PriceData = {
       spotPrice,
@@ -221,14 +221,14 @@ export async function fetchPoolData(): Promise<PriceData> {
       token0,
       token1,
       blockTimestamp: blockTimestampLast,
-      isNeyxtToken0,
+      isWfounderToken0,
       liquidityWeth,
-      liquidityNeyxt,
+      liquidityWfounder,
       priceImpact1Weth,
-      priceImpact1Neyxt,
+      priceImpact1Wfounder,
     };
 
-    console.log(`Pool data fetched successfully: ${spotPrice.toFixed(6)} NEYXT per WETH, ${liquidityWeth.toFixed(4)} WETH liquidity`);
+    console.log(`Pool data fetched successfully: ${spotPrice.toFixed(6)} WFOUNDER per WETH, ${liquidityWeth.toFixed(4)} WETH liquidity`);
     
     return poolData;
   } catch (error) {
@@ -252,23 +252,23 @@ function calculatePriceImpactForAmount(
     // Determine which reserves to use
     let reserveIn: bigint, reserveOut: bigint;
     if (isWethIn) {
-      if (poolData.isNeyxtToken0) {
-        // WETH in, NEYXT out
+      if (poolData.isWfounderToken0) {
+        // WETH in, WFOUNDER out
         reserveIn = BigInt(poolData.reserve1); // WETH reserve
-        reserveOut = BigInt(poolData.reserve0); // NEYXT reserve
+        reserveOut = BigInt(poolData.reserve0); // WFOUNDER reserve
       } else {
-        // WETH in, NEYXT out
+        // WETH in, WFOUNDER out
         reserveIn = BigInt(poolData.reserve0); // WETH reserve
-        reserveOut = BigInt(poolData.reserve1); // NEYXT reserve
+        reserveOut = BigInt(poolData.reserve1); // WFOUNDER reserve
       }
     } else {
-      if (poolData.isNeyxtToken0) {
-        // NEYXT in, WETH out
-        reserveIn = BigInt(poolData.reserve0); // NEYXT reserve
+      if (poolData.isWfounderToken0) {
+        // WFOUNDER in, WETH out
+        reserveIn = BigInt(poolData.reserve0); // WFOUNDER reserve
         reserveOut = BigInt(poolData.reserve1); // WETH reserve
       } else {
-        // NEYXT in, WETH out
-        reserveIn = BigInt(poolData.reserve1); // NEYXT reserve
+        // WFOUNDER in, WETH out
+        reserveIn = BigInt(poolData.reserve1); // WFOUNDER reserve
         reserveOut = BigInt(poolData.reserve0); // WETH reserve
       }
     }
@@ -347,7 +347,7 @@ export function validateQuote(
     }
 
     // 4. Check liquidity constraints
-    const liquidityCheck = isWethIn ? poolData.liquidityWeth : poolData.liquidityNeyxt;
+    const liquidityCheck = isWethIn ? poolData.liquidityWeth : poolData.liquidityWfounder;
     if (parseFloat(amountIn) > liquidityCheck * 0.1) { // Max 10% of liquidity
       warnings.push(`Trade size ${parseFloat(amountIn).toFixed(4)} represents more than 10% of available liquidity`);
     }
@@ -407,7 +407,7 @@ export function getPoolHealthMetrics(poolData: PriceData): {
   overallHealth: number; // 0-100
 } {
   // Liquidity score based on total value locked
-  const totalValueWeth = poolData.liquidityWeth + (poolData.liquidityNeyxt / poolData.spotPrice);
+  const totalValueWeth = poolData.liquidityWeth + (poolData.liquidityWfounder / poolData.spotPrice);
   const liquidityScore = Math.min(100, (totalValueWeth / 100) * 100); // 100 WETH = 100% score
   
   // Price stability (placeholder - would need historical data for real calculation)

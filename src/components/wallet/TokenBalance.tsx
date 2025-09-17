@@ -8,7 +8,7 @@ export const TokenBalance = () => {
   const { isConnected, user, getAccounts } = useWeb3Auth();
   const { getTokenBalances, formatBalance, formatNativeBalance } = useTokenService();
   
-  const [balances, setBalances] = useState({ neyxt: '0', native: '0', usdc: '0', weth: '0' });
+  const [balances, setBalances] = useState({ wfounder: '0', native: '0', usdc: '0', weth: '0' });
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
@@ -89,7 +89,7 @@ export const TokenBalance = () => {
       <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
         <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">Connect Your Wallet</h3>
-        <p className="text-gray-600">Sign in to view your token balances and manage your NEYXT tokens.</p>
+        <p className="text-gray-600">Sign in to view your token balances and manage your WFOUNDER tokens.</p>
       </div>
     );
   }
@@ -158,14 +158,14 @@ export const TokenBalance = () => {
 
       {/* Token Balances */}
       <div className="space-y-4">
-        {/* NEYXT Token */}
+        {/* WFOUNDER Token */}
         <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">N</span>
             </div>
             <div>
-              <p className="font-medium text-gray-900">NEYXT</p>
+              <p className="font-medium text-gray-900">WFOUNDER</p>
               <p className="text-sm text-gray-500">Founders Token</p>
             </div>
           </div>
@@ -174,7 +174,7 @@ export const TokenBalance = () => {
               <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
             ) : showBalances ? (
               <p className="font-semibold text-gray-900">
-                {formatBalance(balances.neyxt)} NEYXT
+                {formatBalance(balances.wfounder)} WFOUNDER
               </p>
             ) : (
               <p className="font-semibold text-gray-900">••••••</p>
@@ -259,11 +259,11 @@ export const TokenBalance = () => {
       <div className="mt-6 flex space-x-3">
         {/* TODO: Implement send buttons
         <Button
-          onClick={() => handleSendNEYXT()}
+          onClick={() => handleSendWFOUNDER()}
           className="flex-1"
           disabled={isLoading}
         >
-          Send NEYXT
+          Send WFOUNDER
         </Button>
         <Button
           onClick={() => handleSendPOL()}

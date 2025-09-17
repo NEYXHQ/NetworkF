@@ -98,9 +98,9 @@ Deno.serve(async (req: Request) => {
         }
       )
     }
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const resendApiKey = Deno.env.get('SUPA_RESEND_API_KEY')
     if (!resendApiKey) {
-      console.error('❌ RESEND_API_KEY not found in environment variables')
+      console.error('❌ SUPA_RESEND_API_KEY not found in environment variables')
       return new Response(
         JSON.stringify({ error: 'Email service configuration error' }),
         { 

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **WFounders**, a modern Web3 application built with React, TypeScript, and Vite that combines:
 - **Web3Auth** for social authentication with automatic wallet creation
 - **Supabase** for user management and database operations  
-- **Polygon blockchain** integration for NEYXT token transactions
+- **Polygon blockchain** integration for WFOUNDER token transactions
 - **Admin dashboard** for user approval workflows
 - **AI-powered founder profiling** system
 
@@ -61,7 +61,7 @@ Configuration is managed through:
 **State Management (`src/hooks/`)**
 - `useWeb3Auth.ts` - Web3Auth authentication state
 - `useSupabaseUser.ts` - User profile and database operations
-- `useTokenService.ts` - NEYXT token balance and transaction handling
+- `useTokenService.ts` - WFOUNDER token balance and transaction handling
 - `useBuyNeyxt.ts` - Token purchase flow with DEX integration
 
 **Services (`src/services/`)**
@@ -109,12 +109,12 @@ All environment variables use `VITE_` prefix for frontend access:
 - `VITE_SUPABASE_PROJECT_ID` - Supabase project identifier
 
 **Smart Contracts (Polygon):**
-- `VITE_POLYGON_NEYXT_CONTRACT_ADDRESS` - NEYXT token contract
+- `VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS` - WFOUNDER token contract
 - `VITE_POLYGON_WETH_CONTRACT_ADDRESS` - Wrapped ETH contract  
 - `VITE_POLYGON_USDC_CONTRACT_ADDRESS` - USD Coin contract
 - `VITE_POLYGON_QUICKSWAP_FACTORY` - QuickSwap DEX factory
 - `VITE_POLYGON_QUICKSWAP_ROUTER` - QuickSwap DEX router
-- `VITE_POLYGON_REF_POOL_ADDRESS` - WETH/NEYXT liquidity pool
+- `VITE_POLYGON_REF_POOL_ADDRESS` - WETH/WFOUNDER liquidity pool
 - `VITE_POLYGON_BICONOMY_PAYMASTER` - Gasless transaction paymaster
 - `VITE_POLYGON_ALLOWED_ROUTERS` - Comma-separated DEX router addresses
 
@@ -125,11 +125,17 @@ All environment variables use `VITE_` prefix for frontend access:
 
 ### Server-Side Secrets (Supabase)
 These are stored as Supabase secrets and not exposed to frontend:
-- `ZEROX_API_KEY` - 0x Protocol API for DEX aggregation
-- `BICONOMY_API_KEY` - Biconomy gasless transaction API
-- `BICONOMY_PAYMASTER_ID` - Biconomy paymaster application ID
-- `RESEND_API_KEY` - Email delivery service
-- `OPENAI_API_KEY` - AI profiling service
+- `SUPA_ZEROX_API_KEY` - 0x Protocol API for DEX aggregation
+- `SUPA_BICONOMY_API_KEY` - Biconomy gasless transaction API
+- `SUPA_BICONOMY_PAYMASTER_ID` - Biconomy paymaster application ID
+- `SUPA_RESEND_API_KEY` - Email delivery service
+- `SUPA_OPENAI_API_KEY` - AI profiling service
+- `SUPA_TRANSAK_API_KEY` - Fiat onramp service
+- `SUPA_POLYGON_RPC_URL` - Server-side RPC endpoint
+- `SUPA_POLYGON_TREASURY_WALLET_PRIVATE_KEY` - Treasury wallet private key (CRITICAL - server only)
+- `SUPA_NETWORK_ENVIRONMENT` - Server-side environment detection
+- `SUPA_NODE_ENV` - Node environment variable
+- `SUPA_ENVIRONMENT` - Environment configuration
 
 ## Key Development Patterns
 
@@ -161,7 +167,7 @@ const network = currentNetwork; // Auto-selected based on import.meta.env.DEV
 ```
 
 ### Token Integration
-NEYXT token operations via ethers.js:
+WFOUNDER token operations via ethers.js:
 ```typescript
 const { balance, sendToken, isLoading } = useTokenService();
 const { getQuote, executeTrade } = useBuyNeyxt();

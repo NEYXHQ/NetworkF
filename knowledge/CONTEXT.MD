@@ -4,13 +4,13 @@
 
 **WFounders** is a modern Web3 application that creates a global network of verified company founders. Built with a **React + TypeScript + Vite** frontend, **Web3Auth** for social authentication, **Supabase** for backend services, and **Polygon blockchain** for token operations.
 
-The platform combines traditional social networking with Web3 capabilities while keeping blockchain complexity invisible to end users. **Currently implementing a comprehensive NEYXT token purchase flow** that allows users to buy tokens using crypto or fiat with gas fees paid in NEYXT.
+The platform combines traditional social networking with Web3 capabilities while keeping blockchain complexity invisible to end users. **Currently implementing a comprehensive WFOUNDER token purchase flow** that allows users to buy tokens using crypto or fiat with gas fees paid in WFOUNDER.
 
 
 ### Buy Flow Architecture (NEW)
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    NEYXT Purchase Flow                     │
+│                    WFOUNDER Purchase Flow                     │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
 │  │   Frontend  │ │   Backend   │ │    Providers        │  │
 │  │             │ │             │ │                     │  │
@@ -41,8 +41,8 @@ The platform combines traditional social networking with Web3 capabilities while
 ### Buy Flow Providers (NEW)
 - **0x Swap API** - Primary swap aggregator for Polygon
 - **Transak** - Primary fiat onramp provider
-- **Biconomy Token Paymaster** - Gasless transactions with NEYXT fees
-- **QuickSwap v2** - Reference DEX for WETH/NEYXT pricing
+- **Biconomy Token Paymaster** - Gasless transactions with WFOUNDER fees
+- **QuickSwap v2** - Reference DEX for WETH/WFOUNDER pricing
 
 ### Development Tools
 - **ESLint 9.30.1** - Code quality and consistency
@@ -119,7 +119,7 @@ VITE_FEATURE_ENABLE_GAS_SPONSORSHIP=false
 VITE_FEATURE_ENABLE_CROSS_CHAIN=false
 
 # Buy Flow (contracts & DEX)
-VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=
+VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS=
 VITE_POLYGON_WETH_CONTRACT_ADDRESS=
 VITE_POLYGON_USDC_CONTRACT_ADDRESS=
 VITE_POLYGON_QUICKSWAP_FACTORY=

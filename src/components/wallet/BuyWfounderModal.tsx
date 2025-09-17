@@ -10,7 +10,7 @@ import config from '../../config/env';
 // M6.3 - Quote display with QuoteBreakdown + GaslessBadge - COMPLETE
 // TODO [M6.4] - Confirm + progress; analytics events
 
-interface BuyNeyxtModalProps {
+interface BuyWfounderModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
@@ -18,7 +18,7 @@ interface BuyNeyxtModalProps {
 type PayAsset = 'USDC' | 'POL' | 'ETH' | 'FIAT';
 type Step = 'select' | 'quote' | 'confirm' | 'executing' | 'success' | 'error';
 
-export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose }) => {
+export const BuyWfounderModal: React.FC<BuyWfounderModalProps> = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState<Step>('select');
   const [selectedAsset, setSelectedAsset] = useState<PayAsset | null>(null);
   const [amount, setAmount] = useState('');
@@ -82,7 +82,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
       payAsset: selectedAsset,
       payChain: 'polygon',
       amountIn: amount,
-      receiveAsset: 'NEYXT',
+      receiveAsset: 'WFOUNDER',
       receiveChain: 'polygon'
     });
   };
@@ -119,7 +119,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
         routeId: quote.routeId,
         userAddress: userAddress,
         payAsset: selectedAsset,
-        receiveAsset: 'NEYXT',
+        receiveAsset: 'WFOUNDER',
         amountIn: amount,
         slippagePercentage: 1 // 1% slippage
       };
@@ -302,7 +302,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
               <span className="text-teal-blue text-lg font-bold">N</span>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-soft-white">Buy NEYXT</h2>
+              <h2 className="text-xl font-semibold text-soft-white">Buy WFOUNDER</h2>
               <p className="text-xs text-soft-white/60">Development Testing</p>
             </div>
           </div>
@@ -490,7 +490,7 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
                 )}
                 
                 <p className="text-soft-white/80 text-center">
-                  Your NEYXT tokens will be available in your wallet shortly
+                  Your WFOUNDER tokens will be available in your wallet shortly
                 </p>
               </div>
             )}
@@ -581,4 +581,4 @@ export const BuyNeyxtModal: React.FC<BuyNeyxtModalProps> = ({ isOpen, onClose })
   );
 };
 
-export default BuyNeyxtModal;
+export default BuyWfounderModal;

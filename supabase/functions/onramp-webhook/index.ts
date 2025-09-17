@@ -1,8 +1,8 @@
-// Transak webhook handler for onramp success → autoswap NEYXT
-// ✅ TRANSAK_API_KEY configured in Supabase secrets
+// Transak webhook handler for onramp success → autoswap WFOUNDER
+// ✅ SUPA_TRANSAK_API_KEY configured in Supabase secrets
 // 🧩 [M7.2] - Verify HMAC (ONRAMP_WEBHOOK_SECRET) - TODO: Implement signature verification
 // 🧩 [M7.2] - Must be idempotent (no double swaps on retries) - TODO: Add idempotency logic
-// 🧩 [M7.4] - Server-initiated autoswap USDC→NEYXT via /api/execute - TODO: Connect to execute endpoint
+// 🧩 [M7.4] - Server-initiated autoswap USDC→WFOUNDER via /api/execute - TODO: Connect to execute endpoint
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
@@ -20,9 +20,9 @@ serve(async (req) => {
       const body = await req.text();
       
       // Get Transak API key from environment
-      const transakApiKey = Deno.env.get('TRANSAK_API_KEY');
+      const transakApiKey = Deno.env.get('SUPA_TRANSAK_API_KEY');
       if (!transakApiKey) {
-        console.error('TRANSAK_API_KEY not configured');
+        console.error('SUPA_TRANSAK_API_KEY not configured');
         return new Response(
           JSON.stringify({ error: 'Transak API key not configured' }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
@@ -32,7 +32,7 @@ serve(async (req) => {
       // TODO: Verify HMAC signature using ONRAMP_WEBHOOK_SECRET
       // TODO: Parse onramp webhook event
       // TODO: Check for successful onramp completion
-      // TODO: Trigger autoswap to NEYXT
+      // TODO: Trigger autoswap to WFOUNDER
       // TODO: Ensure idempotency
       
       console.log('Transak webhook endpoint called - processing webhook');
@@ -59,7 +59,7 @@ serve(async (req) => {
         nextSteps: [
           'Verify webhook signature',
           'Parse onramp completion event',
-          'Trigger autoswap to NEYXT',
+          'Trigger autoswap to WFOUNDER',
           'Ensure idempotency'
         ]
       };

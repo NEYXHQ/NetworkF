@@ -8,7 +8,7 @@ export interface SwapQuoteRequest {
   payAsset: 'USDC' | 'POL' | 'ETH' | 'FIAT';
   payChain: 'polygon';
   amountIn: string;
-  receiveAsset: 'NEYXT';
+  receiveAsset: 'WFOUNDER';
   receiveChain: 'polygon';
   slippagePercentage?: number; // Optional slippage tolerance
 }
@@ -18,7 +18,7 @@ export interface SwapQuoteResponse {
   amountOutEst: string;
   price: string;
   usdEquivalent?: string; // USD value of the purchase
-  neyxtPriceUsd?: string; // USD price for 1 NEYXT token
+  wfounderPriceUsd?: string; // USD price for 1 WFOUNDER token
   fees: {
     protocol: string;
     gasInPolEst: string;

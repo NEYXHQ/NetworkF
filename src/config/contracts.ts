@@ -1,11 +1,11 @@
 // Auto-switching contract addresses based on environment (dev = testnet, prod = mainnet)
 // TODO [M2.2] - Fill testnet contract addresses in environment variables
-// TODO [M2.3] - Create WETH/NEYXT pool and record addresses
+// TODO [M2.3] - Create WETH/WFOUNDER pool and record addresses
 // TODO [M3.1] - Configure pricing policy bounds for sanity checks
 
 export interface ContractAddresses {
   // Core tokens
-  NEYXT: string;
+  WFOUNDER: string;
   WETH: string;
   USDC: string;
   // POL is the native token - no contract address needed
@@ -13,7 +13,7 @@ export interface ContractAddresses {
   // DEX contracts
   QUICKSWAP_FACTORY: string;
   QUICKSWAP_ROUTER: string;
-  REF_POOL_ADDRESS: string; // WETH/NEYXT 50/50 pool
+  REF_POOL_ADDRESS: string; // WETH/WFOUNDER 50/50 pool
   
   // Paymaster
   BICONOMY_PAYMASTER: string;
@@ -30,7 +30,7 @@ export interface PricingPolicy {
 
 // Auto-select contract addresses based on environment (dev = testnet, prod = mainnet)
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  NEYXT: import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS as string,
+  WFOUNDER: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS as string,
   WETH: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS as string,
   USDC: import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS as string,
   
@@ -96,7 +96,7 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
   if (!import.meta.env.VITE_SUPABASE_PROJECT_ID) missing.push('VITE_SUPABASE_PROJECT_ID');
 
   // Contracts: generic
-  if (!import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS');
   if (!import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_WETH_CONTRACT_ADDRESS');
   if (!import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_USDC_CONTRACT_ADDRESS');
   if (!import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY) missing.push('VITE_POLYGON_QUICKSWAP_FACTORY');
@@ -109,7 +109,7 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
   if (airdropEnabled) {
     if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS) missing.push('VITE_POLYGON_TREASURY_WALLET_ADDRESS');
     if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY) missing.push('VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
-    // VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION is optional, defaults to '10'
+    // VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION is optional, defaults to '10'
   }
 
   return {
@@ -122,7 +122,7 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
 export const getAllContractAddresses = () => {
   return {
     // Auto-switching addresses
-    neyxt: CONTRACT_ADDRESSES.NEYXT,
+    wfounder: CONTRACT_ADDRESSES.WFOUNDER,
     weth: CONTRACT_ADDRESSES.WETH,
     usdc: CONTRACT_ADDRESSES.USDC,
     quickswapFactory: CONTRACT_ADDRESSES.QUICKSWAP_FACTORY,
@@ -140,7 +140,7 @@ export const getAllContractAddresses = () => {
 // Airdrop configuration helper
 export const getAirdropConfig = () => {
   return {
-    airdropAmount: import.meta.env.VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION || '10',
+    airdropAmount: import.meta.env.VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION || '10',
     treasuryWalletAddress: import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS as string,
     treasuryWalletPrivateKey: import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY as string,
     enableAirdrop: import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false', // Default enabled

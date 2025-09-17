@@ -1,6 +1,6 @@
 // M4.1 - GET /api/quote with DEX Aggregator API (Polygon-only)
-// M4.2 - Return gas_in_neyxt_est and warnings for min purchase
-// M4.3 - Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est)
+// M4.2 - Return gas_in_wfounder_est and warnings for min purchase
+// M4.3 - Enforce min purchase (WFOUNDER_out ≥ 1.25× gas_in_wfounder_est)
 // M4.4 - Apply per-trade cap (≤ max_trade_notional_base)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -10,7 +10,7 @@ import { corsHeaders } from "../_shared/cors.ts"
 const POLYGON_TOKENS = {
   weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', // WETH on Polygon
   usdc: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
-  neyxt: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // NEYXT on Polygon
+  wfounder: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // WFOUNDER on Polygon
   pol: '0x0000000000000000000000000000000000001010', // Native POL token
 };
 
@@ -44,7 +44,7 @@ interface QuoteResponse {
   amountOutEst: string;
   price: string;
   usdEquivalent?: string; // Add USD equivalent
-  neyxtPriceUsd?: string; // Add NEYXT price in USD
+  wfounderPriceUsd?: string; // Add WFOUNDER price in USD
   fees: {
     protocol: string;
     gasInPolEst: string;
@@ -70,7 +70,7 @@ function getTokenAddress(asset: string): string {
       return POLYGON_TOKENS.usdc;
     case 'POL':
       return POLYGON_TOKENS.pol;
-    case 'NEYXT':
+    case 'WFOUNDER':
       return POLYGON_TOKENS.neyxt;
     default:
       throw new Error(`Unsupported asset: ${asset}`);
@@ -85,7 +85,7 @@ function getTokenDecimals(asset: string): number {
     case 'WETH':
     case 'ETH':
     case 'POL':
-    case 'NEYXT':
+    case 'WFOUNDER':
       return 18;
     default:
       throw new Error(`Unsupported asset: ${asset}`);
@@ -384,7 +384,7 @@ function calculatePriceImpact(
     // Fallback: Enhanced estimation for low liquidity scenarios
     const amountInNum = parseFloat(amountIn);
     
-    // For NEYXT pools (known low liquidity), be more conservative
+    // For WFOUNDER pools (known low liquidity), be more conservative
     const tradeSize = amountInNum;
     let estimatedImpact = 0;
     
@@ -560,14 +560,14 @@ async function getQuote(
     amountOutEst = (parseFloat((quote as OpenOceanQuoteResponse).data.outAmount) / 1e18).toFixed(6);
   }
   
-  // Calculate price (amount of NEYXT per input token)
+  // Calculate price (amount of WFOUNDER per input token)
   const price = (parseFloat(amountOutEst) / parseFloat(amountIn)).toFixed(6);
   
   // Calculate USD equivalent
   const usdEquivalent = await calculateUsdEquivalent(payAsset, amountIn);
   
-  // Calculate NEYXT price in USD
-  const neyxtPriceUsd = parseFloat(usdEquivalent) / parseFloat(amountOutEst);
+  // Calculate WFOUNDER price in USD
+  const wfounderPriceUsd = parseFloat(usdEquivalent) / parseFloat(amountOutEst);
   
   // Estimate gas costs
   let gasEstimate: string;
@@ -589,9 +589,9 @@ async function getQuote(
   const warnings: string[] = [];
   const priceImpactNum = parseFloat(priceImpact);
   
-  // Detect liquidity crisis based on inflated NEYXT price
-  const neyxtPriceNum = parseFloat(neyxtPriceUsd.toFixed(6));
-  const isLiquidityCrisis = neyxtPriceNum > 100; // NEYXT should be ~$0.01, not $100+
+  // Detect liquidity crisis based on inflated WFOUNDER price
+  const neyxtPriceNum = parseFloat(wfounderPriceUsd.toFixed(6));
+  const isLiquidityCrisis = neyxtPriceNum > 100; // WFOUNDER should be ~$0.01, not $100+
   
   // Get actual pool liquidity estimate if available
   let poolTVLEstimate = 'unknown';
@@ -609,7 +609,7 @@ async function getQuote(
   }
   
   if (isLiquidityCrisis) {
-    warnings.push(`LIQUIDITY CRISIS: NEYXT price inflated to $${neyxtPriceNum.toFixed(2)} (should be ~$0.01)`);
+    warnings.push(`LIQUIDITY CRISIS: WFOUNDER price inflated to $${neyxtPriceNum.toFixed(2)} (should be ~$0.01)`);
     
     if (poolTVLEstimate !== 'unknown') {
       warnings.push(`Pool has insufficient liquidity (estimated ${poolTVLEstimate} TVL, ${poolConfidence} confidence) - Trade may not be executable`);
@@ -646,7 +646,7 @@ async function getQuote(
     amountOutEst,
     price,
     usdEquivalent,
-    neyxtPriceUsd: neyxtPriceUsd.toFixed(6),
+    wfounderPriceUsd: wfounderPriceUsd.toFixed(6),
     fees: {
       protocol: source === '1inch' ? '0.3' : '0.25',
       gasInPolEst,
@@ -730,11 +730,11 @@ serve(async (req) => {
       }
 
       // Validate assets
-      if (receiveAsset.toUpperCase() !== 'NEYXT') {
+      if (receiveAsset.toUpperCase() !== 'WFOUNDER') {
         return new Response(
           JSON.stringify({ 
             error: 'Invalid receive asset',
-            message: 'Only NEYXT can be received' 
+            message: 'Only WFOUNDER can be received' 
           }),
           { 
             headers: { ...corsHeaders, "Content-Type": "application/json" },

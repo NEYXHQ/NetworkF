@@ -21,13 +21,13 @@ export const useTokenService = () => {
     }
   };
 
-  const getNEYXTBalance = async (): Promise<string> => {
+  const getWFOUNDERBalance = async (): Promise<string> => {
     checkConnection();
     try {
-      return await ethersRPC.getNEYXTBalance(provider!);
+      return await ethersRPC.getWFOUNDERBalance(provider!);
     } catch (error) {
-      console.error('Error getting NEYXT balance:', error);
-      throw new Error('Failed to get NEYXT token balance');
+      console.error('Error getting WFOUNDER balance:', error);
+      throw new Error('Failed to get WFOUNDER token balance');
     }
   };
 
@@ -64,20 +64,20 @@ export const useTokenService = () => {
   const getTokenBalances = async (): Promise<TokenBalance> => {
     checkConnection();
     try {
-      const [neyxt, native, usdc, weth] = await Promise.all([
-        getNEYXTBalance(),
+      const [wfounder, native, usdc, weth] = await Promise.all([
+        getWFOUNDERBalance(),
         getNativeBalance(),
         getUSDCBalance(),
         getWETHBalance(),
       ]);
-      return { neyxt, native, usdc, weth };
+      return { wfounder, native, usdc, weth };
     } catch (error) {
       console.error('Error getting token balances:', error);
       throw new Error('Failed to get token balances');
     }
   };
 
-  const sendNEYXT = async (recipient: string, amount: string): Promise<string> => {
+  const sendWFOUNDER = async (recipient: string, amount: string): Promise<string> => {
     checkConnection();
     if (!recipient || !amount) {
       throw new Error('Recipient address and amount are required');
@@ -87,8 +87,8 @@ export const useTokenService = () => {
       const result = await ethersRPC.sendToken(provider!, recipient, amount);
       return result.hash || 'Transaction submitted';
     } catch (error) {
-      console.error('Error sending NEYXT:', error);
-      throw new Error('Failed to send NEYXT tokens');
+      console.error('Error sending WFOUNDER:', error);
+      throw new Error('Failed to send WFOUNDER tokens');
     }
   };
 
@@ -164,12 +164,12 @@ export const useTokenService = () => {
   return {
     // Core token operations
     getChainId,
-    getNEYXTBalance,
+    getWFOUNDERBalance,
     getNativeBalance,
     getUSDCBalance,
     getWETHBalance,
     getTokenBalances,
-    sendNEYXT,
+    sendWFOUNDER,
     sendNative,
     signMessage,
     ensureTokenApproval,

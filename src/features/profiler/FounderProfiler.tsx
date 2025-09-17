@@ -345,7 +345,7 @@ export const FounderProfiler = () => {
                     <span className="text-soft-white font-medium">Complete & Earn</span>
                   </div>
                   <p className="text-soft-white/70 text-sm">
-                    Upon completion, you'll receive a welcome gift of NEYXT tokens to help you get started connecting 
+                    Upon completion, you'll receive a welcome gift of WFOUNDER tokens to help you get started connecting 
                     with other entrepreneurs in our community. These tokens power introductions, collaborations, and 
                     meaningful connections—not transactions.
                   </p>
@@ -505,7 +505,7 @@ export const FounderProfiler = () => {
                           <span className="text-soft-white font-semibold">Processing Your Welcome Gift...</span>
                         </div>
                         <p className="text-soft-white/80 text-sm">
-                          We're sending your NEYXT tokens to your wallet. This may take a moment to complete.
+                          We're sending your WFOUNDER tokens to your wallet. This may take a moment to complete.
                         </p>
                       </>
                     ) : airdropStatus === 'success' || airdropClaim?.status === 'completed' ? (
@@ -515,7 +515,7 @@ export const FounderProfiler = () => {
                           <span className="text-soft-white font-semibold">Welcome Gift Delivered!</span>
                         </div>
                         <p className="text-soft-white/80 text-sm mb-2">
-                          Congratulations! Your NEYXT tokens have been sent to your wallet and are ready to use for connecting with other entrepreneurs in our community.
+                          Congratulations! Your WFOUNDER tokens have been sent to your wallet and are ready to use for connecting with other entrepreneurs in our community.
                         </p>
                         {airdropClaim?.transactionHash && (
                           <p className="text-soft-white/60 text-xs">
@@ -543,7 +543,7 @@ export const FounderProfiler = () => {
                           <span className="text-soft-white font-semibold">Welcome Gift Unlocked!</span>
                         </div>
                         <p className="text-soft-white/80 text-sm mb-2">
-                          Congratulations on completing your entrepreneurial profile! You've earned a welcome gift of NEYXT tokens 
+                          Congratulations on completing your entrepreneurial profile! You've earned a welcome gift of WFOUNDER tokens 
                           to start building connections with other founders in our community.
                         </p>
                         <p className="text-soft-white/60 text-xs">

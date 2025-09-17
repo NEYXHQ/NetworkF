@@ -1,12 +1,12 @@
-// Supabase Edge Function for processing NEYXT token airdrops
+// Supabase Edge Function for processing WFOUNDER token airdrops
 // Handles automated token distribution for profiler completion rewards
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ethers } from 'https://esm.sh/ethers@6'
 
-// NEYXT Token ABI (ERC-20 transfer function)
-const NEYXT_ABI = [
+// WFOUNDER Token ABI (ERC-20 transfer function)
+const WFOUNDER_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',
   'function balanceOf(address owner) view returns (uint256)',
   'function decimals() view returns (uint8)'
@@ -229,20 +229,20 @@ serve(async (req) => {
 
     try {
       // Get environment configuration
-      const treasuryPrivateKey = Deno.env.get('VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
-      const neyxtContractAddress = Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS');
+      const treasuryPrivateKey = Deno.env.get('SUPA_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
+      const wfounderContractAddress = Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS');
       
       // Network configuration following src/config/networks.ts pattern
       // Edge Function needs explicit environment detection since it can't use import.meta.env.DEV
       
       // Option 1: Use explicit environment variable to determine network
-      const networkEnv = Deno.env.get('NETWORK_ENVIRONMENT'); // 'development' | 'production'
+      const networkEnv = Deno.env.get('SUPA_NETWORK_ENVIRONMENT'); // 'development' | 'production'
       
       // Option 2: Auto-detect based on common environment patterns
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const isDevelopment = networkEnv === 'development' || 
                           supabaseUrl.includes('kxepoivhqnurxmkgiojo') || // Your dev project
-                          Deno.env.get('NODE_ENV') === 'development';
+                          Deno.env.get('SUPA_NODE_ENV') === 'development';
       
       // Use network configuration similar to src/config/networks.ts
       const networkConfig = isDevelopment ? {
@@ -258,38 +258,38 @@ serve(async (req) => {
       };
       
       // Allow explicit RPC URL override
-      const rpcUrl = Deno.env.get('POLYGON_RPC_URL') || networkConfig.rpcUrl;
+      const rpcUrl = Deno.env.get('SUPA_POLYGON_RPC_URL') || networkConfig.rpcUrl;
 
       // Log all configuration for debugging
       console.log('🎯 AIRDROP EDGE FUNCTION: Environment configuration:', {
         treasuryPrivateKeyExists: !!treasuryPrivateKey,
         treasuryPrivateKeyLength: treasuryPrivateKey?.length,
-        neyxtContractAddress,
+        wfounderContractAddress,
         rpcUrl,
         networkConfiguration: {
           networkEnv: networkEnv || 'NOT SET',
           supabaseUrl,
-          nodeEnv: Deno.env.get('NODE_ENV') || 'NOT SET',
+          nodeEnv: Deno.env.get('SUPA_NODE_ENV') || 'NOT SET',
           isDevelopment,
           selectedNetwork: networkConfig.name,
           chainId: networkConfig.chainId,
           isTestnet: networkConfig.isTestnet,
-          rpcUrlSource: Deno.env.get('POLYGON_RPC_URL') ? 'explicit env var' : 'auto-detected from network config'
+          rpcUrlSource: Deno.env.get('SUPA_POLYGON_RPC_URL') ? 'explicit env var' : 'auto-detected from network config'
         },
         allEnvVars: {
           VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY: treasuryPrivateKey ? `${treasuryPrivateKey.slice(0, 10)}...` : 'NOT SET',
-          VITE_POLYGON_NEYXT_CONTRACT_ADDRESS: neyxtContractAddress || 'NOT SET',
-          POLYGON_RPC_URL: Deno.env.get('POLYGON_RPC_URL') || 'NOT SET (using auto-detection)',
+          VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS: wfounderContractAddress || 'NOT SET',
+          SUPA_POLYGON_RPC_URL: Deno.env.get('SUPA_POLYGON_RPC_URL') || 'NOT SET (using auto-detection)',
           VITE_POLYGON_TREASURY_WALLET_ADDRESS: Deno.env.get('VITE_POLYGON_TREASURY_WALLET_ADDRESS') || 'NOT SET',
-          VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION: Deno.env.get('VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION') || 'NOT SET'
+          VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION: Deno.env.get('VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION') || 'NOT SET'
         }
       });
 
-      if (!treasuryPrivateKey || !neyxtContractAddress || !rpcUrl) {
+      if (!treasuryPrivateKey || !wfounderContractAddress || !rpcUrl) {
         const missingVars = [];
-        if (!treasuryPrivateKey) missingVars.push('VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
-        if (!neyxtContractAddress) missingVars.push('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS');
-        if (!rpcUrl) missingVars.push('POLYGON_RPC_URL');
+        if (!treasuryPrivateKey) missingVars.push('SUPA_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
+        if (!wfounderContractAddress) missingVars.push('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS');
+        if (!rpcUrl) missingVars.push('SUPA_POLYGON_RPC_URL');
         
         console.error('🎯 AIRDROP EDGE FUNCTION: Missing environment variables:', missingVars);
         throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
@@ -302,31 +302,31 @@ serve(async (req) => {
       console.log('🎯 AIRDROP EDGE FUNCTION: Blockchain connection setup:', {
         rpcUrl,
         treasuryWalletAddress: treasuryWallet.address,
-        neyxtContractAddress,
+        wfounderContractAddress,
         networkFromProvider: await provider.getNetwork().then(n => ({ name: n.name, chainId: n.chainId.toString() })).catch(() => 'Failed to get network')
       });
 
-      // Initialize NEYXT token contract
-      const neyxtContract = new ethers.Contract(neyxtContractAddress, NEYXT_ABI, treasuryWallet);
+      // Initialize WFOUNDER token contract
+      const wfounderContract = new ethers.Contract(wfounderContractAddress, WFOUNDER_ABI, treasuryWallet);
       
       console.log('🎯 AIRDROP EDGE FUNCTION: Attempting to call decimals() on contract...');
 
       // Get token decimals
-      const decimals = await neyxtContract.decimals();
+      const decimals = await wfounderContract.decimals();
       console.log('🎯 AIRDROP EDGE FUNCTION: Contract decimals:', decimals);
       
       // Convert token amount to proper units (assuming tokenAmount is in human-readable format)
       const tokenAmountWei = ethers.parseUnits(tokenAmount, decimals);
 
       // Check treasury balance
-      const treasuryBalance = await neyxtContract.balanceOf(treasuryWallet.address);
+      const treasuryBalance = await wfounderContract.balanceOf(treasuryWallet.address);
       if (treasuryBalance < tokenAmountWei) {
         throw new Error('Insufficient treasury balance for airdrop');
       }
 
       // Execute token transfer
-      console.log(`Sending ${tokenAmount} NEYXT to ${walletAddress} for user ${userId}`);
-      const transferTx = await neyxtContract.transfer(walletAddress, tokenAmountWei);
+      console.log(`Sending ${tokenAmount} WFOUNDER to ${walletAddress} for user ${userId}`);
+      const transferTx = await wfounderContract.transfer(walletAddress, tokenAmountWei);
       
       // Wait for transaction confirmation
       const receipt = await transferTx.wait();

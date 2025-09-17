@@ -16,7 +16,7 @@ interface NetworkConfig {
   blockExplorerUrls: string[];
   iconUrls?: string[];
   contracts: {
-    neyxt: string;
+    wfounder: string;
     multicall?: string;
     ensRegistry?: string;
     ensUniversalResolver?: string;
@@ -58,7 +58,7 @@ const POLYGON_AMOY_TESTNET: NetworkConfig = {
   ],
   iconUrls: ['https://polygon.technology/favicon.ico'],
   contracts: {
-    neyxt: import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS || '',
+    wfounder: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   faucets: [
@@ -102,7 +102,7 @@ const POLYGON_MAINNET: NetworkConfig = {
   ],
   iconUrls: ['https://polygon.technology/favicon.ico'],
   contracts: {
-    neyxt: import.meta.env.VITE_POLYGON_NEYXT_CONTRACT_ADDRESS || '',
+    wfounder: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
     ensRegistry: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
     ensUniversalResolver: '0xE4395e13d3c8f7F8895D4c3DA9a7e3c89e50AB95',

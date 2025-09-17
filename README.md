@@ -11,11 +11,11 @@ A modern, fully static web application built with **Vite**, **React**, **TypeScr
 - **LinkedIn Integration** - Perfect for founder/entrepreneur networks
 
 ### 💰 Web3 & Token Integration
-- **NEYXT Token Support** - Custom token for payments and features
+- **WFOUNDER Token Support** - Custom token for payments and features
 - **Polygon Network** - Mainnet and Amoy Testnet support
 - **Automatic Network Switching** - Seamless testnet/mainnet handling
-- **Token Balance Display** - Real-time NEYXT and native token balances
-- **Transaction Support** - Send NEYXT and native tokens
+- **Token Balance Display** - Real-time WFOUNDER and native token balances
+- **Transaction Support** - Send WFOUNDER and native tokens
 
 ### 🗄️ Database & User Management
 - **Supabase Integration** - PostgreSQL database with real-time features
@@ -102,8 +102,8 @@ src/
    VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
    
    # Smart Contract Addresses (Required - Auto-switch between testnet/mainnet)
-   VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
-   VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
+   VITE_POLYGON_TESTNET_WFOUNDER_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
+   VITE_POLYGON_MAINNET_WFOUNDER_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
    VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS=your_polygon_amoy_testnet_weth_address_here
    VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS=0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
    VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS=your_polygon_amoy_testnet_usdc_address_here
@@ -197,18 +197,18 @@ For each project:
 2. **Copy Project URL, anon key, and Project ID**
 3. **Add to your environment variables**
 
-## 💰 NEYXT Token Setup
+## 💰 WFOUNDER Token Setup
 
 ### Contract Addresses
 
-Add your NEYXT token contract addresses:
+Add your WFOUNDER token contract addresses:
 
 ```env
 # Testnet (used automatically on localhost)
-VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
+VITE_POLYGON_TESTNET_WFOUNDER_CONTRACT_ADDRESS=your_polygon_amoy_testnet_contract_address_here
 
 # Mainnet (used automatically on cloud VM)
-VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
+VITE_POLYGON_MAINNET_WFOUNDER_CONTRACT_ADDRESS=your_polygon_mainnet_contract_address_here
 ```
 
 ## 🔄 Environment Auto-Switching
@@ -219,19 +219,19 @@ The app automatically switches environments:
 - **Database**: Uses `VITE_SUPABASE_DEV_*` variables
 - **Network**: Polygon Amoy Testnet
 - **Web3Auth**: Sapphire Devnet
-- **Tokens**: Testnet NEYXT contract
+- **Tokens**: Testnet WFOUNDER contract
 
 ### Production (Vercel)
 - **Database**: Uses `VITE_SUPABASE_PROD_*` variables
 - **Network**: Polygon Mainnet
 - **Web3Auth**: Sapphire Mainnet
-- **Tokens**: Mainnet NEYXT contract
+- **Tokens**: Mainnet WFOUNDER contract
 
 ### Visual Indicators and Debugging (Dev)
 - `EnvironmentChecker` (bottom-right in dev): shows current env, network, Supabase project
 - Buttons to send test welcome/approval emails
 - `NetworkIndicator` (header): displays chain; `NetworkMismatchWarning` prompts network switch
-- `BalanceDebugger` (dev-only): fetches native and NEYXT balances, contract code checks
+- `BalanceDebugger` (dev-only): fetches native and WFOUNDER balances, contract code checks
 
 ## 🚀 Deployment
 
@@ -244,7 +244,7 @@ The app automatically switches environments:
    VITE_SUPABASE_PROD_ANON_KEY=your_prod_anon_key_here
    VITE_SUPABASE_PROD_PROJECT_ID=your_prod_project_id_here
    VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
-   VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS=your_mainnet_contract_address
+   VITE_POLYGON_MAINNET_WFOUNDER_CONTRACT_ADDRESS=your_mainnet_contract_address
    ```
 3. **Deploy** - Vercel will automatically use production settings
 
@@ -265,11 +265,11 @@ Users sign in with familiar social accounts and automatically get:
 - ✅ Secure key management (MPC)
 - ✅ Profile data stored in Supabase
 
-### 💰 **NEYXT Token Integration**
-- **Balance Display**: Real-time NEYXT and native token balances
-- **Transaction Support**: Send NEYXT and native tokens
+### 💰 **WFOUNDER Token Integration**
+- **Balance Display**: Real-time WFOUNDER and native token balances
+- **Transaction Support**: Send WFOUNDER and native tokens
 - **Network Auto-Switching**: Seamless testnet/mainnet handling
-- **Contract Integration**: Direct interaction with NEYXT smart contracts
+- **Contract Integration**: Direct interaction with WFOUNDER smart contracts
 
 ### 🗄️ **User Management System**
 - **LinkedIn Profile Sync**: Automatic profile data import
@@ -324,8 +324,8 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `VITE_SUPABASE_PROD_PROJECT_ID` - Production Supabase project ID
 
 #### Smart Contract Addresses (Required)
-- `VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon Amoy testnet
-- `VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS` - NEYXT token address on Polygon mainnet
+- `VITE_POLYGON_TESTNET_WFOUNDER_CONTRACT_ADDRESS` - WFOUNDER token address on Polygon Amoy testnet
+- `VITE_POLYGON_MAINNET_WFOUNDER_CONTRACT_ADDRESS` - WFOUNDER token address on Polygon mainnet
 - `VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS` - WETH token address on testnet
 - `VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS` - WETH token address on mainnet
 - `VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS` - USDC token address on testnet
@@ -335,8 +335,8 @@ Core tables used by the app (see `src/lib/database.types.ts`):
 - `VITE_POLYGON_MAINNET_QUICKSWAP_FACTORY` - QuickSwap factory on mainnet
 - `VITE_POLYGON_TESTNET_QUICKSWAP_ROUTER` - QuickSwap router on testnet
 - `VITE_POLYGON_MAINNET_QUICKSWAP_ROUTER` - QuickSwap router on mainnet
-- `VITE_POLYGON_TESTNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on testnet
-- `VITE_POLYGON_MAINNET_REF_POOL_ADDRESS` - WETH/NEYXT pool on mainnet
+- `VITE_POLYGON_TESTNET_REF_POOL_ADDRESS` - WETH/WFOUNDER pool on testnet
+- `VITE_POLYGON_MAINNET_REF_POOL_ADDRESS` - WETH/WFOUNDER pool on mainnet
 - `VITE_POLYGON_TESTNET_BICONOMY_PAYMASTER` - Biconomy paymaster contract on testnet
 - `VITE_POLYGON_MAINNET_BICONOMY_PAYMASTER` - Biconomy paymaster contract on mainnet
 - **Note**: Biconomy uses singleton paymaster contracts per chain - your instance is identified by API key + paymaster ID in Supabase secrets
@@ -367,7 +367,7 @@ These variables are stored as secrets in Supabase and are NOT exposed to the fro
 - `ONRAMP_API_KEY` - Transak or Ramp API key for fiat onramp
 - `ONRAMP_WEBHOOK_SECRET` - HMAC secret for webhook verification
 - `ALCHEMY_OR_RPC_URL_POLYGON` - RPC endpoint for Polygon blockchain
-- `REF_POOL_ADDRESS` - WETH/NEYXT reference pool address
+- `REF_POOL_ADDRESS` - WETH/WFOUNDER reference pool address
 - `ALLOWED_ROUTERS` - Comma-separated list of allowed DEX router addresses
 
 ### Environment Detection
@@ -446,7 +446,7 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_SUPABASE_PROJECT_ID=
 
-VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=
+VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS=
 VITE_POLYGON_WETH_CONTRACT_ADDRESS=
 VITE_POLYGON_USDC_CONTRACT_ADDRESS=
 VITE_POLYGON_QUICKSWAP_FACTORY=

@@ -1,6 +1,6 @@
 {
     "version": "0.31",
-    "project": { "name": "WFounders / NEYXT Purchase Flow", "owner": "Stephane" },
+    "project": { "name": "WFounders / WFOUNDER Purchase Flow", "owner": "Stephane" },
     "context": {
       "repo": "NetworkF (single-repo, Vercel + Supabase Functions)",
       "runtime": { "frontend": "Vite/React", "backend": "Supabase Edge Functions (Deno)" },
@@ -8,31 +8,31 @@
       "current_state": "Login + Web3Auth wallet OK; no on-chain actions"
     },
     "ask": {
-      "goal": "Buy NEYXT with ETH/POL/USDC/USDT or FIAT with minimal friction (Polygon only v1)",
-      "gas": "Users pay gas in NEYXT via token paymaster; no native POL needed"
+      "goal": "Buy WFOUNDER with ETH/POL/USDC/USDT or FIAT with minimal friction (Polygon only v1)",
+      "gas": "Users pay gas in WFOUNDER via token paymaster; no native POL needed"
     },
     "target_architecture": {
       "choice": "Supabase backend-of-record; keep front/back in same repo",
       "components": [
-        "Buy Modal (src/components/wallet/BuyNeyxtModal.tsx)",
+        "Buy Modal (src/components/wallet/BuyWfounderModal.tsx)",
         "Onramp Widget (src/components/wallet/OnrampWidget.tsx)",
         "Quote Service (supabase/functions/quote)",
         "Execute Service (supabase/functions/execute)",
         "Status Service (supabase/functions/status)",
         "Onramp Webhook (supabase/functions/onramp-webhook)",
         "Paymaster integration (via execute function)",
-        "Sanity pricing check vs WETH/NEYXT reference pool"
+        "Sanity pricing check vs WETH/WFOUNDER reference pool"
       ],
       "repo_layout": {
         "frontend": {
           "components": [
-            "src/components/wallet/BuyNeyxtModal.tsx",
+            "src/components/wallet/BuyWfounderModal.tsx",
             "src/components/wallet/OnrampWidget.tsx",
             "src/components/wallet/GaslessBadge.tsx",
             "src/components/ui/QuoteBreakdown.tsx"
           ],
           "hooks": [
-            "src/hooks/useBuyNeyxt.ts",
+            "src/hooks/useBuyWfounder.ts",
             "src/hooks/useQuote.ts",
             "src/hooks/useOnrampEvents.ts"
           ],
@@ -66,11 +66,11 @@
       "gas": { "primary": "Biconomy Token Paymaster", "backup": "Gelato Paymaster" }
     },
     "liquidity_and_pricing": {
-      "reference_pool": { "pair": "WETH/NEYXT", "chain": "Polygon", "dex": "TBD", "address": "REF_POOL_ADDRESS" },
+      "reference_pool": { "pair": "WETH/WFOUNDER", "chain": "Polygon", "dex": "TBD", "address": "REF_POOL_ADDRESS" },
       "policy": { "slippage_bps": 100, "max_price_impact_bps": 200, "quote_ttl_sec": 45 }
     },
     "env_required": {
-      "PUBLIC": ["NEXT_PUBLIC_CHAIN_ID", "NEXT_PUBLIC_NEYXT_ADDRESS", "NEXT_PUBLIC_FEATURE_ENABLE_FIAT", "NEXT_PUBLIC_FEATURE_ENABLE_GAS_SPONSORSHIP"],
+      "PUBLIC": ["NEXT_PUBLIC_CHAIN_ID", "NEXT_PUBLIC_WFOUNDER_ADDRESS", "NEXT_PUBLIC_FEATURE_ENABLE_FIAT", "NEXT_PUBLIC_FEATURE_ENABLE_GAS_SPONSORSHIP"],
       "SERVER": ["ZEROX_API_KEY", "BICONOMY_API_KEY", "BICONOMY_PAYMASTER_ID", "ONRAMP_API_KEY", "ONRAMP_WEBHOOK_SECRET", "ALCHEMY_OR_RPC_URL_POLYGON", "REF_POOL_ADDRESS", "ALLOWED_ROUTERS"]
     },
     "project_status": {
@@ -94,19 +94,19 @@
           "title": "Provider accounts + allowlists",
           "status": "todo",
           "subtasks": [
-            "Transak (Polygon USDC/POL), 0x (Polygon), Biconomy Token Paymaster (NEYXT fee)",
-            "Record official NEYXT, WETH, router, ref pool addresses in contracts.ts",
+            "Transak (Polygon USDC/POL), 0x (Polygon), Biconomy Token Paymaster (WFOUNDER fee)",
+            "Record official WFOUNDER, WETH, router, ref pool addresses in contracts.ts",
             "Set ALLOWED_ROUTERS and REF_POOL_ADDRESS in secrets"
           ],
           "dependencies": ["M1-foundation"],
-          "acceptance": ["Keys/IDs live in Supabase secrets; NEYXT enabled for paymaster"]
+          "acceptance": ["Keys/IDs live in Supabase secrets; WFOUNDER enabled for paymaster"]
         },
         {
           "id": "M3-reference-pool",
           "title": "Pricing guardrails",
           "status": "todo",
           "subtasks": [
-            "Confirm WETH/NEYXT pool address + DEX",
+            "Confirm WETH/WFOUNDER pool address + DEX",
             "Edge util to fetch spot/TWAP price",
             "Reject quotes deviating beyond policy"
           ],
@@ -119,7 +119,7 @@
           "status": "todo",
           "subtasks": [
             "Map pay assets (USDC, POL, ETH) → 0x params",
-            "Return {route_id, amount_out_est, price, gas_in_neyxt_est, ttl}",
+            "Return {route_id, amount_out_est, price, gas_in_wfounder_est, ttl}",
             "Apply slippage + impact + sanity checks; surface warnings"
           ],
           "dependencies": ["M3-reference-pool"],
@@ -127,23 +127,23 @@
         },
         {
           "id": "M5-execute-endpoint",
-          "title": "POST /api/execute (pay gas in NEYXT)",
+          "title": "POST /api/execute (pay gas in WFOUNDER)",
           "status": "todo",
           "subtasks": [
             "Biconomy token paymaster integration",
             "Approvals via permit/permit2 when available; fallback approve",
-            "Fail-fast when NEYXT_out < gas_in_neyxt_est + buffer",
+            "Fail-fast when WFOUNDER_out < gas_in_wfounder_est + buffer",
             "Idempotency key; return tx_ids; implement /api/status polling"
           ],
           "dependencies": ["M4-quote-endpoint"],
-          "acceptance": ["Swap executes w/out native POL; clear insufficient NEYXT error"]
+          "acceptance": ["Swap executes w/out native POL; clear insufficient WFOUNDER error"]
         },
         {
           "id": "M6-frontend-modal",
           "title": "Buy modal UX",
           "status": "todo",
           "subtasks": [
-            "Add CTA on HomePage → BuyNeyxtModal",
+            "Add CTA on HomePage → BuyWfounderModal",
             "Asset picker (USDC, POL, ETH, FIAT)",
             "Quote display with QuoteBreakdown + GaslessBadge",
             "Confirm + progress; analytics events"
@@ -157,11 +157,11 @@
           "status": "todo",
           "subtasks": [
             "Embed Transak widget (prefill wallet, chain=Polygon)",
-            "HMAC webhook: detect success → server-initiated /api/execute to NEYXT",
+            "HMAC webhook: detect success → server-initiated /api/execute to WFOUNDER",
             "Frontend listens to onramp events; shows status"
           ],
           "dependencies": ["M5-execute-endpoint", "M6-frontend-modal"],
-          "acceptance": ["Fiat→USDC/POL→NEYXT auto path confirmed on DEV"]
+          "acceptance": ["Fiat→USDC/POL→WFOUNDER auto path confirmed on DEV"]
         },
         {
           "id": "M8-observability",
@@ -181,7 +181,7 @@
           "status": "todo",
           "subtasks": [
             "Feature flags: enable_fiat / enable_gas_sponsorship = true for internal",
-            "Scripted test purchases (USDC→NEYXT, POL→NEYXT, FIAT→NEYXT)",
+            "Scripted test purchases (USDC→WFOUNDER, POL→WFOUNDER, FIAT→WFOUNDER)",
             "Go-live: flip flags for all users"
           ],
           "dependencies": ["M8-observability"],

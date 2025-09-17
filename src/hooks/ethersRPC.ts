@@ -88,9 +88,9 @@ const sendToken = async (provider: IProvider, recipient: string, amount: string)
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
-    const contract = new ethers.Contract(config.neyxtContractAddress, ERC20_ABI, signer);
+    const contract = new ethers.Contract(config.wfounderContractAddress, ERC20_ABI, signer);
 
-    const decimals = 18; // Adjust based on NEYXT token decimals
+    const decimals = 18; // Adjust based on WFOUNDER token decimals
     const parsedAmount = ethers.parseUnits(amount, decimals);
 
     const tx = await contract.transfer(recipient, parsedAmount);
@@ -132,17 +132,17 @@ const getNetworkBalance = async (provider: IProvider): Promise<string> => {
   }
 };
 
-// ✅ Get NEYXT Token Balance (ERC-20)
-const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
+// ✅ Get WFOUNDER Token Balance (ERC-20)
+const getWFOUNDERBalance = async (provider: IProvider): Promise<string> => {
   try {
 
     const ethersProvider = new ethers.BrowserProvider(provider);
     const address = await getAccounts(provider);
 
-    const contract = new ethers.Contract(config.neyxtContractAddress, ERC20_ABI, ethersProvider);
+    const contract = new ethers.Contract(config.wfounderContractAddress, ERC20_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
 
-    console.log(`balance = ${ethers.formatUnits(balance, 18)} for NEYXT contract ${config.neyxtContractAddress}`)
+    console.log(`balance = ${ethers.formatUnits(balance, 18)} for WFOUNDER contract ${config.wfounderContractAddress}`)
 
     return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
   } catch (error) {
@@ -192,9 +192,9 @@ const ensureApproval = async (
   amount: bigint
 ): Promise<boolean> => {
   try {
-    const wNEYXTContract = new ethers.Contract(config.neyxtContractAddress, ERC20_ABI, signer);
+    const wFOUNDERContract = new ethers.Contract(config.wfounderContractAddress, ERC20_ABI, signer);
 
-    const currentAllowance = await wNEYXTContract.allowance(userAddress, spenderAddress);
+    const currentAllowance = await wFOUNDERContract.allowance(userAddress, spenderAddress);
     console.log("💰 Current allowance:", currentAllowance.toString());
 
     if (currentAllowance >= amount) {
@@ -203,7 +203,7 @@ const ensureApproval = async (
 
     console.log("🛂 Not enough allowance. Requesting approval...");
 
-    const tx = await wNEYXTContract.approve(spenderAddress, amount * 10n);
+    const tx = await wFOUNDERContract.approve(spenderAddress, amount * 10n);
     console.log("⏳ Waiting for approval tx...");
 
     await tx.wait();
@@ -222,7 +222,7 @@ export default {
   getAccounts,
   getBalance,
   getNetworkBalance,
-  getNEYXTBalance,
+  getWFOUNDERBalance,
   getERC20Balance,
   getUSDCBalance,
   getWETHBalance,

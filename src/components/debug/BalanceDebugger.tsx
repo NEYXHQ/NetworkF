@@ -35,7 +35,7 @@ interface DebugInfo {
 
 export const BalanceDebugger = () => {
   const { isConnected, provider, getAccounts } = useWeb3Auth();
-  const { getNEYXTBalance, getNativeBalance } = useTokenService();
+  const { getWFOUNDERBalance, getNativeBalance } = useTokenService();
   
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [isDebugging, setIsDebugging] = useState(false);
@@ -52,7 +52,7 @@ export const BalanceDebugger = () => {
         name: config.network.displayName,
         chainId: config.network.chainId,
         isTestnet: config.network.features.isTestnet,
-        neyxtContract: config.neyxtContractAddress,
+        neyxtContract: config.wfounderContractAddress,
         rpcUrls: config.network.rpcUrls.default,
       },
       wallet: {},
@@ -85,23 +85,23 @@ export const BalanceDebugger = () => {
         debug.errors.push(`Native Balance Error: ${error}`);
       }
 
-      // Test NEYXT balance
+      // Test WFOUNDER balance
       try {
-        const neyxtBalance = await getNEYXTBalance();
-        debug.balances.neyxt = neyxtBalance;
-        debug.balances.neyxtSuccess = !neyxtBalance.includes('Error');
+        const wfounderBalance = await getWFOUNDERBalance();
+        debug.balances.neyxt = wfounderBalance;
+        debug.balances.neyxtSuccess = !wfounderBalance.includes('Error');
       } catch (error) {
-        debug.errors.push(`NEYXT Balance Error: ${error}`);
+        debug.errors.push(`WFOUNDER Balance Error: ${error}`);
       }
 
       // Test contract existence
-      if (config.neyxtContractAddress) {
+      if (config.wfounderContractAddress) {
         try {
           const ethers = await import('ethers');
           const ethersProvider = new ethers.BrowserProvider(provider);
-          const code = await ethersProvider.getCode(config.neyxtContractAddress);
+          const code = await ethersProvider.getCode(config.wfounderContractAddress);
           debug.contract = {
-            address: config.neyxtContractAddress,
+            address: config.wfounderContractAddress,
             hasCode: code !== '0x',
             codeLength: code.length
           };
@@ -109,7 +109,7 @@ export const BalanceDebugger = () => {
           debug.errors.push(`Contract Check Error: ${error}`);
         }
       } else {
-        debug.errors.push('No NEYXT contract address configured');
+        debug.errors.push('No WFOUNDER contract address configured');
       }
 
     } catch (error) {
@@ -192,7 +192,7 @@ export const BalanceDebugger = () => {
           {/* Contract Info */}
           {debugInfo.contract && (
             <div className="bg-white rounded p-3">
-              <h4 className="text-xs font-medium text-gray-700 mb-2">NEYXT Contract</h4>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">WFOUNDER Contract</h4>
               <div className="text-xs space-y-1">
                                <div className="flex items-center">
                  Address: {debugInfo.contract?.address?.slice(0, 10)}...
@@ -218,7 +218,7 @@ export const BalanceDebugger = () => {
                 POL: {debugInfo.balances.native}
               </div>
               <div className={debugInfo.balances.neyxtSuccess ? 'text-green-600' : 'text-red-600'}>
-                NEYXT: {debugInfo.balances.neyxt}
+                WFOUNDER: {debugInfo.balances.neyxt}
               </div>
             </div>
           </div>

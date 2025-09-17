@@ -8,7 +8,7 @@ import { corsHeaders } from "../_shared/cors.ts"
 const POLYGON_TOKENS = {
   weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', // WETH on Polygon
   usdc: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
-  neyxt: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // NEYXT on Polygon
+  wfounder: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // WFOUNDER on Polygon
   pol: '0x0000000000000000000000000000000000001010', // Native POL token
 };
 
@@ -64,7 +64,7 @@ function getTokenAddress(asset: string): string {
       return POLYGON_TOKENS.usdc;
     case 'POL':
       return POLYGON_TOKENS.pol;
-    case 'NEYXT':
+    case 'WFOUNDER':
       return POLYGON_TOKENS.neyxt;
     default:
       throw new Error(`Unsupported asset: ${asset}`);
@@ -79,7 +79,7 @@ function getTokenDecimals(asset: string): number {
     case 'WETH':
     case 'ETH':
     case 'POL':
-    case 'NEYXT':
+    case 'WFOUNDER':
       return 18;
     default:
       throw new Error(`Unsupported asset: ${asset}`);
@@ -556,11 +556,11 @@ serve(async (req) => {
       }
 
       // Validate assets
-      if (receiveAsset.toUpperCase() !== 'NEYXT') {
+      if (receiveAsset.toUpperCase() !== 'WFOUNDER') {
         return new Response(
           JSON.stringify({ 
             error: 'Invalid receive asset',
-            message: 'Only NEYXT can be received' 
+            message: 'Only WFOUNDER can be received' 
           }),
           { 
             headers: { ...corsHeaders, "Content-Type": "application/json" },

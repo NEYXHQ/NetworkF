@@ -32,7 +32,7 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
         console.log(`   Chain ID: ${config.network.chainId}`);
         console.log(`   Web3Auth Network: ${config.web3AuthNetwork}`);
         console.log(`   Database Project ID: ${config.supabase.projectId ? config.supabase.projectId.slice(-8) : 'N/A'}`);
-        console.log(`   NEYXT Contract: ${config.neyxtContractAddress.slice(0, 10)}...${config.neyxtContractAddress.slice(-8)}`);
+        console.log(`   WFOUNDER Contract: ${config.wfounderContractAddress.slice(0, 10)}...${config.wfounderContractAddress.slice(-8)}`);
         console.log('');
 
         if (!config.web3AuthClientId) {
@@ -281,12 +281,12 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     }
   };
 
-  const getNEYXTBalance = async (): Promise<string> => {
+  const getWFOUNDERBalance = async (): Promise<string> => {
     if (!provider) throw new Error('Provider not available');
     try {
-      return await ethersRPC.getNEYXTBalance(provider);
+      return await ethersRPC.getWFOUNDERBalance(provider);
     } catch (error) {
-      console.error('Error getting NEYXT balance:', error);
+      console.error('Error getting WFOUNDER balance:', error);
       return '0';
     }
   };
@@ -305,25 +305,25 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     if (!provider) throw new Error('Provider not available');
     try {
       const [neyxt, native, usdc, weth] = await Promise.all([
-        getNEYXTBalance(),
+        getWFOUNDERBalance(),
         getNativeBalance(),
         ethersRPC.getUSDCBalance(provider),
         ethersRPC.getWETHBalance(provider),
       ]);
-      return { neyxt, native, usdc, weth };
+      return { wfounder: neyxt, native, usdc, weth };
     } catch (error) {
       console.error('Error getting token balances:', error);
-      return { neyxt: '0', native: '0', usdc: '0', weth: '0' };
+      return { wfounder: '0', native: '0', usdc: '0', weth: '0' };
     }
   };
 
-  const sendNEYXT = async (recipient: string, amount: string): Promise<string | Error> => {
+  const sendWFOUNDER = async (recipient: string, amount: string): Promise<string | Error> => {
     if (!provider) throw new Error('Provider not available');
     try {
       const result = await ethersRPC.sendToken(provider, recipient, amount);
       return result.hash || 'Transaction submitted';
     } catch (error) {
-      console.error('Error sending NEYXT:', error);
+      console.error('Error sending WFOUNDER:', error);
       return error as Error;
     }
   };
@@ -382,9 +382,9 @@ export const Web3AuthProvider = ({ children }: Web3AuthProviderProps) => {
     // Token operations
     getChainId,
     getTokenBalances,
-    getNEYXTBalance,
+    getWFOUNDERBalance,
     getNativeBalance,
-    sendNEYXT,
+    sendWFOUNDER,
     sendNative,
     signMessage,
     ensureTokenApproval,

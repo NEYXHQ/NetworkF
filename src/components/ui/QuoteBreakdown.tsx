@@ -2,7 +2,7 @@ import React from 'react';
 
 // TODO [M4.4] - Quote/fees/slippage summary UI
 // TODO [M4.2] - Display amount_out_est, price, fees, slippage
-// TODO [M4.3] - Show gas_in_neyxt_est and warnings
+// TODO [M4.3] - Show gas_in_wfounder_est and warnings
 // TODO [M6.4] - Analytics for quote display
 
 interface QuoteBreakdownProps {
@@ -10,7 +10,7 @@ interface QuoteBreakdownProps {
     amountOutEst: string;
     price: string;
     usdEquivalent?: string; // USD value of the purchase
-    neyxtPriceUsd?: string; // USD price for 1 NEYXT token
+    wfounderPriceUsd?: string; // USD price for 1 WFOUNDER token
     fees: {
       protocol: string;
       gasInPolEst: string;
@@ -41,7 +41,7 @@ export const QuoteBreakdown: React.FC<QuoteBreakdownProps> = ({
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-600">You'll receive:</span>
-          <span className="font-medium">{quote.amountOutEst} NEYXT</span>
+          <span className="font-medium">{quote.amountOutEst} WFOUNDER</span>
         </div>
         
         <div className="flex justify-between">
@@ -56,10 +56,10 @@ export const QuoteBreakdown: React.FC<QuoteBreakdownProps> = ({
           </div>
         )}
         
-        {quote.neyxtPriceUsd && (
+        {quote.wfounderPriceUsd && (
           <div className="flex justify-between">
-            <span className="text-gray-600">NEYXT price:</span>
-            <span className="font-medium">${quote.neyxtPriceUsd} per token</span>
+            <span className="text-gray-600">WFOUNDER price:</span>
+            <span className="font-medium">${quote.wfounderPriceUsd} per token</span>
           </div>
         )}
         

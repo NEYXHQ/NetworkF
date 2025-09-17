@@ -27,12 +27,12 @@ export const OnrampWidget: React.FC<OnrampWidgetProps> = ({
         <div className="space-y-2 text-sm text-gray-500 text-left">
           <p>• Prefill wallet: {walletAddress || 'Not connected'}</p>
           <p>• Target chain: Polygon</p>
-          <p>• Auto-swap to NEYXT on success</p>
+          <p>• Auto-swap to WFOUNDER on success</p>
         </div>
         
         <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
           <p className="text-yellow-800 text-sm">
-            Widget integration pending - will enable fiat → NEYXT path
+            Widget integration pending - will enable fiat → WFOUNDER path
           </p>
         </div>
       </div>

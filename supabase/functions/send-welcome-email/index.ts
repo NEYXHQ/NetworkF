@@ -113,10 +113,10 @@ Deno.serve(async (req: Request) => {
     console.log(`🌍 Environment: ${isDevelopment ? 'development' : 'production'}`)
 
     // Get Resend API key from environment variables
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    const resendApiKey = Deno.env.get('SUPA_RESEND_API_KEY');
     if (!resendApiKey) {
       return new Response(
-        JSON.stringify({ error: 'RESEND_API_KEY not configured' }),
+        JSON.stringify({ error: 'SUPA_RESEND_API_KEY not configured' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

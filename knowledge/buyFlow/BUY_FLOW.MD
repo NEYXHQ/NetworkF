@@ -1,20 +1,20 @@
-NEYXT – Buy Flow (Polygon)
+WFOUNDER – Buy Flow (Polygon)
 
-A minimal-friction way for users to buy NEYXT on Polygon using USDC/POL/ETH or Fiat, with traditional gas payments in POL (simplified V1 approach).
+A minimal-friction way for users to buy WFOUNDER on Polygon using USDC/POL/ETH or Fiat, with traditional gas payments in POL (simplified V1 approach).
 
 Principles
 	•	Ship fast with existing infra: Supabase Edge Functions + Vercel
 	•	Keep front & back in one repo
 	•	Traditional gas UX (fees paid in POL) - simplified for V1
-	•	Safe quotes (price bounds vs WETH/NEYXT reference pool)
+	•	Safe quotes (price bounds vs WETH/WFOUNDER reference pool)
 
 ⸻
 
 1) High-level UX
-	•	Single CTA: Buy NEYXT
+	•	Single CTA: Buy WFOUNDER
 	•	3 steps: Select pay asset → Get quote → Confirm
-	•	Crypto path (Polygon): (USDC | ETH) → swap → NEYXT (POL for gas only, airdropped)
-	•	Fiat path: Onramp → settle USDC/POL on Polygon → auto-swap → NEYXT
+	•	Crypto path (Polygon): (USDC | ETH) → swap → WFOUNDER (POL for gas only, airdropped)
+	•	Fiat path: Onramp → settle USDC/POL on Polygon → auto-swap → WFOUNDER
 	•	Traditional gas: Users pay normal gas fees in POL (no paymaster complexity)
 	•	Fail-fast copy if insufficient POL for gas fees
 
@@ -36,12 +36,12 @@ Principles
 
 See the merged tree in context. Key additions:
 	•	Frontend
-	•	src/components/wallet/BuyNeyxtModal.tsx  (TODO [M6.1])
+	•	src/components/wallet/BuyWfounderModal.tsx  (TODO [M6.1])
 	•	src/components/wallet/OnrampWidget.tsx  (TODO [M7.1])
 	•	src/components/wallet/GaslessBadge.tsx   (TODO [M6.3])
 	•	src/components/ui/QuoteBreakdown.tsx     (TODO [M4.4])
 	•	src/hooks/useQuote.ts                    (TODO [M4.2])
-	•	src/hooks/useBuyNeyxt.ts                 (TODO [M5.5])
+	•	src/hooks/useBuyWfounder.ts                 (TODO [M5.5])
 	•	src/hooks/useOnrampEvents.ts             (TODO [M7.3])
 	•	src/services/swapService.ts              (TODO [M4.2])
 	•	src/services/paymasterService.ts         (TODO [M5.4])
@@ -78,7 +78,7 @@ Public (frontend)
 Safe to expose in client (build-time or runtime via Vercel env):
 
 	•	NEXT_PUBLIC_CHAIN_ID – Polygon chain ID
-	•	NEXT_PUBLIC_NEYXT_ADDRESS – NEYXT ERC-20 address on Polygon
+	•	NEXT_PUBLIC_WFOUNDER_ADDRESS – WFOUNDER ERC-20 address on Polygon
 	•	NEXT_PUBLIC_FEATURE_ENABLE_FIAT – true|false
 	•	NEXT_PUBLIC_FEATURE_ENABLE_GAS_SPONSORSHIP – true|false
 	•	NEXT_PUBLIC_FEATURE_ENABLE_CROSS_CHAIN – true|false
@@ -93,7 +93,7 @@ Never expose to frontend:
 	•	BICONOMY_API_KEY – Biconomy
 	•	BICONOMY_PAYMASTER_ID – Token paymaster app/ID
 	•	ALCHEMY_OR_RPC_URL_POLYGON – RPC for Polygon
-	•	REF_POOL_ADDRESS – WETH/NEYXT reference pool address (DEX specific)
+	•	REF_POOL_ADDRESS – WETH/WFOUNDER reference pool address (DEX specific)
 	•	ALLOWED_ROUTERS – Comma-separated router addresses allowlist (e.g., 0x, ParaSwap)
 
 Optional / later:
@@ -110,7 +110,7 @@ Query
 pay_asset=USDC|POL|ETH|FIAT
 pay_chain=polygon   // v1 polygon-only; “FIAT” returns onramp params
 amount_in=string_decimal
-receive_asset=NEYXT
+receive_asset=WFOUNDER
 receive_chain=polygon
 
 Response
@@ -121,7 +121,7 @@ Response
   "price": "string_decimal",
   "fees": {
     "protocol": "string_decimal",
-    "gas_in_neyxt_est": "string_decimal"
+    "gas_in_wfounder_est": "string_decimal"
   },
   "slippage_bps": 100,
   "estimated_time_sec": 0,
@@ -162,13 +162,13 @@ Response
 
 POST /api/onramp-webhook  (TODO [M7.2])
 	•	Verify HMAC (ONRAMP_WEBHOOK_SECRET)
-	•	On success: server-initiated autoswap USDC→NEYXT via /api/execute
+	•	On success: server-initiated autoswap USDC→WFOUNDER via /api/execute
 	•	Must be idempotent (no double swaps on retries)
 
 ⸻
 
 7) Pricing Guardrails (Reference Pool)
-	•	Reference: QuickSwap v2 WETH/NEYXT 50/50 pool on Polygon (REF_POOL_ADDRESS)
+	•	Reference: QuickSwap v2 WETH/WFOUNDER 50/50 pool on Polygon (REF_POOL_ADDRESS)
 	•	Policy:
 	•	slippage_bps ≤ 100
 	•	max_price_impact_bps ≤ 200
@@ -212,22 +212,22 @@ Exit: ✅ Frontend builds; ✅ Edge deploy OK. M1 Complete!
 M2 – Providers & Addresses
 	•	✅ Transak account; Polygon USDC/POL enabled - TRANSAK_API_KEY configured in Supabase secrets
 	•	✅ 0x API key; Polygon enabled - API key configured in Supabase secrets
-	•	✅ Biconomy paymaster app created; NEYXT allowed as fee token - Paymaster apps configured for dev/prod
-	•	✅ Fill contracts.ts: NEYXT, WETH, routers, REF_POOL_ADDRESS - All contract addresses completed in .env
+	•	✅ Biconomy paymaster app created; WFOUNDER allowed as fee token - Paymaster apps configured for dev/prod
+	•	✅ Fill contracts.ts: WFOUNDER, WETH, routers, REF_POOL_ADDRESS - All contract addresses completed in .env
 	•	✅ Save secrets in Supabase (DEV/PROD) - BICONOMY_API_KEY, BICONOMY_PAYMASTER_ID, ZEROX_API_KEY, TRANSAK_API_KEY configured
 
 M2.3 – Pool Creation
-	•	✅ Choose initial NEYXT price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/NEYXT amounts
-	•	✅Create QuickSwap v2 WETH/NEYXT pool (50/50) - TODO: Deploy pool with seed liquidity
+	•	✅ Choose initial WFOUNDER price (low, conservative) and compute seed amounts - TODO: Set price ~$0.01, calculate WETH/WFOUNDER amounts
+	•	✅Create QuickSwap v2 WETH/WFOUNDER pool (50/50) - TODO: Deploy pool with seed liquidity
 	•	✅ Record pool/router/factory addresses in contracts.ts and ALLOWED_ROUTERS - TODO: Update contracts.ts with actual addresses
 	•	✅ Set REF_POOL_ADDRESS secret and verify quotes via 0x - TODO: Test quote endpoint with pool data
 
-Exit: ✅ Keys present; paymaster NEYXT-configured; contract addresses completed. M2 Complete!
+Exit: ✅ Keys present; paymaster WFOUNDER-configured; contract addresses completed. M2 Complete!
 
 ⸻
 
 M3 – Reference Pool & Pricing
-	•	✅ Confirm WETH/NEYXT pool DEX + address - QuickSwap v2 pool is active
+	•	✅ Confirm WETH/WFOUNDER pool DEX + address - QuickSwap v2 pool is active
 	•	✅ _shared/pricing.ts: spot/TWAP fetch utility - COMPLETE: Pool data fetching implemented with enhanced features
 	•	✅ Sanity checks (deviation, slippage, TTL) + unit tests - COMPLETE: Validation logic and comprehensive testing implemented
 	•	✅ Pool Info Button: Added to EnvironmentChecker for real-time pool data validation
@@ -243,8 +243,8 @@ M4 – Quote Endpoint
 	•	✅ GET /api/quote with DEX Aggregator APIs (Polygon-only) - COMPLETE: Multi-aggregator implementation with intelligent fallbacks
 	•	✅ swapService.ts + useQuote.ts in FE - COMPLETE: Frontend hooks connected to backend API with validation
 	•	✅ QuoteBreakdown.tsx UI - COMPLETE: UI displays real quote data with warnings and price impact
-	•	✅ Return gas_in_neyxt_est and warnings for min purchase - COMPLETE: Real gas estimation with NEYXT conversion
-	•	⬜ Enforce min purchase (NEYXT_out ≥ 1.25× gas_in_neyxt_est) - TODO: Add validation logic
+	•	✅ Return gas_in_wfounder_est and warnings for min purchase - COMPLETE: Real gas estimation with WFOUNDER conversion
+	•	⬜ Enforce min purchase (WFOUNDER_out ≥ 1.25× gas_in_wfounder_est) - TODO: Add validation logic
 	•	⬜ Apply per-trade cap (≤ max_trade_notional_base) - TODO: Add trade size limits
 
 M4.1 - Enhanced DEX Aggregator Integration:
@@ -258,7 +258,7 @@ M4.2 - Advanced Price Impact & Liquidity Analysis:
 	•	✅ Low liquidity pool detection via price distortion analysis - Detects when output USD > input USD significantly  
 	•	✅ Dynamic pool TVL estimation from trade impact data - Calculates actual pool size from price behavior
 	•	✅ Intelligent warnings system with confidence levels - Progressive alerts based on impact severity
-	•	✅ Liquidity crisis detection for inflated token pricing - Identifies when NEYXT price is unrealistic ($4000+ vs $0.01)
+	•	✅ Liquidity crisis detection for inflated token pricing - Identifies when WFOUNDER price is unrealistic ($4000+ vs $0.01)
 
 M4.3 - Comprehensive Error Handling & Debugging:
 	•	✅ Enhanced debug information for failed quotes - Includes pool addresses, token addresses, amounts, errors
@@ -269,9 +269,9 @@ Implementation Notes:
 - Evolved from manual QuickSwap calculations to professional DEX aggregator integration
 - Significantly reduced code complexity (800+ lines → 350 lines) while improving accuracy
 - Now handles edge cases like 98.94% price impact scenarios in low liquidity pools
-- Provides realistic warnings: "LIQUIDITY CRISIS: NEYXT price inflated to $4347.83 (should be ~$0.01)"
+- Provides realistic warnings: "LIQUIDITY CRISIS: WFOUNDER price inflated to $4347.83 (should be ~$0.01)"
 - Pool TVL estimation: "Pool has insufficient liquidity (estimated $0.52 TVL, medium confidence)"
-- Better route discovery through aggregation (finds multi-hop paths like USDC→WETH→NEYXT automatically)
+- Better route discovery through aggregation (finds multi-hop paths like USDC→WETH→WFOUNDER automatically)
 
 Next steps: Connect frontend components to the enhanced quote API, implement trade size validation.
 
@@ -280,7 +280,7 @@ Next steps: Connect frontend components to the enhanced quote API, implement tra
 M5 – Execute & Status (Traditional Gas in POL) - COMPLETE ✅
 	•	✅ POST /api/execute with standard gas payment - COMPLETE: 1inch API v6 transaction preparation
 	•	✅ GET /api/status (poll tx/route) - COMPLETE: Polygon network transaction monitoring
-	•	✅ useBuyNeyxt.ts orchestration - COMPLETE: Full quote → execute → status flow
+	•	✅ useBuyWfounder.ts orchestration - COMPLETE: Full quote → execute → status flow
 	•	✅ POL balance validation for gas fees - COMPLETE: Warnings displayed in quote breakdown
 	•	✅ Web3Auth wallet integration - COMPLETE: Real transaction signing and execution
 	•	✅ Transaction status polling - COMPLETE: Real-time confirmation tracking
@@ -291,8 +291,8 @@ Exit: ✅ Complete purchase flow with traditional gas payments functional!
 ⸻
 
 M6 – Frontend Modal UX
-	•	✅ Add CTA in HomePage.tsx - COMPLETE: "Buy NEYXT" button added to wallet section
-	•	✅ BuyNeyxtModal.tsx (3 steps) - COMPLETE: Functional 3-step modal connected to real API
+	•	✅ Add CTA in HomePage.tsx - COMPLETE: "Buy WFOUNDER" button added to wallet section
+	•	✅ BuyWfounderModal.tsx (3 steps) - COMPLETE: Functional 3-step modal connected to real API
 	•	✅ Asset disable logic - COMPLETE: FIAT & POL disabled as payment options (POL reserved for gas)
 	•	✅ Scrollable modal design - COMPLETE: Handles all content sizes gracefully
 	•	✅ Dynamic minimum amounts - COMPLETE: ETH 0.00001, USDC 0.01, disabled assets handled
@@ -315,7 +315,7 @@ Exit: 3-step flow functional on DEV.
 M6.2 - Complete Frontend-Backend Integration (Dec 2024):
 	•	✅ SwapService API Client - Real Supabase Edge Function integration with authentication
 	•	✅ useQuote Hook - Comprehensive validation, error handling, POL gas warnings
-	•	✅ useBuyNeyxt Hook - Full execution orchestration with Web3Auth integration
+	•	✅ useBuyWfounder Hook - Full execution orchestration with Web3Auth integration
 	•	✅ QuoteBreakdown UI - Live display of price impact, warnings, liquidity analysis
 	•	✅ Asset Management System - Smart disable logic for problematic assets (POL, FIAT)
 	•	✅ Minimum Amount Validation - Dynamic minimums: ETH (0.00001), USDC (0.01)
@@ -341,10 +341,10 @@ Implementation Details:
 M7 – Fiat Onramp & Autoswap
 	•	⬜ OnrampWidget.tsx (prefill wallet + Polygon) - TODO: Integrate Transak/Ramp widget
 	•	⬜ onramp-webhook (HMAC verify, idempotent) - TODO: Add HMAC verification and webhook processing
-	•	⬜ Autoswap to NEYXT via server /api/execute - TODO: Auto-trigger swap on onramp success
+	•	⬜ Autoswap to WFOUNDER via server /api/execute - TODO: Auto-trigger swap on onramp success
 	•	⬜ useOnrampEvents.ts status handling - TODO: Listen to onramp events and update UI
 
-Exit: Fiat → NEYXT path confirmed on DEV.
+Exit: Fiat → WFOUNDER path confirmed on DEV.
 
 ⸻
 
@@ -359,7 +359,7 @@ Exit: Minimal dashboard covers funnel; alerts wired.
 
 M9 – Staging/Prod & Launch
 	•	⬜ Feature flags: enable internally, then public - TODO: Test with internal team, then public rollout
-	•	⬜ Scripted test purchases (USDC→NEYXT, POL→NEYXT, Fiat→NEYXT) - TODO: Automated testing of all purchase paths
+	•	⬜ Scripted test purchases (USDC→WFOUNDER, POL→WFOUNDER, Fiat→WFOUNDER) - TODO: Automated testing of all purchase paths
 	•	⬜ Go-live: public flags on; support runbook ready - TODO: Enable public access and prepare support docs
 
 Exit: Users complete purchases in ≤ 3 steps; metrics on target.
@@ -374,8 +374,8 @@ Onramp down
 DEX liquidity thin / price impact high
 	•	Action: Raise min purchase or fallback to backup aggregator; show “try smaller amount” copy.
 
-Paymaster errors / Insufficient NEYXT for fees
-	•	Action: Bump min NEYXT_out threshold; show copy “Increase amount to cover fees.”
+Paymaster errors / Insufficient WFOUNDER for fees
+	•	Action: Bump min WFOUNDER_out threshold; show copy “Increase amount to cover fees.”
 
 RPC degraded
 	•	Action: Switch to backup RPC; degrade to slower polling; surface status to user.
@@ -394,9 +394,9 @@ RPC degraded
 
 12) Acceptance Criteria
 	•	≤ 3 steps to buy
-	•	No native gas needed (fees in NEYXT)
-	•	Fiat & crypto both deliver NEYXT to the same wallet
-	•	Clear failure when NEYXT insufficient to cover fees
+	•	No native gas needed (fees in WFOUNDER)
+	•	Fiat & crypto both deliver WFOUNDER to the same wallet
+	•	Clear failure when WFOUNDER insufficient to cover fees
 	•	Metrics hit: success ≥ 95%, median time ≤ 180s
 
 ⸻
@@ -414,5 +414,5 @@ Owner: Stephane
 Last updated: 2024-12-19
 Current Status: M5 & M6.2 ✅ Complete - Full end-to-end purchase flow operational! 
 Plan Change: Simplified V1 approach - traditional gas payments in POL (no paymaster complexity)
-Achievement: Users can now complete real NEYXT purchases: Quote → Execute → Confirm on Polygon
+Achievement: Users can now complete real WFOUNDER purchases: Quote → Execute → Confirm on Polygon
 Next action: M7 (Fiat Onramp) or M8 (Observability) - depending on priority

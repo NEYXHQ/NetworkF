@@ -10,7 +10,7 @@ interface Config {
   isProduction: boolean;
   network: NetworkConfig; // Comprehensive network data
   chainId: string; // Legacy compatibility for existing code
-  neyxtContractAddress: string;
+  wfounderContractAddress: string;
   web3AuthNetwork: 'sapphire_devnet' | 'sapphire_mainnet';
   // Supabase configuration
   supabase: {
@@ -33,7 +33,7 @@ interface Config {
     // API configuration
     apiBaseUrl: string;
     chainId: string;
-    neyxtAddress: string;
+    wfounderAddress: string;
     // All contract addresses (auto-switching based on environment)
     contracts: {
       weth: string;
@@ -56,7 +56,7 @@ const config: Config = {
   isProduction: import.meta.env.PROD,
   network: currentNetwork, // Full network configuration
   chainId: currentNetwork.chainId, // Legacy compatibility
-  neyxtContractAddress: currentNetwork.contracts.neyxt,
+  wfounderContractAddress: currentNetwork.contracts.wfounder,
   web3AuthNetwork: currentNetwork.web3AuthNetwork,
   // Supabase environment
   supabase: {
@@ -80,7 +80,7 @@ const config: Config = {
     // API configuration
     apiBaseUrl: import.meta.env.VITE_BUY_FLOW_API_BASE_URL || '/api',
     chainId: currentNetwork.chainId,
-    neyxtAddress: currentNetwork.contracts.neyxt, // Auto-selects testnet/mainnet based on environment
+    wfounderAddress: currentNetwork.contracts.wfounder, // Auto-selects testnet/mainnet based on environment
     // All contract addresses (environment-specific via env files)
     contracts: {
       weth: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS || '',

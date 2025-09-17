@@ -24,7 +24,7 @@ interface NetworkConfig {
   };
   blockExplorerUrls: string[];
   contracts: {
-    neyxt: string;
+    wfounder: string;
     multicall?: string;
     ensRegistry?: string;
     ensUniversalResolver?: string;
@@ -65,7 +65,7 @@ const POLYGON_AMOY_TESTNET: NetworkConfig = {
     'https://polygon-amoy.blockscout.com',
   ],
   contracts: {
-    neyxt: Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS') || '',
+    wfounder: Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   faucets: [
@@ -108,7 +108,7 @@ const POLYGON_MAINNET: NetworkConfig = {
     'https://polygon.blockscout.com',
   ],
   contracts: {
-    neyxt: Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS') || '',
+    wfounder: Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
     ensRegistry: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
     ensUniversalResolver: '0xE4395e13d3c8f7F8895D4c3DA9a7e3c89e50AB95',
@@ -127,15 +127,15 @@ const POLYGON_MAINNET: NetworkConfig = {
 export function getCurrentNetwork(): NetworkConfig {
   // In Edge Functions, we need to determine environment differently
   // We can use the presence of testnet vs mainnet contract addresses
-  const hasGeneric = Boolean(Deno.env.get('VITE_POLYGON_NEYXT_CONTRACT_ADDRESS'));
-  const hasTestnetNeyxt = hasGeneric;
-  const hasMainnetNeyxt = hasGeneric;
+  const hasGeneric = Boolean(Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS'));
+  const hasTestnetWfounder = hasGeneric;
+  const hasMainnetWfounder = hasGeneric;
   
   // If both are present, prefer testnet for development
   // If only one is present, use that one
-  if (hasTestnetNeyxt && !hasMainnetNeyxt) {
+  if (hasTestnetWfounder && !hasMainnetWfounder) {
     return POLYGON_AMOY_TESTNET;
-  } else if (hasMainnetNeyxt && !hasTestnetNeyxt) {
+  } else if (hasMainnetWfounder && !hasTestnetWfounder) {
     return POLYGON_MAINNET;
   } else {
     // Default to testnet if both or neither are present
@@ -157,7 +157,7 @@ export function getContractAddresses() {
   const refPoolAddress = Deno.env.get('VITE_POLYGON_REF_POOL_ADDRESS');
 
   return {
-    neyxt: network.contracts.neyxt,
+    wfounder: network.contracts.wfounder,
     weth: wethAddress || '',
     usdc: usdcAddress || '',
     refPool: refPoolAddress || '',
@@ -171,7 +171,7 @@ export function getRpcUrl(): string {
   const network = getCurrentNetwork();
   
   // Try Alchemy URL first if provided
-  const alchemyUrl = Deno.env.get('ALCHEMY_OR_RPC_URL_POLYGON');
+  const alchemyUrl = Deno.env.get('SUPA_ALCHEMY_OR_RPC_URL_POLYGON');
   if (alchemyUrl) {
     return alchemyUrl;
   }

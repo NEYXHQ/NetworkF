@@ -13,7 +13,7 @@ export interface UserInfo {
 }
 
 export interface TokenBalance {
-  neyxt: string;
+  wfounder: string;
   native: string; // ETH or POL
   usdc: string;
   weth: string;
@@ -33,9 +33,9 @@ export interface Web3AuthContextType {
   // Token operations
   getChainId: () => Promise<string>;
   getTokenBalances: () => Promise<TokenBalance>;
-  getNEYXTBalance: () => Promise<string>;
+  getWFOUNDERBalance: () => Promise<string>;
   getNativeBalance: () => Promise<string>;
-  sendNEYXT: (recipient: string, amount: string) => Promise<string | Error>;
+  sendWFOUNDER: (recipient: string, amount: string) => Promise<string | Error>;
   sendNative: (recipient: string, amount: string) => Promise<string | Error>;
   signMessage: () => Promise<string>;
   ensureTokenApproval: (spenderAddress: string, amount: string) => Promise<boolean>;
@@ -54,10 +54,10 @@ export const Web3AuthContext = createContext<Web3AuthContextType>({
   getAccounts: async () => [],
   // Token operations defaults
   getChainId: async () => '',
-  getTokenBalances: async () => ({ neyxt: '0', native: '0', usdc: '0', weth: '0' }),
-  getNEYXTBalance: async () => '0',
+  getTokenBalances: async () => ({ wfounder: '0', native: '0', usdc: '0', weth: '0' }),
+  getWFOUNDERBalance: async () => '0',
   getNativeBalance: async () => '0',
-  sendNEYXT: async () => '',
+  sendWFOUNDER: async () => '',
   sendNative: async () => '',
   signMessage: async () => '',
   ensureTokenApproval: async () => false,

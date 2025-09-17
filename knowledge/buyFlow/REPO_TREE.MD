@@ -34,15 +34,15 @@
 │   │       ├── FaucetLinks.tsx
 │   │       ├── NetworkMismatchWarning.tsx
 │   │       ├── TokenBalance.tsx
-│   │       ├── BuyNeyxtModal.tsx                  # 🧩 [M6.1] Scaffolded - TODO: Implement 3-step buy flow
+│   │       ├── BuyWfounderModal.tsx                  # 🧩 [M6.1] Scaffolded - TODO: Implement 3-step buy flow
 │   │       ├── GaslessBadge.tsx                   # 🧩 [M6.3] Scaffolded - TODO: Implement gas fee display
 │   │       └── OnrampWidget.tsx                   # 🧩 [M7.1] Scaffolded - TODO: Integrate Transak/Ramp widget
 │   ├── config/
 │   │   ├── env.ts                                 # ✅ [M1.2] Complete - All provider API keys configured (0x ✅, Biconomy ✅, Transak ✅)
 │   │   ├── networks.ts                            # ✅ [M1.3] Complete - Polygon mainnet + Amoy configured
 │   │   └── contracts.ts                           # ✅ [M1.1] Complete - All contract addresses configured in .env
-│   │                                              # ✅ [M2.2] Complete - NEYXT/WETH/router addresses configured
-│   │                                              # ✅ [M2.3] Complete - QuickSwap v2 WETH/NEYXT 50/50 pool address (REF_POOL_ADDRESS) + QuickSwap router/factory configured
+│   │                                              # ✅ [M2.2] Complete - WFOUNDER/WETH/router addresses configured
+│   │                                              # ✅ [M2.3] Complete - QuickSwap v2 WETH/WFOUNDER 50/50 pool address (REF_POOL_ADDRESS) + QuickSwap router/factory configured
 │   │                                              # ✅ [M3.1] Complete - Reference DEX = QuickSwap v2; policy bounds configured
 │   ├── contexts/
 │   │   ├── Web3AuthContext.ts
@@ -57,7 +57,7 @@
 │   │   ├── useSupabaseUser.ts
 │   │   ├── useTokenService.ts
 │   │   ├── useWeb3Auth.ts
-│   │   ├── useBuyNeyxt.ts                         # 🧩 [M5.5] Scaffolded - TODO: Implement actual buy orchestration
+│   │   ├── useBuyWfounder.ts                         # 🧩 [M5.5] Scaffolded - TODO: Implement actual buy orchestration
 │   │   ├── useQuote.ts                            # 🧩 [M4.2] Scaffolded - TODO: Implement quote API calls
 │   │   └── useOnrampEvents.ts                     # 🧩 [M7.3] Scaffolded - TODO: Implement onramp event handling
 │   ├── lib/
@@ -66,7 +66,7 @@
 │   ├── pages/
 │   │   ├── AdminLoginPage.tsx
 │   │   ├── AdminPage.tsx
-│   │   └── HomePage.tsx                           # TODO [M6.1] Add "Buy NEYXT" CTA entry point
+│   │   └── HomePage.tsx                           # TODO [M6.1] Add "Buy WFOUNDER" CTA entry point
 │   ├── services/
 │   │   ├── adminService.ts
 │   │   ├── emailService.ts

@@ -28,7 +28,7 @@ serve(async (req) => {
       token1: poolData.token1.symbol,
       blockTimestamp: poolData.blockTimestamp,
       liquidityWeth: poolData.liquidityWeth,
-      liquidityNeyxt: poolData.liquidityNeyxt,
+      liquidityWfounder: poolData.liquidityWfounder,
     });
 
     // Get pricing policy
@@ -59,20 +59,20 @@ serve(async (req) => {
       return {
         trade: trade.description,
         amountIn: `${trade.amountIn} WETH`,
-        amountOut: `${testAmountOut} NEYXT`,
+        amountOut: `${testAmountOut} WFOUNDER`,
         priceImpact: `${(priceImpact * 100).toFixed(4)}%`,
         validation,
       };
     });
 
-    // Test NEYXT to WETH trades
+    // Test WFOUNDER to WETH trades
     const neyxtTestTrades = [
-      { amountIn: '100', description: '100 NEYXT trade' },
-      { amountIn: '1000', description: '1000 NEYXT trade' },
+      { amountIn: '100', description: '100 WFOUNDER trade' },
+      { amountIn: '1000', description: '1000 WFOUNDER trade' },
     ];
 
     const neyxtValidationResults = neyxtTestTrades.map(trade => {
-      const testQuotePrice = 1 / poolData.spotPrice; // WETH per NEYXT
+      const testQuotePrice = 1 / poolData.spotPrice; // WETH per WFOUNDER
       const testAmountOut = (parseFloat(trade.amountIn) / poolData.spotPrice).toString();
 
       const validation = validateQuote(
@@ -80,7 +80,7 @@ serve(async (req) => {
         testQuotePrice,
         trade.amountIn,
         testAmountOut,
-        false, // NEYXT in
+        false, // WFOUNDER in
         policy
       );
 
@@ -88,7 +88,7 @@ serve(async (req) => {
 
       return {
         trade: trade.description,
-        amountIn: `${trade.amountIn} NEYXT`,
+        amountIn: `${trade.amountIn} WFOUNDER`,
         amountOut: `${testAmountOut} WETH`,
         priceImpact: `${(priceImpact * 100).toFixed(4)}%`,
         validation,
@@ -107,17 +107,17 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       poolData: {
         spotPrice: poolData.spotPrice,
-        spotPriceFormatted: `1 WETH = ${poolData.spotPrice.toFixed(6)} NEYXT`,
+        spotPriceFormatted: `1 WETH = ${poolData.spotPrice.toFixed(6)} WFOUNDER`,
         reserves: {
           token0: `${poolData.token0.symbol}: ${(Number(poolData.reserve0) / Math.pow(10, poolData.token0.decimals)).toFixed(6)}`,
           token1: `${poolData.token1.symbol}: ${(Number(poolData.reserve1) / Math.pow(10, poolData.token1.decimals)).toFixed(6)}`,
         },
         liquidity: {
           weth: `${poolData.liquidityWeth.toFixed(4)} WETH`,
-          neyxt: `${poolData.liquidityNeyxt.toFixed(2)} NEYXT`,
-          totalValueWeth: `${(poolData.liquidityWeth + (poolData.liquidityNeyxt / poolData.spotPrice)).toFixed(4)} WETH`,
+          wfounder: `${poolData.liquidityWfounder.toFixed(2)} WFOUNDER`,
+          totalValueWeth: `${(poolData.liquidityWeth + (poolData.liquidityWfounder / poolData.spotPrice)).toFixed(4)} WETH`,
         },
-        isNeyxtToken0: poolData.isNeyxtToken0,
+        isWfounderToken0: poolData.isWfounderToken0,
         blockTimestamp: poolData.blockTimestamp,
         lastUpdate: new Date(poolData.blockTimestamp * 1000).toISOString(),
         dataAge: `${dataAge} seconds`,

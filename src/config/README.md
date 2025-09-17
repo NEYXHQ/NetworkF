@@ -64,7 +64,7 @@ All environment variables from `example.env.empty` are properly accessible throu
 - `VITE_SUPABASE_DEV_PROJECT_ID` / `VITE_SUPABASE_PROD_PROJECT_ID` → `config.supabase.projectId`
 
 ### Contract Addresses (Auto-switching)
-- `VITE_POLYGON_TESTNET_NEYXT_CONTRACT_ADDRESS` / `VITE_POLYGON_MAINNET_NEYXT_CONTRACT_ADDRESS` → `config.neyxtContractAddress`
+- `VITE_POLYGON_TESTNET_WFOUNDER_CONTRACT_ADDRESS` / `VITE_POLYGON_MAINNET_WFOUNDER_CONTRACT_ADDRESS` → `config.neyxtContractAddress`
 - `VITE_POLYGON_TESTNET_WETH_CONTRACT_ADDRESS` / `VITE_POLYGON_MAINNET_WETH_CONTRACT_ADDRESS` → `config.buyFlow.contracts.weth`
 - `VITE_POLYGON_TESTNET_USDC_CONTRACT_ADDRESS` / `VITE_POLYGON_MAINNET_USDC_CONTRACT_ADDRESS` → `config.buyFlow.contracts.usdc`
 

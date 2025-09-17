@@ -6,7 +6,7 @@ import { TokenBalance } from '../components/wallet/TokenBalance';
 import { UserProfile } from '../components/user/UserProfile';
 import { SurveyModal } from '../components/user/SurveyModal';
 import { ProfileCompletionModal } from '../components/user/ProfileCompletionModal';
-import { BuyNeyxtModal } from '../components/wallet/BuyNeyxtModal';
+import { BuyWfounderModal } from '../components/wallet/BuyWfounderModal';
 import { Header } from '../components/layout/Header';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export const HomePage = () => {
   const [showWallet, setShowWallet] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
-  const [showBuyNeyxt, setShowBuyNeyxt] = useState(false);
+  const [showBuyWfounder, setShowBuyWfounder] = useState(false);
   
   // Track if user has skipped for this session
   const [surveySkipped, setSurveySkipped] = useState(false);
@@ -100,14 +100,14 @@ export const HomePage = () => {
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-6 md:mb-8">
                   <h2 className="text-2xl md:text-3xl font-bold text-white">
-                    Your Wallet & NEYXT Tokens
+                    Your Wallet & WFOUNDER Tokens
                   </h2>
                   <Button
-                    onClick={() => setShowBuyNeyxt(true)}
+                    onClick={() => setShowBuyWfounder(true)}
                     className="px-4 py-2 bg-teal-blue text-charcoal-black hover:bg-teal-blue/80 transition-colors font-medium"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    Buy NEYXT
+                    Buy WFOUNDER
                   </Button>
                 </div>
                 <TokenBalance />
@@ -142,10 +142,10 @@ export const HomePage = () => {
           userName={supabaseUser?.name || undefined}
         />
 
-        {/* Buy NEYXT Modal */}
-        <BuyNeyxtModal
-          isOpen={showBuyNeyxt}
-          onClose={() => setShowBuyNeyxt(false)}
+        {/* Buy WFOUNDER Modal */}
+        <BuyWfounderModal
+          isOpen={showBuyWfounder}
+          onClose={() => setShowBuyWfounder(false)}
         />
       </div>
     );

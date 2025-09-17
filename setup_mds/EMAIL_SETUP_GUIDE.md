@@ -36,7 +36,7 @@ You need to add your Resend API key as a secret in Supabase:
 supabase link --project-ref YOUR_PROJECT_REF
 
 # Set the Resend API key as a secret
-supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
+supabase secrets set SUPA_RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
 ```
 
 ### Using Supabase Dashboard
@@ -45,7 +45,7 @@ supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
 2. Navigate to **Settings** → **Edge Functions**
 3. In the **Function Secrets** section, click **"Add new secret"**
 4. Set:
-   - **Name**: `RESEND_API_KEY`
+   - **Name**: `SUPA_RESEND_API_KEY`
    - **Value**: Your Resend API key (e.g., `re_xxxxxxxxxxxxxxxxx`)
 5. Click **"Add secret"**
 
@@ -174,7 +174,7 @@ const sendWelcomeEmail = async (userEmail: string) => {
 
 ### Common Issues
 
-1. **"RESEND_API_KEY not configured"**
+1. **"SUPA_RESEND_API_KEY not configured"**
    - Make sure you've set the secret in Supabase
    - Redeploy the function after setting secrets
 

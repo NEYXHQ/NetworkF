@@ -1,4 +1,4 @@
-# 🎯 NEYXT Token Airdrop Setup Guide
+# 🎯 WFOUNDER Token Airdrop Setup Guide
 
 This guide outlines the steps you need to complete to activate the automated token airdrop system for profiler completion rewards.
 
@@ -8,7 +8,7 @@ This guide outlines the steps you need to complete to activate the automated tok
 
 #### 1. **Treasury Wallet Setup**
 - [ ] Create a dedicated wallet for airdrop distributions
-- [ ] Fund the wallet with sufficient NEYXT tokens (recommend 10,000+ for initial testing)
+- [ ] Fund the wallet with sufficient WFOUNDER tokens (recommend 10,000+ for initial testing)
 - [ ] Record the wallet's private key and address securely
 
 #### 2. **Environment Variables (Frontend)**
@@ -16,20 +16,20 @@ This guide outlines the steps you need to complete to activate the automated tok
 
 ```bash
 # Airdrop Configuration - Your Variable Names
-VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION=10
+VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION=10
 VITE_POLYGON_TREASURY_WALLET_ADDRESS=0x_YOUR_TREASURY_WALLET_ADDRESS_HERE
 VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY=0x_your_private_key_here
 VITE_FEATURE_ENABLE_AIRDROP=true
 
 # Contract Addresses (if not already set)
-VITE_POLYGON_NEYXT_CONTRACT_ADDRESS=0x_YOUR_NEYXT_CONTRACT_ADDRESS
+VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS=0x_YOUR_WFOUNDER_CONTRACT_ADDRESS
 ```
 
 #### 3. **Supabase Secret Auto-Sync**
 ✅ **Automatic** - Your variables will auto-sync to Supabase secrets:
 
 - `VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY` → Available in Edge Functions
-- `VITE_POLYGON_NEYXT_CONTRACT_ADDRESS` → Available in Edge Functions
+- `VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS` → Available in Edge Functions
 - Standard Polygon RPC will be used (https://polygon-rpc.com)
 
 #### 4. **Database Migration**
@@ -81,7 +81,7 @@ supabase functions deploy airdrop-tokens
 1. **Profile Generation** → Assessment completed, personalized profile created
 2. **Automatic Trigger** → System detects completion and initiates airdrop
 3. **Processing Display** → User sees spinner: "Processing Your Welcome Gift..."
-4. **Blockchain Transaction** → Treasury wallet sends NEYXT tokens to user's wallet
+4. **Blockchain Transaction** → Treasury wallet sends WFOUNDER tokens to user's wallet
 5. **Success Confirmation** → "🎉 Welcome Gift Delivered!" with transaction hash
 6. **Balance Update** → Tokens appear in user's wallet
 
@@ -102,7 +102,7 @@ supabase functions deploy airdrop-tokens
 ### Rate Limiting:
 - **System-wide Limits**: 100 claims/hour, 1000 claims/day
 - **User Cooldowns**: 5 minutes between attempts
-- **Treasury Protection**: Maximum 100 NEYXT per claim
+- **Treasury Protection**: Maximum 100 WFOUNDER per claim
 
 ### Monitoring:
 - **Real-time Alerts**: Low treasury balance warnings
@@ -115,7 +115,7 @@ supabase functions deploy airdrop-tokens
 
 #### Testnet Testing:
 - [ ] Deploy to Polygon Amoy testnet first
-- [ ] Test with small token amounts (1-5 NEYXT)
+- [ ] Test with small token amounts (1-5 WFOUNDER)
 - [ ] Verify all user flows work correctly
 - [ ] Test error scenarios (insufficient balance, etc.)
 
@@ -152,7 +152,7 @@ export const AIRDROP_SECURITY_CONFIG = {
 VITE_FEATURE_ENABLE_AIRDROP=false
 
 # Adjust token amount (using your variable name)
-VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION=25
+VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION=25
 ```
 
 ## 🚨 **Production Readiness**
@@ -185,6 +185,6 @@ VITE_NEYXT_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION=25
 
 ## 🎉 **Ready to Launch!**
 
-Once you complete the setup checklist above, the airdrop system will be fully operational. Users completing the profiler will automatically receive their welcome gift of NEYXT tokens, creating a delightful onboarding experience that introduces them to your Web3 community platform.
+Once you complete the setup checklist above, the airdrop system will be fully operational. Users completing the profiler will automatically receive their welcome gift of WFOUNDER tokens, creating a delightful onboarding experience that introduces them to your Web3 community platform.
 
 **Questions?** The implementation is designed to be secure, scalable, and user-friendly. All error scenarios are handled gracefully, and the system provides comprehensive logging for troubleshooting.

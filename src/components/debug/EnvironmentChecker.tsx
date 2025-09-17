@@ -6,7 +6,7 @@ import { NetworkIndicator } from '../ui/NetworkIndicator';
 import { BalanceDebugger } from './BalanceDebugger';
 import { NetworkMismatchWarning } from '../wallet/NetworkMismatchWarning';
 import { FaucetLinks } from '../wallet/FaucetLinks';
-import { BuyNeyxtModal } from '../wallet/BuyNeyxtModal';
+import { BuyWfounderModal } from '../wallet/BuyWfounderModal';
 import { emailService } from '../../services/emailService';
 import { useWeb3Auth } from '../../hooks/useWeb3Auth';
 import { useAirdropService } from '../../hooks/useAirdropService';
@@ -66,7 +66,7 @@ export const EnvironmentChecker = () => {
       let testReport = `🎁 AIRDROP TEST RESULTS
 ======================
 🌐 Network: ${config.network.displayName}
-💰 Airdrop Amount: ${airdropAmount} NEYXT
+💰 Airdrop Amount: ${airdropAmount} WFOUNDER
 ✅ Airdrop Enabled: ${airdropEnabled ? 'Yes' : 'No'}
 
 🔍 ELIGIBILITY CHECK
@@ -80,7 +80,7 @@ export const EnvironmentChecker = () => {
           testReport += `\n📋 Existing Claim:
    - ID: ${eligibility.existingClaim.id}
    - Status: ${eligibility.existingClaim.status}
-   - Amount: ${eligibility.existingClaim.tokenAmount} NEYXT`;
+   - Amount: ${eligibility.existingClaim.tokenAmount} WFOUNDER`;
           
           if (eligibility.existingClaim.transactionHash) {
             testReport += `\n   - TX Hash: ${eligibility.existingClaim.transactionHash}`;
@@ -117,7 +117,7 @@ export const EnvironmentChecker = () => {
 📋 FINAL STATUS
 ===============
 🎉 Airdrop claim completed successfully
-💰 ${airdropAmount} NEYXT tokens sent  
+💰 ${airdropAmount} WFOUNDER tokens sent  
 🔗 Check your wallet for the tokens
 📊 Database record: COMPLETED`;
         
@@ -208,7 +208,7 @@ export const EnvironmentChecker = () => {
       // This allows us to test M3.2 functionality even in development
       const contracts = {
         refPool: '0x6B8A57addD24CAF494393D9E0bf38BC54F713833', // Mainnet pool (always)
-        neyxt: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // Mainnet NEYXT
+        wfounder: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // Mainnet WFOUNDER
         weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', // Mainnet WETH
         rpcUrl: 'https://polygon-rpc.com' // Mainnet RPC
       };
@@ -217,7 +217,7 @@ export const EnvironmentChecker = () => {
       const networkInfo = `🔗 CONNECTING TO: MAINNET (Polygon) - Always
 📡 RPC: ${contracts.rpcUrl}
 🏊 Pool: ${contracts.refPool}
-🪙 NEYXT: ${contracts.neyxt}
+🪙 WFOUNDER: ${contracts.wfounder}
 💎 WETH: ${contracts.weth}
 
 📊 Fetching pool data...\n\n`;
@@ -237,15 +237,15 @@ export const EnvironmentChecker = () => {
         pairContract.token1(),
       ]);
 
-      // Determine which token is NEYXT and which is WETH
-      const isNeyxtToken0 = token0Address.toLowerCase() === contracts.neyxt.toLowerCase();
+      // Determine which token is WFOUNDER and which is WETH
+      const isWfounderToken0 = token0Address.toLowerCase() === contracts.wfounder.toLowerCase();
       const isWethToken0 = token0Address.toLowerCase() === contracts.weth.toLowerCase();
-      const isNeyxtToken1 = token1Address.toLowerCase() === contracts.neyxt.toLowerCase();
+      const isWfounderToken1 = token1Address.toLowerCase() === contracts.wfounder.toLowerCase();
       const isWethToken1 = token1Address.toLowerCase() === contracts.weth.toLowerCase();
 
-      // Validate this is actually a NEYXT/WETH pair
-      if (!((isNeyxtToken0 && isWethToken1) || (isNeyxtToken1 && isWethToken0))) {
-        throw new Error(`Pool is not a NEYXT/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
+      // Validate this is actually a WFOUNDER/WETH pair
+      if (!((isWfounderToken0 && isWethToken1) || (isWfounderToken1 && isWethToken0))) {
+        throw new Error(`Pool is not a WFOUNDER/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
       }
 
       // Get token metadata
@@ -259,31 +259,31 @@ export const EnvironmentChecker = () => {
         token1Contract.decimals(),
       ]);
 
-      // Calculate spot price (NEYXT per WETH)
+      // Calculate spot price (WFOUNDER per WETH)
       const reserve0 = reserves[0];
       const reserve1 = reserves[1];
       const blockTimestampLast = reserves[2];
 
-      let spotPrice, liquidityWeth, liquidityNeyxt;
+      let spotPrice, liquidityWeth, liquidityWfounder;
       
-      if (isNeyxtToken0) {
-        // NEYXT is token0, WETH is token1
+      if (isWfounderToken0) {
+        // WFOUNDER is token0, WETH is token1
         const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
         const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
         spotPrice = token0Formatted / token1Formatted;
-        liquidityNeyxt = token0Formatted;
+        liquidityWfounder = token0Formatted;
         liquidityWeth = token1Formatted;
       } else {
-        // WETH is token0, NEYXT is token1
+        // WETH is token0, WFOUNDER is token1
         const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
         const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
         spotPrice = token1Formatted / token0Formatted;
         liquidityWeth = token0Formatted;
-        liquidityNeyxt = token1Formatted;
+        liquidityWfounder = token1Formatted;
       }
 
       // Calculate total value locked in WETH
-      const totalValueWeth = liquidityWeth + (liquidityNeyxt / spotPrice);
+      const totalValueWeth = liquidityWeth + (liquidityWfounder / spotPrice);
 
       // Get current WETH price in USD from a reliable source
       let wethPriceUsd = 0;
@@ -315,7 +315,7 @@ export const EnvironmentChecker = () => {
         throw new Error(`Unable to get current WETH price: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
 
-      // Calculate NEYXT spot price in USD
+      // Calculate WFOUNDER spot price in USD
       const neyxtSpotPriceUsd = wethPriceUsd / spotPrice;
 
       // Check if pool has low liquidity
@@ -328,10 +328,10 @@ export const EnvironmentChecker = () => {
 
 🏊 POOL DATA
 =====================
-💰 Spot Price: 1 WETH = ${spotPrice.toFixed(6)} NEYXT
+💰 Spot Price: 1 WETH = ${spotPrice.toFixed(6)} WFOUNDER
 💲 WETH Price: $${wethPriceUsd.toFixed(2)} USD
-🪙 NEYXT Price: $${neyxtSpotPriceUsd.toFixed(6)} USD per token
-💎 NEYXT Liquidity: ${liquidityNeyxt.toLocaleString()} NEYXT
+🪙 WFOUNDER Price: $${neyxtSpotPriceUsd.toFixed(6)} USD per token
+💎 WFOUNDER Liquidity: ${liquidityWfounder.toLocaleString()} WFOUNDER
 💎 WETH Liquidity: ${liquidityWeth.toFixed(4)} WETH
 💎 Total Value Locked: ${totalValueWeth.toFixed(4)} WETH
 💎 Total Value Locked: $${poolValueUsd.toFixed(2)} USD${liquidityWarning}
@@ -340,7 +340,7 @@ export const EnvironmentChecker = () => {
 📝 Token Details:
    Token0 (${token0Symbol}): ${token0Address}
    Token1 (${token1Symbol}): ${token1Address}
-   NEYXT is Token${isNeyxtToken0 ? '0' : '1'}
+   WFOUNDER is Token${isWfounderToken0 ? '0' : '1'}
    WETH is Token${isWethToken0 ? '0' : '1'}
 
 🎯 M3.2 Status: ✅ Pool data fetching working perfectly!
@@ -392,7 +392,7 @@ export const EnvironmentChecker = () => {
         // Tokens
         usdc: config.buyFlow.contracts.usdc || '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
         weth: config.buyFlow.contracts.weth || '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-        neyxt: config.buyFlow.neyxtAddress || '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761',
+        wfounder: config.buyFlow.wfounderAddress || '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761',
         
         // Routers/Spenders
         quickswapRouter: config.buyFlow.contracts.quickswapRouter || '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
@@ -416,7 +416,7 @@ export const EnvironmentChecker = () => {
       // Token contracts
       const usdcContract = new ethers.Contract(contracts.usdc, ERC20_ABI, ethersProvider);
       const wethContract = new ethers.Contract(contracts.weth, ERC20_ABI, ethersProvider);
-      const neyxtContract = new ethers.Contract(contracts.neyxt, ERC20_ABI, ethersProvider);
+      const neyxtContract = new ethers.Contract(contracts.wfounder, ERC20_ABI, ethersProvider);
 
       // Get token symbols and decimals
       const [usdcSymbol, usdcDecimals, wethSymbol, wethDecimals, neyxtSymbol, neyxtDecimals] = await Promise.all([
@@ -429,7 +429,7 @@ export const EnvironmentChecker = () => {
       ]);
 
       // Get balances
-      const [usdcBalance, wethBalance, neyxtBalance] = await Promise.all([
+      const [usdcBalance, wethBalance, wfounderBalance] = await Promise.all([
         usdcContract.balanceOf(userAddress),
         wethContract.balanceOf(userAddress),
         neyxtContract.balanceOf(userAddress)
@@ -449,7 +449,7 @@ export const EnvironmentChecker = () => {
 =================
 ${usdcSymbol}: ${formatBalance(usdcBalance, usdcDecimals)}
 ${wethSymbol}: ${formatBalance(wethBalance, wethDecimals)}
-${neyxtSymbol}: ${formatBalance(neyxtBalance, neyxtDecimals)}
+${neyxtSymbol}: ${formatBalance(wfounderBalance, neyxtDecimals)}
 
 🔐 APPROVAL STATUS
 ==================\n`;
@@ -458,7 +458,7 @@ ${neyxtSymbol}: ${formatBalance(neyxtBalance, neyxtDecimals)}
       const tokens = [
         { name: usdcSymbol, address: contracts.usdc, contract: usdcContract, decimals: usdcDecimals },
         { name: wethSymbol, address: contracts.weth, contract: wethContract, decimals: wethDecimals },
-        { name: neyxtSymbol, address: contracts.neyxt, contract: neyxtContract, decimals: neyxtDecimals }
+        { name: neyxtSymbol, address: contracts.wfounder, contract: neyxtContract, decimals: neyxtDecimals }
       ];
 
       const spenders = [
@@ -496,7 +496,7 @@ ${neyxtSymbol}: ${formatBalance(neyxtBalance, neyxtDecimals)}
 🔄 DEX = Direct exchange protocols
 🔗 Aggregator = Multi-DEX routing protocols
 
-💡 TIP: QuickSwap Router is the main one used for NEYXT swaps.
+💡 TIP: QuickSwap Router is the main one used for WFOUNDER swaps.
 If you see ❌ for USDC → QuickSwap Router, you'll need approval before swapping.`;
 
       setApprovalInfo(approvalReport);
@@ -754,7 +754,7 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
         payAsset: 'USDC' as const,
         payChain: 'polygon' as const,
         amountIn: '0.01', // 1 USDC
-        receiveAsset: 'NEYXT' as const,
+        receiveAsset: 'WFOUNDER' as const,
         receiveChain: 'polygon' as const,
         userAddress: '0x1234567890123456789012345678901234567890', // Test address
         slippagePercentage: 1.0, // 1% slippage
@@ -798,11 +798,11 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
 📊 QUOTE DATA
 =====================
 🆔 Route ID: ${quoteData.routeId}
-💰 Amount Out: ${quoteData.amountOutEst} NEYXT
+💰 Amount Out: ${quoteData.amountOutEst} WFOUNDER
 💵 Amount In: ${quoteData.amountIn} USDC
 💲 USD Equivalent: $${quoteData.usdEquivalent || 'N/A'}
-🪙 NEYXT Price (ETH): $${quoteData.neyxtPriceUsd || 'N/A'} per token
-⛽ Gas in NEYXT: ${quoteData.fees.gasInNeyxtEst}
+🪙 WFOUNDER Price (ETH): $${quoteData.wfounderPriceUsd || 'N/A'} per token
+⛽ Gas in WFOUNDER: ${quoteData.fees.gasInWfounderEst}
 📉 Slippage: ${quoteData.slippageBps / 100}%
 ⏱️ Estimated Time: ${quoteData.estimatedTimeSec}s
 ⏰ TTL: ${quoteData.ttlSec}s
@@ -1062,7 +1062,7 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
     )}
 
     {/* Buy Flow Modal */}
-    <BuyNeyxtModal 
+    <BuyWfounderModal 
       isOpen={showBuyFlowModal} 
       onClose={() => setShowBuyFlowModal(false)} 
     />
