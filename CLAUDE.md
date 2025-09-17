@@ -125,7 +125,7 @@ All environment variables use `VITE_` prefix for frontend access:
 
 ### Server-Side Secrets (Supabase)
 These are stored as Supabase secrets and not exposed to frontend:
-- `SUPA_ZEROX_API_KEY` - 0x Protocol API for DEX aggregation
+- `SUPA_ZEROX_API_KEY` - 0x Protocol API for DEX aggregation - UNUSED 
 - `SUPA_BICONOMY_API_KEY` - Biconomy gasless transaction API
 - `SUPA_BICONOMY_PAYMASTER_ID` - Biconomy paymaster application ID
 - `SUPA_RESEND_API_KEY` - Email delivery service

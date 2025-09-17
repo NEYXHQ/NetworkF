@@ -26,10 +26,11 @@ dist-ssr
 *.sql
 .env.production
 .env.development
+.env.supabase
 .claude 
 .claude/*
 claude.md
 /knowledge/*
-/.claude/*
+/.claude/*  
 
 
