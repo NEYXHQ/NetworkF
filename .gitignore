@@ -26,4 +26,7 @@ dist-ssr
 *.sql
 .env.production
 .env.development
+.claude 
+.claude/*
+claude.md
 
