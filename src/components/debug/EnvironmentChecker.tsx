@@ -27,6 +27,9 @@ export const EnvironmentChecker = () => {
   const [isLoadingCancelTx, setIsLoadingCancelTx] = useState(false);
   const [airdropInfo, setAirdropInfo] = useState<string>('');
   const [isTestingAirdrop, setIsTestingAirdrop] = useState(false);
+  const [envInfo, setEnvInfo] = useState<string>('');
+  const [rpcTestInfo, setRpcTestInfo] = useState<string>('');
+  const [isTestingRpc, setIsTestingRpc] = useState(false);
   
   const debugPanelRef = useRef<HTMLDivElement>(null);
   
@@ -186,11 +189,207 @@ export const EnvironmentChecker = () => {
     setShowBuyFlowModal(true);
   };
 
+  const handleShowEnvInfo = () => {
+    const envReport = `🔧 ENVIRONMENT CONFIGURATION
+============================
+🌐 Network: ${config.network.displayName} (${config.network.chainId})
+📋 Environment: ${config.isDevelopment ? 'Development' : 'Production'}
+🔗 RPC URL: ${config.network.rpcUrls.default[0]}
+
+📄 CONTRACT ADDRESSES
+====================
+🪙 WFOUNDER: ${config.buyFlow.wfounderAddress || '❌ NOT SET'}
+💵 USDC: ${config.buyFlow.contracts.usdc || '❌ NOT SET'}
+🏊 Pool: ${config.buyFlow.contracts.refPoolAddress || '❌ NOT SET'}
+🔄 Router: ${config.buyFlow.contracts.quickswapRouter || '❌ NOT SET'}
+🏭 Factory: ${config.buyFlow.contracts.quickswapFactory || '❌ NOT SET'}
+
+🔗 SUPABASE CONFIGURATION
+========================
+📡 URL: ${config.supabase.url || '❌ NOT SET'}
+🆔 Project ID: ${config.supabase.projectId || '❌ NOT SET'}
+🔑 API Base: ${config.buyFlow.apiBaseUrl || '❌ NOT SET'}
+
+⚙️ FEATURE FLAGS
+================
+💳 Fiat: ${config.buyFlow.enableFiat ? '✅ Enabled' : '❌ Disabled'}
+⛽ Gas Sponsorship: ${config.buyFlow.enableGasSponsorship ? '✅ Enabled' : '❌ Disabled'}
+🌉 Cross Chain: ${config.buyFlow.enableCrossChain ? '✅ Enabled' : '❌ Disabled'}
+
+${config.network.features.isTestnet ? `
+⚠️ TESTNET NOTES
+================
+• Some contracts may not exist on testnet
+• Pool addresses might be different from mainnet
+• Limited DeFi infrastructure available
+• Consider testing core functionality first` : ''}`;
+
+    setEnvInfo(envReport);
+  };
+
+  const handleTestRpcConnectivity = async () => {
+    setIsTestingRpc(true);
+    setRpcTestInfo('');
+
+    try {
+      const allRpcUrls = [
+        config.network.rpcUrls.default[0],
+        ...config.network.rpcUrls.public,
+        ...config.network.rpcUrls.backup
+      ].filter(Boolean);
+
+      let testReport = `🔗 RPC CONNECTIVITY TEST
+========================
+🌐 Network: ${config.network.displayName} (Chain ID: ${config.network.chainId})
+📡 Testing ${allRpcUrls.length} RPC endpoints...
+
+`;
+
+      const results = [];
+
+      for (let i = 0; i < allRpcUrls.length; i++) {
+        const rpcUrl = allRpcUrls[i];
+        testReport += `⏳ Testing RPC ${i + 1}/${allRpcUrls.length}: ${rpcUrl}\n`;
+        setRpcTestInfo(testReport);
+
+        try {
+          const testProvider = new ethers.JsonRpcProvider(rpcUrl);
+          const startTime = Date.now();
+
+          // Test basic connectivity
+          const network = await testProvider.getNetwork();
+          const blockNumber = await testProvider.getBlockNumber();
+          const endTime = Date.now();
+
+          const responseTime = endTime - startTime;
+
+          results.push({
+            url: rpcUrl,
+            status: 'success',
+            chainId: network.chainId.toString(),
+            blockNumber,
+            responseTime,
+            category: i === 0 ? 'primary' : (i < config.network.rpcUrls.default.length + config.network.rpcUrls.public.length ? 'public' : 'backup')
+          });
+
+        } catch (error) {
+          results.push({
+            url: rpcUrl,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+            category: i === 0 ? 'primary' : (i < config.network.rpcUrls.default.length + config.network.rpcUrls.public.length ? 'public' : 'backup')
+          });
+        }
+      }
+
+      // Generate final report
+      testReport = `🔗 RPC CONNECTIVITY TEST RESULTS
+=================================
+🌐 Network: ${config.network.displayName} (Chain ID: ${config.network.chainId})
+📡 Tested ${allRpcUrls.length} RPC endpoints
+
+📊 RESULTS SUMMARY
+==================
+✅ Working: ${results.filter(r => r.status === 'success').length}
+❌ Failed: ${results.filter(r => r.status === 'failed').length}
+
+`;
+
+      // Show detailed results
+      results.forEach((result, index) => {
+        if (result.status === 'success') {
+          testReport += `
+✅ RPC ${index + 1} (${result.category}): SUCCESS
+   URL: ${result.url}
+   Chain ID: ${result.chainId}
+   Block: ${result.blockNumber}
+   Response: ${result.responseTime}ms`;
+        } else {
+          testReport += `
+❌ RPC ${index + 1} (${result.category}): FAILED
+   URL: ${result.url}
+   Error: ${result.error}`;
+        }
+      });
+
+      const workingRpcs = results.filter(r => r.status === 'success');
+      if (workingRpcs.length > 0) {
+        const fastest = workingRpcs.reduce((prev, curr) =>
+          (prev.responseTime || Infinity) < (curr.responseTime || Infinity) ? prev : curr
+        );
+        testReport += `
+
+🚀 RECOMMENDATIONS
+==================
+✅ ${workingRpcs.length} RPC${workingRpcs.length > 1 ? 's' : ''} working properly
+⚡ Fastest RPC: ${fastest.url} (${fastest.responseTime}ms)
+
+${workingRpcs.length === results.length ?
+  '🎉 All RPC endpoints are working!' :
+  `⚠️ ${results.filter(r => r.status === 'failed').length} RPC${results.filter(r => r.status === 'failed').length > 1 ? 's' : ''} failed - but backups available`}`;
+      } else {
+        testReport += `
+
+🚨 CRITICAL ISSUE
+================
+❌ ALL RPC endpoints failed!
+🔍 This explains the JsonRpcProvider error
+💡 Check internet connection and try again`;
+      }
+
+      setRpcTestInfo(testReport);
+
+    } catch (error) {
+      setRpcTestInfo(`❌ RPC connectivity test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTestingRpc(false);
+    }
+  };
+
   const handlePoolInfo = async () => {
     setIsLoadingPool(true);
     setPoolInfo('');
-    
+
     try {
+      // Use current environment configuration
+      const contracts = {
+        refPool: config.buyFlow.contracts.refPoolAddress,
+        wfounder: config.buyFlow.wfounderAddress,
+        usdc: config.buyFlow.contracts.usdc,
+        rpcUrl: config.network.rpcUrls.default[0]
+      };
+
+      // Validate required environment variables
+      const missingVars = [];
+      if (!contracts.refPool) missingVars.push('VITE_ETHEREUM_REF_POOL_ADDRESS');
+      if (!contracts.wfounder) missingVars.push('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS');
+      if (!contracts.usdc) missingVars.push('VITE_ETHEREUM_USDC_CONTRACT_ADDRESS');
+      if (!contracts.rpcUrl) missingVars.push('Network RPC URL');
+
+      if (missingVars.length > 0) {
+        const errorInfo = `❌ ENVIRONMENT CONFIGURATION ERROR
+
+🔍 Missing Required Environment Variables:
+${missingVars.map(v => `• ${v}`).join('\n')}
+
+🌐 Current Network: ${config.network.displayName}
+📋 Environment: ${config.isDevelopment ? 'Development' : 'Production'}
+
+💡 Solutions:
+• Add missing environment variables to .env.development
+• Check CLAUDE.md for required environment variables
+• Verify contract deployments exist on ${config.network.displayName}
+
+${config.network.features.isTestnet ?
+`⚠️ TESTNET NOTE:
+• Testnet pools may not exist
+• You may need to deploy test contracts
+• Consider using mainnet for pool testing` : ''}`;
+
+        setPoolInfo(errorInfo);
+        return;
+      }
+
       // QuickSwap v2 Pair ABI (minimal interface)
       const PAIR_ABI = [
         'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
@@ -204,29 +403,70 @@ export const EnvironmentChecker = () => {
         'function symbol() external view returns (string)',
       ];
 
-      // Always connect to mainnet pool since we don't have a dev pool
-      // This allows us to test M3.2 functionality even in development
-      const contracts = {
-        refPool: '0x6B8A57addD24CAF494393D9E0bf38BC54F713833', // Mainnet pool (always)
-        wfounder: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // Mainnet WFOUNDER
-        weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', // Mainnet WETH
-        rpcUrl: 'https://polygon-rpc.com' // Mainnet RPC
-      };
-
-      // Show network info first
-      const networkInfo = `🔗 CONNECTING TO: MAINNET (Polygon) - Always
-📡 RPC: ${contracts.rpcUrl}
+      // Show initial connection info
+      let initialInfo = `🔗 CONNECTING TO: ${config.network.displayName}
+📡 Trying RPC endpoints...
 🏊 Pool: ${contracts.refPool}
 🪙 WFOUNDER: ${contracts.wfounder}
-💎 WETH: ${contracts.weth}
+💵 USDC: ${contracts.usdc}
+
+📊 Testing RPC connections...\n\n`;
+
+      setPoolInfo(initialInfo);
+
+      // Try multiple RPC endpoints for better reliability
+      let provider: ethers.JsonRpcProvider | null = null;
+      let workingRpcUrl = '';
+
+      const rpcUrls = [
+        contracts.rpcUrl, // Primary from config
+        ...config.network.rpcUrls.public, // Public backups
+        ...config.network.rpcUrls.backup  // Backup endpoints
+      ].filter(Boolean); // Remove any undefined/empty URLs
+
+      // Try each RPC endpoint until we find one that works
+      for (const rpcUrl of rpcUrls) {
+        try {
+          const testProvider = new ethers.JsonRpcProvider(rpcUrl);
+          // Test the provider by getting the network
+          await testProvider.getNetwork();
+          provider = testProvider;
+          workingRpcUrl = rpcUrl;
+          break;
+        } catch (error) {
+          console.warn(`RPC endpoint failed: ${rpcUrl}`, error);
+          continue;
+        }
+      }
+
+      if (!provider) {
+        throw new Error(`All RPC endpoints failed for ${config.network.displayName}. Tried: ${rpcUrls.join(', ')}`);
+      }
+
+      // Update network info with working RPC
+      const networkInfo = `🔗 CONNECTING TO: ${config.network.displayName}
+📡 RPC: ${workingRpcUrl} ✅
+🏊 Pool: ${contracts.refPool}
+🪙 WFOUNDER: ${contracts.wfounder}
+💵 USDC: ${contracts.usdc}
 
 📊 Fetching pool data...\n\n`;
 
       setPoolInfo(networkInfo);
 
-      // Create provider
-      const provider = new ethers.JsonRpcProvider(contracts.rpcUrl);
-      
+      // First, let's check if the pool contract exists
+      try {
+        const poolCode = await provider.getCode(contracts.refPool);
+        if (poolCode === '0x') {
+          throw new Error(`Pool contract does not exist at address ${contracts.refPool} on ${config.network.displayName}`);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('does not exist')) {
+          throw error;
+        }
+        // If it's a different error (like network issues), continue and let the original error show
+      }
+
       // Create contract instances
       const pairContract = new ethers.Contract(contracts.refPool, PAIR_ABI, provider);
       
@@ -237,15 +477,15 @@ export const EnvironmentChecker = () => {
         pairContract.token1(),
       ]);
 
-      // Determine which token is WFOUNDER and which is WETH
+      // Determine which token is WFOUNDER and which is USDC
       const isWfounderToken0 = token0Address.toLowerCase() === contracts.wfounder.toLowerCase();
-      const isWethToken0 = token0Address.toLowerCase() === contracts.weth.toLowerCase();
+      const isUsdcToken0 = token0Address.toLowerCase() === contracts.usdc.toLowerCase();
       const isWfounderToken1 = token1Address.toLowerCase() === contracts.wfounder.toLowerCase();
-      const isWethToken1 = token1Address.toLowerCase() === contracts.weth.toLowerCase();
+      const isUsdcToken1 = token1Address.toLowerCase() === contracts.usdc.toLowerCase();
 
-      // Validate this is actually a WFOUNDER/WETH pair
-      if (!((isWfounderToken0 && isWethToken1) || (isWfounderToken1 && isWethToken0))) {
-        throw new Error(`Pool is not a WFOUNDER/WETH pair. Found tokens: ${token0Address}, ${token1Address}`);
+      // Validate this is actually a WFOUNDER/USDC pair
+      if (!((isWfounderToken0 && isUsdcToken1) || (isWfounderToken1 && isUsdcToken0))) {
+        throw new Error(`Pool is not a WFOUNDER/USDC pair. Found tokens: ${token0Address}, ${token1Address}`);
       }
 
       // Get token metadata
@@ -259,110 +499,118 @@ export const EnvironmentChecker = () => {
         token1Contract.decimals(),
       ]);
 
-      // Calculate spot price (WFOUNDER per WETH)
+      // Calculate spot price (WFOUNDER per USDC)
       const reserve0 = reserves[0];
       const reserve1 = reserves[1];
       const blockTimestampLast = reserves[2];
 
-      let spotPrice, liquidityWeth, liquidityWfounder;
-      
+      let spotPrice, liquidityUsdc, liquidityWfounder;
+
       if (isWfounderToken0) {
-        // WFOUNDER is token0, WETH is token1
+        // WFOUNDER is token0, USDC is token1
         const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
         const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
         spotPrice = token0Formatted / token1Formatted;
         liquidityWfounder = token0Formatted;
-        liquidityWeth = token1Formatted;
+        liquidityUsdc = token1Formatted;
       } else {
-        // WETH is token0, WFOUNDER is token1
+        // USDC is token0, WFOUNDER is token1
         const token0Formatted = Number(ethers.formatUnits(reserve0, token0Decimals));
         const token1Formatted = Number(ethers.formatUnits(reserve1, token1Decimals));
         spotPrice = token1Formatted / token0Formatted;
-        liquidityWeth = token0Formatted;
+        liquidityUsdc = token0Formatted;
         liquidityWfounder = token1Formatted;
       }
 
-      // Calculate total value locked in WETH
-      const totalValueWeth = liquidityWeth + (liquidityWfounder / spotPrice);
+      // Calculate total value locked in USD (since USDC ≈ $1)
+      const totalValueUsd = liquidityUsdc + (liquidityWfounder / spotPrice);
 
-      // Get current WETH price in USD from a reliable source
-      let wethPriceUsd = 0;
-      try {
-        // Try CoinGecko API first
-        const coingeckoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-        if (coingeckoResponse.ok) {
-          const coingeckoData = await coingeckoResponse.json();
-          wethPriceUsd = coingeckoData.ethereum?.usd || 0;
-        }
-        
-        // If CoinGecko fails, try alternative source
-        if (!wethPriceUsd) {
-          const alternativeResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
-          if (alternativeResponse.ok) {
-            const alternativeData = await alternativeResponse.json();
-            wethPriceUsd = parseFloat(alternativeData.price);
-          }
-        }
-        
-        // If no price could be fetched, throw an error
-        if (!wethPriceUsd) {
-          throw new Error('Failed to fetch WETH price from all available sources');
-        }
-        
-        console.log('WETH price fetched:', wethPriceUsd);
-      } catch (error) {
-        console.error('Failed to fetch WETH price from external APIs:', error);
-        throw new Error(`Unable to get current WETH price: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-
-      // Calculate WFOUNDER spot price in USD
-      const neyxtSpotPriceUsd = wethPriceUsd / spotPrice;
+      // Calculate WFOUNDER spot price in USD (USDC price per WFOUNDER)
+      const wfounderSpotPriceUsd = 1 / spotPrice; // Since USDC ≈ $1
 
       // Check if pool has low liquidity
-      const poolValueUsd = totalValueWeth * wethPriceUsd;
-      const liquidityWarning = poolValueUsd < 10 ? 
-        `\n⚠️  WARNING: Pool has very low liquidity ($${poolValueUsd.toFixed(2)}). Trades will have extreme price impact!` : '';
+      const liquidityWarning = totalValueUsd < 10 ?
+        `\n⚠️  WARNING: Pool has very low liquidity ($${totalValueUsd.toFixed(2)}). Trades will have extreme price impact!` : '';
 
       // Format the pool info
-      const poolInfoText = `${networkInfo}✅ SUCCESS: Pool data retrieved from mainnet!
+      const poolInfoText = `${networkInfo}✅ SUCCESS: Pool data retrieved from ${config.network.displayName}!
 
 🏊 POOL DATA
 =====================
-💰 Spot Price: 1 WETH = ${spotPrice.toFixed(6)} WFOUNDER
-💲 WETH Price: $${wethPriceUsd.toFixed(2)} USD
-🪙 WFOUNDER Price: $${neyxtSpotPriceUsd.toFixed(6)} USD per token
+💰 Spot Price: 1 USDC = ${spotPrice.toFixed(6)} WFOUNDER
+💵 USDC Price: $1.00 USD (stablecoin)
+🪙 WFOUNDER Price: $${wfounderSpotPriceUsd.toFixed(6)} USD per token
 💎 WFOUNDER Liquidity: ${liquidityWfounder.toLocaleString()} WFOUNDER
-💎 WETH Liquidity: ${liquidityWeth.toFixed(4)} WETH
-💎 Total Value Locked: ${totalValueWeth.toFixed(4)} WETH
-💎 Total Value Locked: $${poolValueUsd.toFixed(2)} USD${liquidityWarning}
+💵 USDC Liquidity: ${liquidityUsdc.toFixed(2)} USDC
+💎 Total Value Locked: $${totalValueUsd.toFixed(2)} USD${liquidityWarning}
 ⏰ Last Update: ${new Date(Number(blockTimestampLast) * 1000).toISOString()}
 🔗 Block Number: ${Number(blockTimestampLast)}
 📝 Token Details:
    Token0 (${token0Symbol}): ${token0Address}
    Token1 (${token1Symbol}): ${token1Address}
    WFOUNDER is Token${isWfounderToken0 ? '0' : '1'}
-   WETH is Token${isWethToken0 ? '0' : '1'}
+   USDC is Token${isUsdcToken0 ? '0' : '1'}
 
-🎯 M3.2 Status: ✅ Pool data fetching working perfectly!
-💡 Note: Connected to mainnet pool regardless of current environment for testing purposes.`;
+🎯 Pool Status: ✅ Pool data fetching working perfectly!
+💡 Network: Using ${config.network.displayName} (${config.network.features.isTestnet ? 'Testnet' : 'Mainnet'}) configuration.`;
 
       setPoolInfo(poolInfoText);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      let errorText = `❌ Error fetching pool data from mainnet: ${errorMessage}\n\n`;
-      errorText += `🔍 DIAGNOSIS: Unexpected error on mainnet\n\n`;
-      errorText += `📋 Possible causes:\n`;
-      errorText += `• RPC endpoint is down\n`;
-      errorText += `• Contract addresses are incorrect\n`;
-      errorText += `• Network congestion\n`;
-      errorText += `• Mainnet pool contract issues\n\n`;
-      errorText += `💡 Solutions:\n`;
-      errorText += `• Check RPC endpoint status\n`;
-      errorText += `• Verify contract addresses\n`;
-      errorText += `• Try again later\n`;
-      errorText += `• Check if mainnet pool is still active`;
+      let errorText = `❌ Error fetching pool data from ${config.network.displayName}: ${errorMessage}\n\n`;
+
+      // Check if this is an RPC provider error
+      if (errorMessage.includes('JsonRpcProvider failed to detect network') ||
+          errorMessage.includes('All RPC endpoints failed') ||
+          errorMessage.includes('network connection') ||
+          errorMessage.includes('could not detect network')) {
+        errorText += `🔍 RPC PROVIDER ERROR DETECTED\n\n`;
+        errorText += `⚠️ Issue with RPC endpoint connectivity.\n\n`;
+        errorText += `📋 Common causes:\n`;
+        errorText += `• Infura API key may be invalid or rate limited\n`;
+        errorText += `• Network connectivity issues\n`;
+        errorText += `• RPC endpoint is down or overloaded\n`;
+        errorText += `• Wrong network configuration\n\n`;
+        errorText += `💡 Solutions:\n`;
+        errorText += `• Check internet connection\n`;
+        errorText += `• Verify Infura API key in networks.ts\n`;
+        errorText += `• Try again in a few minutes (rate limiting)\n`;
+        errorText += `• Use alternative RPC endpoints\n\n`;
+        errorText += `🔧 Debug info:\n`;
+        errorText += `Primary RPC: ${config.network.rpcUrls.default[0]}\n`;
+        errorText += `Backup RPCs available: ${config.network.rpcUrls.public.length + config.network.rpcUrls.backup.length}`;
+      } else if (config.network.features.isTestnet) {
+        errorText += `🔍 TESTNET LIMITATION DETECTED\n\n`;
+        errorText += `⚠️ The pool address (${config.buyFlow.contracts.refPoolAddress}) likely doesn't exist on ${config.network.displayName}.\n\n`;
+        errorText += `📋 Common causes on testnets:\n`;
+        errorText += `• Pool contracts are deployed on mainnet only\n`;
+        errorText += `• Different pool addresses for testnet vs mainnet\n`;
+        errorText += `• Limited DeFi infrastructure on testnets\n`;
+        errorText += `• Test tokens may not have established liquidity pools\n\n`;
+        errorText += `💡 Solutions:\n`;
+        errorText += `• Deploy a test pool on ${config.network.displayName}\n`;
+        errorText += `• Use mainnet pool address for testing (read-only)\n`;
+        errorText += `• Check if testnet-specific pool addresses exist\n`;
+        errorText += `• Consider using a testnet with more DeFi infrastructure\n\n`;
+        errorText += `🚀 For now, you can:\n`;
+        errorText += `1. Test other functionality that doesn't require pools\n`;
+        errorText += `2. Switch to production mode to test with mainnet pools\n`;
+        errorText += `3. Deploy your own test pool on ${config.network.displayName}`;
+      } else {
+        errorText += `🔍 DIAGNOSIS: Error on ${config.network.displayName}\n\n`;
+        errorText += `📋 Possible causes:\n`;
+        errorText += `• RPC endpoint is down\n`;
+        errorText += `• Contract addresses are incorrect\n`;
+        errorText += `• Network congestion\n`;
+        errorText += `• Pool contract issues\n\n`;
+        errorText += `💡 Solutions:\n`;
+        errorText += `• Check RPC endpoint status\n`;
+        errorText += `• Verify contract addresses in environment\n`;
+        errorText += `• Try again later\n`;
+        errorText += `• Check if pool is still active`;
+      }
       
       setPoolInfo(errorText);
     } finally {
@@ -390,17 +638,45 @@ export const EnvironmentChecker = () => {
       // Contract addresses based on current network
       const contracts = {
         // Tokens
-        usdc: config.buyFlow.contracts.usdc || '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-        weth: config.buyFlow.contracts.weth || '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-        wfounder: config.buyFlow.wfounderAddress || '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761',
-        
+        usdc: config.buyFlow.contracts.usdc,
+        wfounder: config.buyFlow.wfounderAddress,
+
         // Routers/Spenders
-        quickswapRouter: config.buyFlow.contracts.quickswapRouter || '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
-        // Add other potential spenders
+        quickswapRouter: config.buyFlow.contracts.quickswapRouter,
+        // Add other potential spenders (these may not exist on testnet)
         uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // If used
         oneinchRouter: '0x1111111254EEB25477B68fb85Ed929f73A960582', // 1inch v5
         paraswapRouter: '0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57', // ParaSwap
       };
+
+      // Validate required environment variables for token contracts
+      const missingVars = [];
+      if (!contracts.usdc) missingVars.push('VITE_ETHEREUM_USDC_CONTRACT_ADDRESS');
+      if (!contracts.wfounder) missingVars.push('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS');
+      if (!contracts.quickswapRouter) missingVars.push('VITE_ETHEREUM_UNISWAP_ROUTER');
+
+      if (missingVars.length > 0) {
+        const errorInfo = `❌ ENVIRONMENT CONFIGURATION ERROR
+
+🔍 Missing Required Environment Variables:
+${missingVars.map(v => `• ${v}`).join('\n')}
+
+🌐 Current Network: ${config.network.displayName}
+📋 Environment: ${config.isDevelopment ? 'Development' : 'Production'}
+
+💡 Solutions:
+• Add missing environment variables to .env.development
+• Check CLAUDE.md for required environment variables
+• Verify token contracts exist on ${config.network.displayName}
+
+${config.network.features.isTestnet ?
+`⚠️ TESTNET NOTE:
+• Some tokens may not be deployed on testnet
+• Consider using testnet-specific token addresses` : ''}`;
+
+        setApprovalInfo(errorInfo);
+        return;
+      }
 
       // ERC20 ABI for allowance and token info
       const ERC20_ABI = [
@@ -412,27 +688,23 @@ export const EnvironmentChecker = () => {
 
       // Create ethers provider
       const ethersProvider = new ethers.BrowserProvider(provider);
-      
+
       // Token contracts
       const usdcContract = new ethers.Contract(contracts.usdc, ERC20_ABI, ethersProvider);
-      const wethContract = new ethers.Contract(contracts.weth, ERC20_ABI, ethersProvider);
-      const neyxtContract = new ethers.Contract(contracts.wfounder, ERC20_ABI, ethersProvider);
+      const wfounderContract = new ethers.Contract(contracts.wfounder, ERC20_ABI, ethersProvider);
 
       // Get token symbols and decimals
-      const [usdcSymbol, usdcDecimals, wethSymbol, wethDecimals, neyxtSymbol, neyxtDecimals] = await Promise.all([
+      const [usdcSymbol, usdcDecimals, wfounderSymbol, wfounderDecimals] = await Promise.all([
         usdcContract.symbol(),
         usdcContract.decimals(),
-        wethContract.symbol(), 
-        wethContract.decimals(),
-        neyxtContract.symbol(),
-        neyxtContract.decimals()
+        wfounderContract.symbol(),
+        wfounderContract.decimals()
       ]);
 
       // Get balances
-      const [usdcBalance, wethBalance, wfounderBalance] = await Promise.all([
+      const [usdcBalance, wfounderBalance] = await Promise.all([
         usdcContract.balanceOf(userAddress),
-        wethContract.balanceOf(userAddress),
-        neyxtContract.balanceOf(userAddress)
+        wfounderContract.balanceOf(userAddress)
       ]);
 
       // Format balances
@@ -448,8 +720,7 @@ export const EnvironmentChecker = () => {
 💰 TOKEN BALANCES
 =================
 ${usdcSymbol}: ${formatBalance(usdcBalance, usdcDecimals)}
-${wethSymbol}: ${formatBalance(wethBalance, wethDecimals)}
-${neyxtSymbol}: ${formatBalance(wfounderBalance, neyxtDecimals)}
+${wfounderSymbol}: ${formatBalance(wfounderBalance, wfounderDecimals)}
 
 🔐 APPROVAL STATUS
 ==================\n`;
@@ -457,15 +728,14 @@ ${neyxtSymbol}: ${formatBalance(wfounderBalance, neyxtDecimals)}
       // Check approvals for each token against each router
       const tokens = [
         { name: usdcSymbol, address: contracts.usdc, contract: usdcContract, decimals: usdcDecimals },
-        { name: wethSymbol, address: contracts.weth, contract: wethContract, decimals: wethDecimals },
-        { name: neyxtSymbol, address: contracts.wfounder, contract: neyxtContract, decimals: neyxtDecimals }
+        { name: wfounderSymbol, address: contracts.wfounder, contract: wfounderContract, decimals: wfounderDecimals }
       ];
 
       const spenders = [
-        { name: 'QuickSwap Router', address: contracts.quickswapRouter, category: '🔄 DEX' },
-        { name: '1inch Router', address: contracts.oneinchRouter, category: '🔗 Aggregator' },
-        { name: 'ParaSwap Router', address: contracts.paraswapRouter, category: '🔗 Aggregator' },
-        { name: 'Uniswap V2 Router', address: contracts.uniswapV2Router, category: '🔄 DEX' }
+        { name: 'QuickSwap Router', address: contracts.quickswapRouter, category: '🔄 DEX', testnetAvailable: true },
+        { name: '1inch Router', address: contracts.oneinchRouter, category: '🔗 Aggregator', testnetAvailable: false },
+        { name: 'ParaSwap Router', address: contracts.paraswapRouter, category: '🔗 Aggregator', testnetAvailable: false },
+        { name: 'Uniswap V2 Router', address: contracts.uniswapV2Router, category: '🔄 DEX', testnetAvailable: true }
       ];
 
       for (const token of tokens) {
@@ -473,15 +743,21 @@ ${neyxtSymbol}: ${formatBalance(wfounderBalance, neyxtDecimals)}
         
         for (const spender of spenders) {
           try {
+            // Skip testnet-unavailable routers if on testnet
+            if (config.network.features.isTestnet && !spender.testnetAvailable) {
+              approvalReport += `  ${spender.category} ${spender.name}: ⏸️ Not available on testnet\n`;
+              continue;
+            }
+
             const allowance = await token.contract.allowance(userAddress, spender.address);
             const allowanceFormatted = parseFloat(ethers.formatUnits(allowance, token.decimals));
-            
-            const status = allowanceFormatted > 0 
+
+            const status = allowanceFormatted > 0
               ? `✅ ${allowanceFormatted.toFixed(6)} ${token.name}`
               : '❌ Not Approved';
-              
+
             approvalReport += `  ${spender.category} ${spender.name}: ${status}\n`;
-          } catch (error) {
+          } catch {
             approvalReport += `  ${spender.category} ${spender.name}: ⚠️ Error checking\n`;
           }
         }
@@ -492,12 +768,13 @@ ${neyxtSymbol}: ${formatBalance(wfounderBalance, neyxtDecimals)}
 ✅ = Router has approval to spend tokens
 ❌ = No approval (will need approval transaction)
 ⚠️ = Error checking (router may not exist on this network)
+⏸️ = Not available on testnet
 
 🔄 DEX = Direct exchange protocols
 🔗 Aggregator = Multi-DEX routing protocols
 
-💡 TIP: QuickSwap Router is the main one used for WFOUNDER swaps.
-If you see ❌ for USDC → QuickSwap Router, you'll need approval before swapping.`;
+💡 TIP: ${config.network.features.isTestnet ? 'DEX routers' : 'QuickSwap Router'} ${config.network.features.isTestnet ? 'are' : 'is'} the main ${config.network.features.isTestnet ? 'ones' : 'one'} used for WFOUNDER swaps.
+If you see ❌ for USDC → Router, you'll need approval before swapping.`;
 
       setApprovalInfo(approvalReport);
 
@@ -781,8 +1058,8 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
       // Include Supabase anon key for authentication
       const response = await fetch(apiUrl, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZXBvaXZocW51cnhta2dpb2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjEwMzYsImV4cCI6MjA2OTQzNzAzNn0.f_GUBRAHJypHPXXOD8JAW7okAuhPUpQDvfFl9_JqK4Q',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZXBvaXZocW51cnhta2dpb2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NjEwMzYsImV4cCI6MjA2OTQzNzAzNn0.f_GUBRAHJypHPXXOD8JAW7okAuhPUpQDvfFl9_JqK4Q`,
+          'apikey': config.supabase.anonKey,
+          'Authorization': `Bearer ${config.supabase.anonKey}`,
         },
       });
 
@@ -793,15 +1070,16 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
 
       const quoteData = await response.json();
       
-      const quoteInfo = `🧪 QUICKSWAP QUOTE TEST - SUCCESS!
+      const quoteInfo = `🧪 SWAP QUOTE TEST - SUCCESS!
 
 📊 QUOTE DATA
 =====================
+🌐 Network: ${config.network.displayName}
 🆔 Route ID: ${quoteData.routeId}
 💰 Amount Out: ${quoteData.amountOutEst} WFOUNDER
 💵 Amount In: ${quoteData.amountIn} USDC
 💲 USD Equivalent: $${quoteData.usdEquivalent || 'N/A'}
-🪙 WFOUNDER Price (ETH): $${quoteData.wfounderPriceUsd || 'N/A'} per token
+🪙 WFOUNDER Price: $${quoteData.wfounderPriceUsd || 'N/A'} per token
 ⛽ Gas in WFOUNDER: ${quoteData.fees.gasInWfounderEst}
 📉 Slippage: ${quoteData.slippageBps / 100}%
 ⏱️ Estimated Time: ${quoteData.estimatedTimeSec}s
@@ -810,28 +1088,30 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
 📊 Price Impact: ${quoteData.priceImpact}
 ⛽ Gas Estimate: ${quoteData.gasEstimate}
 
-✅ M4 Implementation: QuickSwap API integration working!`;
+✅ Swap API integration working on ${config.network.displayName}!`;
 
       setPoolInfo(quoteInfo);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      const errorInfo = `🧪 QUICKSWAP QUOTE TEST - FAILED!
+      const errorInfo = `🧪 SWAP QUOTE TEST - FAILED!
 
 ❌ Error: ${errorMessage}
+🌐 Network: ${config.network.displayName}
 
 🔍 This could mean:
-• QuickSwap API integration not yet implemented
+• Swap API integration not yet implemented
 • Network connectivity issues
 • Invalid request parameters
 • Supabase function errors
-
+${config.network.features.isTestnet ? '• Testnet liquidity or DEX unavailability\n' : ''}
 📋 Check:
 • Function deployment status
 • Network connectivity
 • Request parameters
-• Supabase function logs`;
+• Supabase function logs
+${config.network.features.isTestnet ? '• Testnet DEX availability\n' : ''}`;
 
       setPoolInfo(errorInfo);
     }
@@ -939,6 +1219,23 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
         </button>
         
         <button
+          onClick={handleShowEnvInfo}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors mt-2"
+        >
+          <span>⚙️</span>
+          <span>Env Config</span>
+        </button>
+
+        <button
+          onClick={handleTestRpcConnectivity}
+          disabled={isTestingRpc}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
+          <span>🔗</span>
+          <span>{isTestingRpc ? 'Testing...' : 'Test RPC'}</span>
+        </button>
+
+        <button
           onClick={handlePoolInfo}
           disabled={isLoadingPool}
           className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-princeton-orange text-soft-white text-xs rounded hover:bg-princeton-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
@@ -952,7 +1249,7 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
           className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 transition-colors mt-2"
         >
           <span>🧪</span>
-          <span>Test QuickSwap Quote</span>
+          <span>Test Swap Quote</span>
         </button>
 
         <button
@@ -991,6 +1288,24 @@ Cancel: ${ethers.formatUnits(higherGasPrice, 'gwei')} Gwei (+20%)
           <span>{isTestingAirdrop ? 'Testing Airdrop...' : 'Test Airdrop'}</span>
         </button>
       </div>
+
+      {/* Environment Info Display */}
+      {envInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {envInfo}
+          </div>
+        </div>
+      )}
+
+      {/* RPC Test Info Display */}
+      {rpcTestInfo && (
+        <div className="border-t border-teal-blue/20 pt-4 mb-4">
+          <div className="bg-charcoal-black/50 rounded p-3 text-xs font-mono whitespace-pre-wrap text-soft-white/90 max-h-64 overflow-y-auto">
+            {rpcTestInfo}
+          </div>
+        </div>
+      )}
 
       {/* Pool Info Display */}
       {poolInfo && (
