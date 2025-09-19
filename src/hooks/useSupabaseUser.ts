@@ -58,10 +58,26 @@ export const useSupabaseUser = () => {
         if (!existingUser) {
           // Create new user from Web3Auth data
           const linkedinData = convertWeb3AuthToLinkedIn(web3AuthUser)
+          console.log('🖼️ Debug: Web3Auth profile image:', web3AuthUser.profileImage)
+          console.log('🖼️ Debug: LinkedIn data profile image:', linkedinData.profileImage)
           existingUser = await userService.upsertUserFromLinkedIn(linkedinData, userId)
+          console.log('🖼️ Debug: Created user profile image:', existingUser?.profile_image)
         } else {
           // Update last login - use the existing user's ID
           await userService.updateLastLogin(existingUser.id)
+          console.log('🖼️ Debug: Existing user profile image:', existingUser?.profile_image)
+
+          // Always sync profile image from Web3Auth if available (handles expired LinkedIn URLs)
+          if (web3AuthUser.profileImage && web3AuthUser.profileImage !== existingUser.profile_image) {
+            console.log('🖼️ Debug: Syncing fresh profile image from Web3Auth to existing user')
+            console.log('🖼️ Debug: Old URL:', existingUser.profile_image)
+            console.log('🖼️ Debug: New URL:', web3AuthUser.profileImage)
+            const updatedUser = await userService.updateUser(existingUser.id, {
+              profile_image: web3AuthUser.profileImage
+            })
+            existingUser = updatedUser
+            console.log('🖼️ Debug: Updated user profile image:', existingUser?.profile_image)
+          }
         }
 
         setSupabaseUser(existingUser)

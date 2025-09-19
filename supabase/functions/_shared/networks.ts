@@ -37,41 +37,41 @@ interface NetworkConfig {
   web3AuthNetwork: 'sapphire_devnet' | 'sapphire_mainnet';
 }
 
-const POLYGON_AMOY_TESTNET: NetworkConfig = {
-  chainId: '80002',
-  chainIdHex: '0x13882',
-  name: 'polygon-amoy',
-  displayName: 'Polygon Amoy Testnet',
+const ETHEREUM_SEPOLIA_TESTNET: NetworkConfig = {
+  chainId: '11155111',
+  chainIdHex: '0xaa36a7',
+  name: 'ethereum-sepolia',
+  displayName: 'Ethereum Sepolia Testnet',
   nativeCurrency: {
-    name: 'Polygon',
-    symbol: 'POL',
+    name: 'Ethereum',
+    symbol: 'ETH',
     decimals: 18,
   },
   rpcUrls: {
-    default: ['https://rpc-amoy.polygon.technology'],
+    default: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
     public: [
-      'https://rpc-amoy.polygon.technology',
-      'https://polygon-amoy.drpc.org',
-      'https://rpc.ankr.com/polygon_amoy',
+      'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      'https://rpc.sepolia.org',
+      'https://rpc2.sepolia.org',
     ],
     backup: [
-      'https://polygon-amoy-bor-rpc.publicnode.com',
-      'https://polygon-amoy.gateway.tenderly.co',
-      'https://gateway.tenderly.co/public/polygon-amoy',
+      'https://sepolia.blockpi.network/v1/rpc/public',
+      'https://sepolia.gateway.tenderly.co',
+      'https://gateway.tenderly.co/public/sepolia',
     ],
   },
   blockExplorerUrls: [
-    'https://amoy.polygonscan.com',
-    'https://polygon-amoy.blockscout.com',
+    'https://sepolia.etherscan.io',
+    'https://sepolia.blockscout.com',
   ],
   contracts: {
-    wfounder: Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS') || '',
+    wfounder: Deno.env.get('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   faucets: [
-    'https://faucet.polygon.technology',
-    'https://www.alchemy.com/faucets/polygon-amoy',
-    'https://faucet.quicknode.com/polygon/amoy',
+    'https://sepoliafaucet.com',
+    'https://www.alchemy.com/faucets/ethereum-sepolia',
+    'https://faucet.quicknode.com/ethereum/sepolia',
   ],
   features: {
     eip1559: true,
@@ -80,35 +80,35 @@ const POLYGON_AMOY_TESTNET: NetworkConfig = {
   web3AuthNetwork: 'sapphire_devnet',
 };
 
-const POLYGON_MAINNET: NetworkConfig = {
-  chainId: '137',
-  chainIdHex: '0x89',
-  name: 'polygon',
-  displayName: 'Polygon Mainnet',
+const ETHEREUM_MAINNET: NetworkConfig = {
+  chainId: '1',
+  chainIdHex: '0x1',
+  name: 'ethereum',
+  displayName: 'Ethereum Mainnet',
   nativeCurrency: {
-    name: 'Polygon',
-    symbol: 'POL',
+    name: 'Ethereum',
+    symbol: 'ETH',
     decimals: 18,
   },
   rpcUrls: {
-    default: ['https://polygon-rpc.com'],
+    default: ['https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
     public: [
-      'https://polygon-rpc.com',
-      'https://rpc.ankr.com/polygon',
-      'https://poly-rpc.gateway.pokt.network',
+      'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      'https://eth.llamarpc.com',
+      'https://rpc.ankr.com/eth',
     ],
     backup: [
-      'https://polygon-mainnet.public.blastapi.io',
-      'https://polygon-bor-rpc.publicnode.com',
-      'https://1rpc.io/matic',
+      'https://ethereum-mainnet.public.blastapi.io',
+      'https://ethereum-rpc.publicnode.com',
+      'https://1rpc.io/eth',
     ],
   },
   blockExplorerUrls: [
-    'https://polygonscan.com',
-    'https://polygon.blockscout.com',
+    'https://etherscan.io',
+    'https://ethereum.blockscout.com',
   ],
   contracts: {
-    wfounder: Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS') || '',
+    wfounder: Deno.env.get('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS') || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
     ensRegistry: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
     ensUniversalResolver: '0xE4395e13d3c8f7F8895D4c3DA9a7e3c89e50AB95',
@@ -117,7 +117,7 @@ const POLYGON_MAINNET: NetworkConfig = {
     eip1559: true,
     isTestnet: false,
   },
-  web3AuthNetwork: 'sapphire_devnet',
+  web3AuthNetwork: 'sapphire_mainnet',
 };
 
 /**
@@ -127,19 +127,19 @@ const POLYGON_MAINNET: NetworkConfig = {
 export function getCurrentNetwork(): NetworkConfig {
   // In Edge Functions, we need to determine environment differently
   // We can use the presence of testnet vs mainnet contract addresses
-  const hasGeneric = Boolean(Deno.env.get('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS'));
+  const hasGeneric = Boolean(Deno.env.get('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS'));
   const hasTestnetWfounder = hasGeneric;
   const hasMainnetWfounder = hasGeneric;
-  
+
   // If both are present, prefer testnet for development
   // If only one is present, use that one
   if (hasTestnetWfounder && !hasMainnetWfounder) {
-    return POLYGON_AMOY_TESTNET;
+    return ETHEREUM_SEPOLIA_TESTNET;
   } else if (hasMainnetWfounder && !hasTestnetWfounder) {
-    return POLYGON_MAINNET;
+    return ETHEREUM_MAINNET;
   } else {
     // Default to testnet if both or neither are present
-    return POLYGON_AMOY_TESTNET;
+    return ETHEREUM_SEPOLIA_TESTNET;
   }
 }
 
@@ -150,11 +150,11 @@ export function getContractAddresses() {
   const network = getCurrentNetwork();
   const isTestnet = network.features.isTestnet;
   
-  const wethAddress = Deno.env.get('VITE_POLYGON_WETH_CONTRACT_ADDRESS');
-    
-  const usdcAddress = Deno.env.get('VITE_POLYGON_USDC_CONTRACT_ADDRESS');
-    
-  const refPoolAddress = Deno.env.get('VITE_POLYGON_REF_POOL_ADDRESS');
+  const wethAddress = Deno.env.get('VITE_ETHEREUM_WETH_CONTRACT_ADDRESS');
+
+  const usdcAddress = Deno.env.get('VITE_ETHEREUM_USDC_CONTRACT_ADDRESS');
+
+  const refPoolAddress = Deno.env.get('VITE_ETHEREUM_REF_POOL_ADDRESS');
 
   return {
     wfounder: network.contracts.wfounder,
@@ -171,7 +171,7 @@ export function getRpcUrl(): string {
   const network = getCurrentNetwork();
   
   // Try Alchemy URL first if provided
-  const alchemyUrl = Deno.env.get('SUPA_ALCHEMY_OR_RPC_URL_POLYGON');
+  const alchemyUrl = Deno.env.get('SUPA_ETHEREUM_RPC_URL');
   if (alchemyUrl) {
     return alchemyUrl;
   }
@@ -192,8 +192,8 @@ export function getRpcUrl(): string {
 }
 
 export const networks = {
-  testnet: POLYGON_AMOY_TESTNET,
-  mainnet: POLYGON_MAINNET,
+  testnet: ETHEREUM_SEPOLIA_TESTNET,
+  mainnet: ETHEREUM_MAINNET,
 };
 
 export type { NetworkConfig };

@@ -17,6 +17,11 @@ When reviewing code, you will:
 5. Verify that VITE_ prefixed variables are used correctly for frontend access
 6. Check that server-side secrets are not exposed to the frontend
 
+https://media.licdn.com/dms/image/v2/C4D03AQEqfFMKPZsN2A/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1552344258030?e=1761177600&v=beta&t=stYSp1IjlnbWD7-fE_c6hm46UzdlRyPotldjDFBZJGY
+
+https://media.licdn.com/dms/image/v2/C4D03AQEqfFMKPZsN2A/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1552344258030?e=1757548800&v=beta&t=jBlvZ_t8LYx_3f8eQdgCqnhWw-cimA9LPP5cUZ7Yv4E
+
+
 **Code Quality Review:**
 1. Assess code structure, readability, and adherence to TypeScript best practices
 2. Verify proper error handling, especially for environment-dependent operations

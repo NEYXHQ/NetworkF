@@ -30,20 +30,20 @@ export interface PricingPolicy {
 
 // Auto-select contract addresses based on environment (dev = testnet, prod = mainnet)
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  WFOUNDER: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS as string,
-  WETH: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS as string,
-  USDC: import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS as string,
-  
-  QUICKSWAP_FACTORY: import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY as string,
-  QUICKSWAP_ROUTER: import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER as string,
-  REF_POOL_ADDRESS: import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS as string,
-  
+  WFOUNDER: import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS as string,
+  WETH: import.meta.env.VITE_ETHEREUM_WETH_CONTRACT_ADDRESS as string,
+  USDC: import.meta.env.VITE_ETHEREUM_USDC_CONTRACT_ADDRESS as string,
+
+  QUICKSWAP_FACTORY: import.meta.env.VITE_ETHEREUM_UNISWAP_FACTORY as string,
+  QUICKSWAP_ROUTER: import.meta.env.VITE_ETHEREUM_UNISWAP_ROUTER as string,
+  REF_POOL_ADDRESS: import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS as string,
+
   // Biconomy uses singleton paymaster contracts per chain
   // Your instance is identified by API key + paymaster ID, not contract address
-  BICONOMY_PAYMASTER: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER as string
+  BICONOMY_PAYMASTER: import.meta.env.VITE_ETHEREUM_BICONOMY_PAYMASTER as string
 };
 
-// Helper function to get native token address (POL)
+// Helper function to get native token address (ETH)
 export const getNativeTokenAddress = (): string => {
   // Native tokens use the special address 0x0000000000000000000000000000000000000000
   return '0x0000000000000000000000000000000000000000';
@@ -59,17 +59,17 @@ export const PRICING_POLICY: PricingPolicy = {
 };
 
 export const SUPPORTED_CHAINS = {
-  POLYGON: {
-    id: 137,
-    name: 'Polygon',
-    rpcUrl: 'https://polygon-rpc.com',
-    explorer: 'https://polygonscan.com'
+  ETHEREUM: {
+    id: 1,
+    name: 'Ethereum',
+    rpcUrl: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+    explorer: 'https://etherscan.io'
   },
-  POLYGON_AMOY: {
-    id: 80002,
-    name: 'Polygon Amoy',
-    rpcUrl: 'https://rpc-amoy.polygon.technology',
-    explorer: 'https://amoy.polygonscan.com'
+  ETHEREUM_SEPOLIA: {
+    id: 11155111,
+    name: 'Ethereum Sepolia',
+    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+    explorer: 'https://sepolia.etherscan.io'
   }
 };
 
@@ -96,19 +96,19 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
   if (!import.meta.env.VITE_SUPABASE_PROJECT_ID) missing.push('VITE_SUPABASE_PROJECT_ID');
 
   // Contracts: generic
-  if (!import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS');
-  if (!import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_WETH_CONTRACT_ADDRESS');
-  if (!import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS) missing.push('VITE_POLYGON_USDC_CONTRACT_ADDRESS');
-  if (!import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY) missing.push('VITE_POLYGON_QUICKSWAP_FACTORY');
-  if (!import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER) missing.push('VITE_POLYGON_QUICKSWAP_ROUTER');
-  if (!import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS) missing.push('VITE_POLYGON_REF_POOL_ADDRESS');
-  if (!import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER) missing.push('VITE_POLYGON_BICONOMY_PAYMASTER');
+  if (!import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_ETHEREUM_WETH_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_WETH_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_ETHEREUM_USDC_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_USDC_CONTRACT_ADDRESS');
+  if (!import.meta.env.VITE_ETHEREUM_UNISWAP_FACTORY) missing.push('VITE_ETHEREUM_UNISWAP_FACTORY');
+  if (!import.meta.env.VITE_ETHEREUM_UNISWAP_ROUTER) missing.push('VITE_ETHEREUM_UNISWAP_ROUTER');
+  if (!import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS) missing.push('VITE_ETHEREUM_REF_POOL_ADDRESS');
+  if (!import.meta.env.VITE_ETHEREUM_BICONOMY_PAYMASTER) missing.push('VITE_ETHEREUM_BICONOMY_PAYMASTER');
 
   // Airdrop configuration (only required if airdrops are enabled)
   const airdropEnabled = import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false';
   if (airdropEnabled) {
-    if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS) missing.push('VITE_POLYGON_TREASURY_WALLET_ADDRESS');
-    if (!import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY) missing.push('VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY');
+    if (!import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_ADDRESS) missing.push('VITE_ETHEREUM_TREASURY_WALLET_ADDRESS');
+    if (!import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_PRIVATE_KEY) missing.push('VITE_ETHEREUM_TREASURY_WALLET_PRIVATE_KEY');
     // VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION is optional, defaults to '10'
   }
 
@@ -129,11 +129,11 @@ export const getAllContractAddresses = () => {
     quickswapRouter: CONTRACT_ADDRESSES.QUICKSWAP_ROUTER,
     refPoolAddress: CONTRACT_ADDRESSES.REF_POOL_ADDRESS,
     biconomyPaymaster: CONTRACT_ADDRESSES.BICONOMY_PAYMASTER,
-    // Native token (POL)
+    // Native token (ETH)
     nativeToken: getNativeTokenAddress(),
     // Environment info
     environment: import.meta.env.DEV ? 'testnet' : 'mainnet',
-    chainId: import.meta.env.DEV ? '80002' : '137',
+    chainId: import.meta.env.DEV ? '11155111' : '1',
   };
 };
 
@@ -141,8 +141,8 @@ export const getAllContractAddresses = () => {
 export const getAirdropConfig = () => {
   return {
     airdropAmount: import.meta.env.VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION || '10',
-    treasuryWalletAddress: import.meta.env.VITE_POLYGON_TREASURY_WALLET_ADDRESS as string,
-    treasuryWalletPrivateKey: import.meta.env.VITE_POLYGON_TREASURY_WALLET_PRIVATE_KEY as string,
+    treasuryWalletAddress: import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_ADDRESS as string,
+    treasuryWalletPrivateKey: import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_PRIVATE_KEY as string,
     enableAirdrop: import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false', // Default enabled
   };
 };

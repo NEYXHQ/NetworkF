@@ -27,19 +27,19 @@ const REQUIRED_VARIABLES = {
     'VITE_SUPABASE_PROJECT_ID'
   ],
   
-  // Smart contracts (different per environment) 
+  // Smart contracts (different per environment)
   contracts: [
-    'VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS',
-    'VITE_POLYGON_WETH_CONTRACT_ADDRESS',
-    'VITE_POLYGON_USDC_CONTRACT_ADDRESS',
-    'VITE_POLYGON_REF_POOL_ADDRESS',
-    'VITE_POLYGON_BICONOMY_PAYMASTER'
+    'VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS',
+    'VITE_ETHEREUM_WETH_CONTRACT_ADDRESS',
+    'VITE_ETHEREUM_USDC_CONTRACT_ADDRESS',
+    'VITE_ETHEREUM_REF_POOL_ADDRESS',
+    'VITE_ETHEREUM_BICONOMY_PAYMASTER'
   ],
   
   // Hybrid services (same addresses, but still environment-specific configuration)
   hybrid: [
-    'VITE_POLYGON_QUICKSWAP_FACTORY', 
-    'VITE_POLYGON_QUICKSWAP_ROUTER'
+    'VITE_ETHEREUM_UNISWAP_FACTORY',
+    'VITE_ETHEREUM_UNISWAP_ROUTER'
   ],
   
   // Feature flags (optional but should be present)
@@ -57,13 +57,13 @@ const REQUIRED_VARIABLES = {
 
 // Known hybrid services that connect to production even in development
 const HYBRID_SERVICES = {
-  'VITE_POLYGON_QUICKSWAP_FACTORY': {
-    description: 'QuickSwap Factory - Production only, no testnet version',
-    expectedSame: true
+  'VITE_ETHEREUM_UNISWAP_FACTORY': {
+    description: 'Uniswap Factory - Different addresses for mainnet vs testnet',
+    expectedSame: false
   },
-  'VITE_POLYGON_QUICKSWAP_ROUTER': { 
-    description: 'QuickSwap Router - Production only, same router used for both networks',
-    expectedSame: true
+  'VITE_ETHEREUM_UNISWAP_ROUTER': {
+    description: 'Uniswap Router - Different addresses for mainnet vs testnet',
+    expectedSame: false
   }
 };
 

@@ -1,4 +1,5 @@
 import { useSupabaseUser } from '../../hooks/useSupabaseUser'
+import { useWeb3Auth } from '../../hooks/useWeb3Auth'
 import { User, MapPin, Briefcase, Mail, Clock, CheckCircle, AlertCircle, XCircle, Target, Brain } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useState } from 'react'
@@ -6,15 +7,17 @@ import { FounderProfiler } from '../../features/profiler/FounderProfiler'
 
 export const UserProfile = () => {
   const [showProfiler, setShowProfiler] = useState(false)
-  
-  const { 
-    supabaseUser, 
-    isLoading, 
-    error, 
+
+  const {
+    supabaseUser,
+    isLoading,
+    error,
     isApproved,
     isPending,
-    isRejected 
+    isRejected
   } = useSupabaseUser()
+
+  const { user: web3AuthUser } = useWeb3Auth()
 
   if (isLoading) {
     return (
@@ -98,17 +101,27 @@ export const UserProfile = () => {
     <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: 'rgba(2, 48, 71, 0.8)', border: '1px solid rgba(142, 202, 230, 0.3)' }}>
       <div className="flex items-start mb-6">
         <div className="flex items-center space-x-4">
-          {supabaseUser.profile_image ? (
+          {(web3AuthUser?.profileImage || supabaseUser.profile_image) ? (
             <img
-              src={supabaseUser.profile_image}
+              src={web3AuthUser?.profileImage || supabaseUser.profile_image || ''}
               alt={supabaseUser.name || 'Profile'}
               className="w-16 h-16 rounded-full object-cover"
+              onError={(e) => {
+                console.log('🖼️ Profile image failed to load:', web3AuthUser?.profileImage || supabaseUser.profile_image)
+                // Hide the broken image and show fallback
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+                const fallback = target.nextElementSibling as HTMLElement
+                if (fallback) fallback.style.display = 'flex'
+              }}
             />
-          ) : (
-            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(142, 202, 230, 0.2)' }}>
-              <User className="w-8 h-8" style={{ color: '#8ecae6' }} />
-            </div>
-          )}
+          ) : null}
+          <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{
+            backgroundColor: 'rgba(142, 202, 230, 0.2)',
+            display: (web3AuthUser?.profileImage || supabaseUser.profile_image) ? 'none' : 'flex'
+          }}>
+            <User className="w-8 h-8" style={{ color: '#8ecae6' }} />
+          </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-semibold text-white truncate">
               {supabaseUser.name || 'Unknown User'}

@@ -83,12 +83,12 @@ const config: Config = {
     wfounderAddress: currentNetwork.contracts.wfounder, // Auto-selects testnet/mainnet based on environment
     // All contract addresses (environment-specific via env files)
     contracts: {
-      weth: import.meta.env.VITE_POLYGON_WETH_CONTRACT_ADDRESS || '',
-      usdc: import.meta.env.VITE_POLYGON_USDC_CONTRACT_ADDRESS || '',
-      quickswapFactory: import.meta.env.VITE_POLYGON_QUICKSWAP_FACTORY || '',
-      quickswapRouter: import.meta.env.VITE_POLYGON_QUICKSWAP_ROUTER || '',
-      refPoolAddress: import.meta.env.VITE_POLYGON_REF_POOL_ADDRESS || '',
-      biconomyPaymaster: import.meta.env.VITE_POLYGON_BICONOMY_PAYMASTER || '',
+      weth: import.meta.env.VITE_ETHEREUM_WETH_CONTRACT_ADDRESS || '',
+      usdc: import.meta.env.VITE_ETHEREUM_USDC_CONTRACT_ADDRESS || '',
+      quickswapFactory: import.meta.env.VITE_ETHEREUM_UNISWAP_FACTORY || '',
+      quickswapRouter: import.meta.env.VITE_ETHEREUM_UNISWAP_ROUTER || '',
+      refPoolAddress: import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS || '',
+      biconomyPaymaster: import.meta.env.VITE_ETHEREUM_BICONOMY_PAYMASTER || '',
     },
   }
 };

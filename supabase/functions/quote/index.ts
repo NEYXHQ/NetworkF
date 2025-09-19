@@ -1,42 +1,59 @@
-// M4.1 - GET /api/quote with DEX Aggregator API (Polygon-only)
+// M4.1 - GET /api/quote with Direct AMM Pool Calculations (Polygon-only)
 // M4.2 - Return gas_in_wfounder_est and warnings for min purchase
 // M4.3 - Enforce min purchase (WFOUNDER_out ≥ 1.25× gas_in_wfounder_est)
 // M4.4 - Apply per-trade cap (≤ max_trade_notional_base)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
+import { ethers } from "https://esm.sh/ethers@6.8.0"
 
-// Token addresses for Polygon
-const POLYGON_TOKENS = {
-  weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', // WETH on Polygon
-  usdc: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
-  wfounder: '0x6dcefF586744F3F1E637FE5eE45e0ff3880bb761', // WFOUNDER on Polygon
-  pol: '0x0000000000000000000000000000000000001010', // Native POL token
+// Token addresses for Ethereum
+const ETHEREUM_TOKENS = {
+  weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH on Ethereum
+  usdc: '0xA0b86a33E6441c959ecAFB81CD29b5bb42AEd08A', // USDC on Ethereum
+  wfounder: process.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS || '', // WFOUNDER on Ethereum
+  eth: '0x0000000000000000000000000000000000000000', // Native ETH token
 };
 
-// DEX Aggregator APIs (fallback order)
-const DEX_APIS = {
-  // 1inch API v6 for Polygon (Chain ID: 137) - public endpoints
-  oneinch: 'https://api.1inch.dev/swap/v6.0/137',
-  // ParaSwap API for Polygon
-  paraswap: 'https://apiv5.paraswap.io',
-  // 0x API for Polygon
-  zeroex: 'https://polygon.api.0x.org',
-  // Backup: OpenOcean (no auth required)
-  openocean: 'https://open-api.openocean.finance/v3/137'
+// AMM Pool Configuration
+const POOL_CONFIG = {
+  // WETH/WFOUNDER 50/50 pool address
+  wethWfounderPool: process.env.VITE_ETHEREUM_REF_POOL_ADDRESS || '',
+  // Uniswap router for additional pool queries if needed
+  uniswapRouter: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // Uniswap V2 Router
+  // RPC endpoint for blockchain queries
+  rpcUrl: process.env.SUPA_ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
 };
 
+// Uniswap V2 Pair ABI (for reading pool reserves)
+const PAIR_ABI = [
+  'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+  'function token0() external view returns (address)',
+  'function token1() external view returns (address)'
+];
+
+// ERC20 ABI (for token decimals)
+const ERC20_ABI = [
+  'function decimals() external view returns (uint8)'
+];
 
 
-// 1inch API v6 Response Interface
-interface OneinchQuoteResponse {
-  dstAmount: string; // Changed from toAmount in v6
-  srcAmount: string; // Changed from fromAmount in v6
-  protocols?: Array<unknown>;
-  estimatedGas?: number;
-  gas?: number; // Alternative gas field in v6
-  // Price impact data (if available in response)
-  priceImpact?: string;
+
+// Pool Reserve Data Interface
+interface PoolReserves {
+  reserve0: bigint;
+  reserve1: bigint;
+  token0: string;
+  token1: string;
+  blockTimestamp: number;
+}
+
+// AMM Calculation Result Interface
+interface AmmCalculation {
+  amountOut: bigint;
+  priceImpact: number;
+  effectivePrice: number;
+  poolLiquidity: { token0: bigint; token1: bigint };
 }
 
 interface QuoteResponse {
@@ -56,6 +73,10 @@ interface QuoteResponse {
   sources: string[];
   priceImpact: string;
   gasEstimate: string;
+  poolLiquidity: {
+    weth: string;
+    wfounder: string;
+  };
 }
 
 
@@ -65,13 +86,11 @@ function getTokenAddress(asset: string): string {
   switch (asset.toUpperCase()) {
     case 'WETH':
     case 'ETH':
-      return POLYGON_TOKENS.weth;
+      return ETHEREUM_TOKENS.weth;
     case 'USDC':
-      return POLYGON_TOKENS.usdc;
-    case 'POL':
-      return POLYGON_TOKENS.pol;
+      return ETHEREUM_TOKENS.usdc;
     case 'WFOUNDER':
-      return POLYGON_TOKENS.neyxt;
+      return ETHEREUM_TOKENS.wfounder;
     default:
       throw new Error(`Unsupported asset: ${asset}`);
   }
@@ -84,7 +103,6 @@ function getTokenDecimals(asset: string): number {
       return 6;
     case 'WETH':
     case 'ETH':
-    case 'POL':
     case 'WFOUNDER':
       return 18;
     default:
@@ -103,313 +121,156 @@ function convertToSmallestUnits(amount: string, asset: string): string {
   return Math.floor(numAmount * Math.pow(10, decimals)).toString();
 }
 
-// Fetch quote from 1inch API (trying public endpoints)
-async function fetchQuoteFrom1inch(
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  amount: string
-): Promise<OneinchQuoteResponse> {
-  // Try the public endpoint first
-  const url = `${DEX_APIS.oneinch}/quote?src=${fromTokenAddress}&dst=${toTokenAddress}&amount=${amount}`;
-  
-  console.log('Fetching quote from 1inch v6:', url);
-  
-  const response = await fetch(url, {
-      headers: {
-      'Accept': 'application/json',
-    }
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-    console.error('1inch API error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: url,
-      errorText: errorText
-    });
-    throw new Error(`1inch API error: ${response.status} - ${errorText}`);
-  }
-  
-  const result = await response.json();
-  console.log('1inch quote result:', result);
-  
-  return result;
+// Initialize blockchain provider for pool queries
+function createProvider(): ethers.JsonRpcProvider {
+  return new ethers.JsonRpcProvider(POOL_CONFIG.rpcUrl);
 }
 
-// ParaSwap API Response Interface
-interface ParaSwapQuoteResponse {
-  priceRoute: {
-    destAmount: string;
-    side: string;
-    srcUSD?: string; // USD value of source amount
-    destUSD?: string; // USD value of destination amount
-    maxImpactReached?: boolean; // High price impact flag
-  };
-  error?: string; // Error message (for high impact scenarios)
-  value?: string; // Price impact percentage when rejected
-}
+// Get pool reserves from WETH/WFOUNDER pair
+async function getPoolReserves(poolAddress: string): Promise<PoolReserves> {
+  const provider = createProvider();
+  const pairContract = new ethers.Contract(poolAddress, PAIR_ABI, provider);
 
-// OpenOcean API Response Interface
-interface OpenOceanQuoteResponse {
-  data: {
-    outAmount: string;
-    estimatedGas: string;
-    priceImpact?: string; // Price impact if provided
-    resPricePerFromToken?: string; // Price data for calculation
-    resPricePerToToken?: string;
-  };
-}
-
-// Fallback to ParaSwap API
-async function fetchQuoteFromParaSwap(
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  amount: string,
-  fromDecimals: number
-): Promise<ParaSwapQuoteResponse> {
-  const url = `${DEX_APIS.paraswap}/prices?srcToken=${fromTokenAddress}&destToken=${toTokenAddress}&amount=${amount}&srcDecimals=${fromDecimals}&destDecimals=18&side=SELL&network=137`;
-  
-  console.log('Fetching quote from ParaSwap:', url);
-  
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('ParaSwap API error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: url,
-      errorText: errorText
-    });
-    throw new Error(`ParaSwap API error: ${response.status} - ${errorText}`);
-  }
-  
-  const result = await response.json();
-  console.log('ParaSwap quote result:', result);
-  
-  return result;
-}
-
-// Fetch quote from OpenOcean API (no auth required)
-async function fetchQuoteFromOpenOcean(
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  amount: string
-): Promise<OpenOceanQuoteResponse> {
-  const url = `${DEX_APIS.openocean}/quote?inTokenAddress=${fromTokenAddress}&outTokenAddress=${toTokenAddress}&amount=${amount}&gasPrice=30000000000`;
-  
-  console.log('Fetching quote from OpenOcean:', url);
-  
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-    }
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenOcean API error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: url,
-      errorText: errorText
-    });
-    throw new Error(`OpenOcean API error: ${response.status} - ${errorText}`);
-  }
-  
-  const result = await response.json();
-  console.log('OpenOcean quote result:', result);
-  
-  return result;
-}
-
-// Estimate pool liquidity from trade impact data
-function estimatePoolLiquidity(
-  quote: ParaSwapQuoteResponse,
-  amountInUSD: number
-): { estimatedTVL: number; confidence: string } {
   try {
-    // If we have USD values, we can estimate pool size from price impact
-    if (quote.priceRoute.srcUSD && quote.priceRoute.destUSD) {
-      const srcUSD = parseFloat(quote.priceRoute.srcUSD);
-      const destUSD = parseFloat(quote.priceRoute.destUSD);
-      
-      // Price impact calculation: impact = tradeSize / (poolSize + tradeSize/2)
-      // Rearranging: poolSize ≈ tradeSize * (1 - impact) / impact
-      const priceDistortionRatio = destUSD / srcUSD;
-      
-      if (priceDistortionRatio > 1.2) {
-        // For low liquidity pools, estimate based on price distortion
-        // Higher distortion = smaller pool
-        const estimatedPoolMultiplier = Math.min(10, Math.max(0.5, 5 / priceDistortionRatio));
-        const estimatedTVL = srcUSD * estimatedPoolMultiplier;
-        
-        return {
-          estimatedTVL: estimatedTVL,
-          confidence: priceDistortionRatio > 3 ? 'low' : 'medium'
-        };
-      }
-    }
-    
-    // If we have the exact price impact percentage from ParaSwap error
-    if (quote.value) {
-      const priceImpactPercent = parseFloat(quote.value.replace('%', ''));
-      
-      if (priceImpactPercent > 10) {
-        // Use constant product formula estimation
-        // For AMM: impact ≈ tradeSize / (2 * poolSize) for small trades
-        // For large trades: impact ≈ tradeSize / poolSize
-        const impact = priceImpactPercent / 100;
-        
-        let estimatedPoolSize;
-        if (impact > 0.5) {
-          // Very high impact - trade size comparable to pool
-          estimatedPoolSize = amountInUSD / impact;
-        } else {
-          // Lower impact - use more conservative estimate
-          estimatedPoolSize = amountInUSD / (impact * 2);
-        }
-        
-        return {
-          estimatedTVL: estimatedPoolSize,
-          confidence: impact > 0.8 ? 'high' : impact > 0.3 ? 'medium' : 'low'
-        };
-      }
-    }
-    
-    // Fallback estimation
+    const [reserve0, reserve1, blockTimestamp] = await pairContract.getReserves();
+    const token0 = await pairContract.token0();
+    const token1 = await pairContract.token1();
+
     return {
-      estimatedTVL: amountInUSD * 5, // Conservative estimate
-      confidence: 'low'
+      reserve0: BigInt(reserve0.toString()),
+      reserve1: BigInt(reserve1.toString()),
+      token0,
+      token1,
+      blockTimestamp: Number(blockTimestamp)
     };
-    
   } catch (error) {
-    console.error('Error estimating pool liquidity:', error);
-    return {
-      estimatedTVL: 1.0,
-      confidence: 'unknown'
-    };
+    console.error('Error fetching pool reserves:', error);
+    throw new Error(`Failed to fetch pool reserves: ${error}`);
   }
 }
 
-// Calculate price impact from different sources with low liquidity detection
-function calculatePriceImpact(
-  quote: OneinchQuoteResponse | ParaSwapQuoteResponse | OpenOceanQuoteResponse,
-  source: string,
-  amountIn: string
-): string {
+// Calculate AMM swap using constant product formula
+function calculateAmmSwap(
+  amountIn: bigint,
+  reserveIn: bigint,
+  reserveOut: bigint
+): AmmCalculation {
+  // Constant product formula: (x + Δx)(y - Δy) = xy
+  // Where Δy = (Δx * y) / (x + Δx)
+
+  const amountInWithFee = amountIn * 997n; // 0.3% fee
+  const numerator = amountInWithFee * reserveOut;
+  const denominator = (reserveIn * 1000n) + amountInWithFee;
+  const amountOut = numerator / denominator;
+
+  // Calculate price impact: (1 - (reserveOut - amountOut) / reserveOut) * 100
+  const priceImpact = Number((reserveOut - (reserveOut - amountOut)) * 10000n / reserveOut) / 100;
+
+  // Calculate effective price
+  const effectivePrice = Number(amountOut) / Number(amountIn);
+
+  return {
+    amountOut,
+    priceImpact,
+    effectivePrice,
+    poolLiquidity: {
+      token0: reserveIn,
+      token1: reserveOut
+    }
+  };
+}
+
+// Get quote for token swap via WETH bridge if needed
+async function getAmmQuote(
+  fromTokenAddress: string,
+  toTokenAddress: string,
+  amountIn: bigint
+): Promise<AmmCalculation> {
+  const wethAddress = ETHEREUM_TOKENS.weth;
+  const wfounderAddress = ETHEREUM_TOKENS.wfounder;
+
+  // Direct WETH -> WFOUNDER swap
+  if (fromTokenAddress.toLowerCase() === wethAddress.toLowerCase() &&
+      toTokenAddress.toLowerCase() === wfounderAddress.toLowerCase()) {
+
+    const poolReserves = await getPoolReserves(POOL_CONFIG.wethWfounderPool);
+
+    // Determine which reserve is WETH and which is WFOUNDER
+    const isToken0Weth = poolReserves.token0.toLowerCase() === wethAddress.toLowerCase();
+    const wethReserve = isToken0Weth ? poolReserves.reserve0 : poolReserves.reserve1;
+    const wfounderReserve = isToken0Weth ? poolReserves.reserve1 : poolReserves.reserve0;
+
+    return calculateAmmSwap(amountIn, wethReserve, wfounderReserve);
+  }
+
+  // For other tokens (USDC, POL), bridge through WETH
+  // This would require additional pool queries and two-hop calculations
+  // For now, throwing error as this requires more complex routing
+  throw new Error(`Direct swap from ${fromTokenAddress} to ${toTokenAddress} not supported. Only WETH->WFOUNDER is currently implemented.`);
+}
+
+// Calculate USD equivalent for different assets
+function calculateUsdEquivalent(asset: string, amount: string): string {
+  const amountNum = parseFloat(amount);
+
+  switch (asset.toUpperCase()) {
+    case 'USDC':
+      return amountNum.toFixed(2);
+    case 'WETH':
+    case 'ETH':
+      return (amountNum * 3000).toFixed(2); // Approximate ETH price
+    default:
+      return '0.00';
+  }
+}
+
+// Estimate gas costs in ETH
+function estimateGasInEth(gasEstimate: string): string {
   try {
-    if (source === '1inch') {
-      const oneinchQuote = quote as OneinchQuoteResponse;
-      // Check if 1inch provides price impact directly
-      if (oneinchQuote.priceImpact) {
-        return parseFloat(oneinchQuote.priceImpact).toFixed(4);
-      }
-    } else if (source === 'ParaSwap') {
-      const paraswapQuote = quote as ParaSwapQuoteResponse;
-      
-      // If we have the exact price impact from error (most reliable)
-      if (paraswapQuote.value) {
-        return parseFloat(paraswapQuote.value.replace('%', '')).toFixed(4);
-      }
-      
-      // Enhanced calculation for low liquidity detection
-      if (paraswapQuote.priceRoute.srcUSD && paraswapQuote.priceRoute.destUSD) {
-        const srcUSD = parseFloat(paraswapQuote.priceRoute.srcUSD);
-        const destUSD = parseFloat(paraswapQuote.priceRoute.destUSD);
-        const amountInNum = parseFloat(amountIn);
-        
-        console.log('ParaSwap price impact calculation:', {
-          srcUSD,
-          destUSD,
-          amountIn: amountInNum,
-          tradeSize: srcUSD
-        });
-        
-        // Detect price distortion (when output USD value > input USD value significantly)
-        const priceDistortionRatio = destUSD / srcUSD;
-        
-        if (priceDistortionRatio > 1.5) {
-          // Liquidity crisis detected - the pool is pricing tokens incorrectly
-          console.warn('LOW LIQUIDITY POOL DETECTED:', {
-            priceDistortionRatio: priceDistortionRatio.toFixed(2),
-            explanation: 'Output USD value significantly exceeds input USD value due to low liquidity'
-          });
-          
-          // Estimate actual pool size and calculate realistic impact
-          const poolLiquidity = estimatePoolLiquidity(paraswapQuote, srcUSD);
-          const poolSize = poolLiquidity.estimatedTVL;
-          const poolImpactRatio = srcUSD / poolSize;
-          
-          console.log('Pool liquidity estimation:', {
-            estimatedTVL: poolSize.toFixed(2),
-            confidence: poolLiquidity.confidence,
-            tradeSize: srcUSD,
-            poolImpactRatio: (poolImpactRatio * 100).toFixed(1) + '%'
-          });
-          
-          if (poolImpactRatio > 0.8) {
-            return '95.0000'; // 95%+ impact for trades > 80% of pool
-          } else if (poolImpactRatio > 0.5) {
-            return (80 + (poolImpactRatio * 30)).toFixed(4); // 80%+ impact for trades > 50% of pool
-          } else if (poolImpactRatio > 0.2) {
-            return (30 + (poolImpactRatio * 150)).toFixed(4); // 30%+ impact for trades > 20% of pool
-          } else if (poolImpactRatio > 0.05) {
-            return (poolImpactRatio * 300).toFixed(4); // Scaled impact for smaller trades
-          } else {
-            return (poolImpactRatio * 100).toFixed(4); // Linear impact for very small trades
-          }
-        }
-        
-        // Normal calculation (for sufficient liquidity pools)
-        const impact = Math.abs(((srcUSD - destUSD) / srcUSD) * 100);
-        
-        // Sanity check: if calculated impact seems too low for the price distortion, override
-        if (priceDistortionRatio > 2 && impact < 50) {
-          console.warn('Price impact calculation override due to extreme price distortion');
-          return '90.0000';
-        }
-        
-        return impact.toFixed(4);
-      }
-    } else if (source === 'OpenOcean') {
-      const openoceanQuote = quote as OpenOceanQuoteResponse;
-      // Check if OpenOcean provides price impact directly
-      if (openoceanQuote.data.priceImpact) {
-        return parseFloat(openoceanQuote.data.priceImpact).toFixed(4);
-      }
-    }
-    
-    // Fallback: Enhanced estimation for low liquidity scenarios
-    const amountInNum = parseFloat(amountIn);
-    
-    // For WFOUNDER pools (known low liquidity), be more conservative
-    const tradeSize = amountInNum;
-    let estimatedImpact = 0;
-    
-    // More aggressive estimates for known low liquidity tokens
-    if (tradeSize > 1) {
-      estimatedImpact = 85.0; // Very large trades in low liquidity: extreme impact
-    } else if (tradeSize > 0.5) {
-      estimatedImpact = 60.0; // Large trades: very high impact
-    } else if (tradeSize > 0.1) {
-      estimatedImpact = 30.0; // Medium trades: high impact
-    } else if (tradeSize > 0.01) {
-      estimatedImpact = 10.0; // Small trades: moderate impact
-    } else {
-      estimatedImpact = 5.0; // Very small trades: low impact
-    }
-    
-    return estimatedImpact.toFixed(4);
-    
+    const gas = parseInt(gasEstimate);
+    // Calculate gas cost in ETH: gas units * gas price (30 gwei) / 1e18
+    const gasCostEth = (gas * 30e9) / 1e18;
+    return gasCostEth.toFixed(6);
   } catch (error) {
-    console.error('Error calculating price impact:', error);
-    return '50.0000'; // Conservative fallback for low liquidity
+    console.error('Error estimating gas in ETH:', error);
+    return '0.001'; // Default estimate (small amount of ETH)
   }
 }
 
-// Main function to get quote with fallback logic
+// Generate warnings based on price impact and pool conditions
+function generateWarnings(
+  priceImpact: number,
+  poolLiquidity: { token0: bigint; token1: bigint },
+  amountInUsd: number
+): string[] {
+  const warnings: string[] = [];
+
+  // Price impact warnings
+  if (priceImpact > 50) {
+    warnings.push(`EXTREME PRICE IMPACT: ${priceImpact.toFixed(2)}% - Trade not recommended`);
+  } else if (priceImpact > 15) {
+    warnings.push(`HIGH PRICE IMPACT: ${priceImpact.toFixed(2)}% - Consider smaller amount`);
+  } else if (priceImpact > 5) {
+    warnings.push(`Moderate price impact: ${priceImpact.toFixed(2)}%`);
+  }
+
+  // Pool liquidity warnings
+  const wethLiquidity = Number(poolLiquidity.token0) / 1e18;
+  const wfounderLiquidity = Number(poolLiquidity.token1) / 1e18;
+  const totalLiquidityUsd = wethLiquidity * 3000; // Approximate WETH value
+
+  if (totalLiquidityUsd < 1000) {
+    warnings.push('LOW LIQUIDITY POOL: Pool has limited liquidity, expect high slippage');
+  }
+
+  if (amountInUsd > totalLiquidityUsd * 0.1) {
+    warnings.push(`Large trade relative to pool size - Consider multiple smaller trades`);
+  }
+
+  return warnings;
+}
+
+// Main function to get quote using direct AMM calculations
 async function getQuote(
   payAsset: string,
   amountIn: string,
@@ -417,279 +278,75 @@ async function getQuote(
 ): Promise<QuoteResponse> {
   const fromTokenAddress = getTokenAddress(payAsset);
   const toTokenAddress = getTokenAddress(receiveAsset);
-  const amountInSmallestUnits = convertToSmallestUnits(amountIn, payAsset);
-  
-  console.log('Getting quote:', {
+  const amountInBigInt = BigInt(convertToSmallestUnits(amountIn, payAsset));
+
+  console.log('Getting AMM quote:', {
     payAsset,
     receiveAsset,
     amountIn,
     fromTokenAddress,
     toTokenAddress,
-    amountInSmallestUnits
+    amountInBigInt: amountInBigInt.toString()
   });
-  
-  let quote: OneinchQuoteResponse | ParaSwapQuoteResponse | OpenOceanQuoteResponse | null = null;
-  let source = '';
-  let oneinchError: Error | null = null;
-  let paraswapError: Error | null = null;
-  
+
   try {
-    // Try 1inch first
-    quote = await fetchQuoteFrom1inch(fromTokenAddress, toTokenAddress, amountInSmallestUnits);
-    source = '1inch';
+    // Get AMM calculation result
+    const ammResult = await getAmmQuote(fromTokenAddress, toTokenAddress, amountInBigInt);
+
+    // Convert amounts to human-readable format
+    const amountOutEst = (Number(ammResult.amountOut) / 1e18).toFixed(6);
+    const price = (parseFloat(amountOutEst) / parseFloat(amountIn)).toFixed(6);
+
+    // Calculate USD equivalent
+    const usdEquivalent = calculateUsdEquivalent(payAsset, amountIn);
+
+    // Calculate WFOUNDER price in USD
+    const wfounderPriceUsd = parseFloat(usdEquivalent) / parseFloat(amountOutEst);
+
+    // Estimate gas costs (typical AMM swap)
+    const gasEstimate = '180000';
+    const gasInEthEst = estimateGasInEth(gasEstimate);
+
+    // Generate warnings based on AMM calculation
+    const warnings = generateWarnings(
+      ammResult.priceImpact,
+      ammResult.poolLiquidity,
+      parseFloat(usdEquivalent)
+    );
+
+    // Convert pool liquidity to human-readable format
+    const wethLiquidity = (Number(ammResult.poolLiquidity.token0) / 1e18).toFixed(6);
+    const wfounderLiquidity = (Number(ammResult.poolLiquidity.token1) / 1e18).toFixed(6);
+
+    return {
+      routeId: `amm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      amountOutEst,
+      price,
+      usdEquivalent,
+      wfounderPriceUsd: wfounderPriceUsd.toFixed(6),
+      fees: {
+        protocol: '0.3', // Standard AMM fee
+        gasInEthEst,
+      },
+      slippageBps: 100, // 1% default
+      estimatedTimeSec: 15, // Faster than DEX aggregators
+      ttlSec: 45,
+      warnings,
+      sources: ['AMM'],
+      priceImpact: `${ammResult.priceImpact.toFixed(2)}%`,
+      gasEstimate,
+      poolLiquidity: {
+        weth: wethLiquidity,
+        wfounder: wfounderLiquidity
+      }
+    };
+
   } catch (error) {
-    oneinchError = error as Error;
-    console.warn('1inch failed, trying ParaSwap:', error);
-    
-    try {
-      // Fallback to ParaSwap (but handle high price impact)
-      const fromDecimals = getTokenDecimals(payAsset);
-      quote = await fetchQuoteFromParaSwap(fromTokenAddress, toTokenAddress, amountInSmallestUnits, fromDecimals);
-      source = 'ParaSwap';
-    } catch (error) {
-      paraswapError = error as Error;
-      console.warn('ParaSwap failed, trying OpenOcean:', error);
-      
-      // Check if ParaSwap failed due to high price impact but still has quote data
-      if (paraswapError.message.includes('ESTIMATED_LOSS_GREATER_THAN_MAX_IMPACT')) {
-        console.warn('ParaSwap rejected due to high price impact (98.94%), extracting quote data anyway...');
-        
-        try {
-          // Try to extract the quote from the error message
-          const errorText = paraswapError.message;
-          
-          // Extract price impact percentage
-          const priceImpactMatch = errorText.match(/"value":"([^"]+)"/);
-          const priceImpact = priceImpactMatch ? priceImpactMatch[1] : '98.94%';
-          
-          // Extract destination amount
-          const priceRouteMatch = errorText.match(/"priceRoute":\{[^}]*"destAmount":"([^"]+)"/);
-          
-          // Extract USD values for better price impact calculation
-          const srcUSDMatch = errorText.match(/"srcUSD":"([^"]+)"/);
-          const destUSDMatch = errorText.match(/"destUSD":"([^"]+)"/);
-          
-          if (priceRouteMatch) {
-            const destAmount = priceRouteMatch[1];
-            const srcUSD = srcUSDMatch ? srcUSDMatch[1] : undefined;
-            const destUSD = destUSDMatch ? destUSDMatch[1] : undefined;
-            
-            console.log('Extracted ParaSwap quote data:', {
-              destAmount,
-              priceImpact,
-              srcUSD,
-              destUSD
-            });
-            
-            // Create a response with the extracted data
-            quote = {
-              priceRoute: {
-                destAmount: destAmount,
-                side: priceImpact,
-                srcUSD: srcUSD,
-                destUSD: destUSD,
-                maxImpactReached: true
-              },
-              error: 'ESTIMATED_LOSS_GREATER_THAN_MAX_IMPACT',
-              value: priceImpact
-            } as ParaSwapQuoteResponse;
-            source = 'ParaSwap';
-            
-            // Add warning about high price impact
-            console.warn(`Using ParaSwap quote with HIGH PRICE IMPACT: ${priceImpact}`);
-            // Don't try OpenOcean since we got a quote
-          } else {
-            console.warn('Could not extract quote from ParaSwap error, trying OpenOcean...');
-            throw paraswapError; // Continue to OpenOcean
-          }
-        } catch {
-          console.warn('Failed to extract ParaSwap quote, trying OpenOcean...');
-          // Continue to OpenOcean fallback below
-        }
-      }
-      
-      // Only try OpenOcean if we don't have a quote yet
-      if (!quote) {
-        try {
-          // Last fallback to OpenOcean
-          quote = await fetchQuoteFromOpenOcean(fromTokenAddress, toTokenAddress, amountInSmallestUnits);
-          source = 'OpenOcean';
-        } catch (openoceanError) {
-          console.error('All DEX aggregators failed:', openoceanError);
-        
-          // Enhanced debugging information
-          const debugInfo = {
-            fromToken: fromTokenAddress,
-            toToken: toTokenAddress,
-            amount: amountInSmallestUnits,
-            payAsset: payAsset,
-            receiveAsset: receiveAsset,
-            amountInOriginal: amountIn,
-            poolAddresses: {
-              quickswapRouter: '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff',
-              wethNeyxtPool: '0x6B8A57addD24CAF494393D9E0bf38BC54F713833',
-              wethUsdcPool: '0x853Ee4b2A13f8a742d64C8F088bE7bA2131f670d'
-            },
-            errors: {
-              oneinch: oneinchError?.message || 'Failed to fetch quote',
-              paraswap: paraswapError?.message || 'Failed to fetch quote',
-              openocean: (openoceanError as Error)?.message || 'Failed to fetch quote'
-            }
-          };
-          
-          console.error('No liquidity found - Debug info:', debugInfo);
-          
-          throw new Error(`No liquidity found for this token pair. Debug info: ${JSON.stringify(debugInfo, null, 2)}`);
-        }
-      }
-    }
+    console.error('AMM quote calculation failed:', error);
+    throw new Error(`Failed to calculate AMM quote: ${error}`);
   }
-  
-  // Ensure we have a quote before proceeding
-  if (!quote) {
-    throw new Error('No quote received from any DEX aggregator');
-  }
-  
-  // Parse the quote response based on source
-  let amountOutEst: string;
-  if (source === '1inch') {
-    amountOutEst = (parseFloat((quote as OneinchQuoteResponse).dstAmount) / 1e18).toFixed(6);
-  } else if (source === 'ParaSwap') {
-    amountOutEst = (parseFloat((quote as ParaSwapQuoteResponse).priceRoute.destAmount) / 1e18).toFixed(6);
-  } else { // OpenOcean
-    amountOutEst = (parseFloat((quote as OpenOceanQuoteResponse).data.outAmount) / 1e18).toFixed(6);
-  }
-  
-  // Calculate price (amount of WFOUNDER per input token)
-  const price = (parseFloat(amountOutEst) / parseFloat(amountIn)).toFixed(6);
-  
-  // Calculate USD equivalent
-  const usdEquivalent = await calculateUsdEquivalent(payAsset, amountIn);
-  
-  // Calculate WFOUNDER price in USD
-  const wfounderPriceUsd = parseFloat(usdEquivalent) / parseFloat(amountOutEst);
-  
-  // Estimate gas costs
-  let gasEstimate: string;
-  if (source === '1inch') {
-    const oneinchQuote = quote as OneinchQuoteResponse;
-    gasEstimate = (oneinchQuote.estimatedGas || oneinchQuote.gas || 150000).toString();
-  } else if (source === 'OpenOcean') {
-    gasEstimate = (quote as OpenOceanQuoteResponse).data.estimatedGas;
-  } else {
-    gasEstimate = '150000'; // Default for ParaSwap
-  }
-  
-  const gasInPolEst = await estimateGasInPol(gasEstimate);
-  
-  // Calculate price impact using smart extraction
-  const priceImpact = calculatePriceImpact(quote, source, amountIn);
-  
-  // Generate warnings based on price impact and liquidity analysis
-  const warnings: string[] = [];
-  const priceImpactNum = parseFloat(priceImpact);
-  
-  // Detect liquidity crisis based on inflated WFOUNDER price
-  const neyxtPriceNum = parseFloat(wfounderPriceUsd.toFixed(6));
-  const isLiquidityCrisis = neyxtPriceNum > 100; // WFOUNDER should be ~$0.01, not $100+
-  
-  // Get actual pool liquidity estimate if available
-  let poolTVLEstimate = 'unknown';
-  let poolConfidence = 'unknown';
-  
-  if (source === 'ParaSwap' && isLiquidityCrisis) {
-    const paraswapQuote = quote as ParaSwapQuoteResponse;
-    const tradeUsdValue = parseFloat(usdEquivalent);
-    const poolLiquidity = estimatePoolLiquidity(paraswapQuote, tradeUsdValue);
-    
-    poolTVLEstimate = poolLiquidity.estimatedTVL < 10 
-      ? `$${poolLiquidity.estimatedTVL.toFixed(2)}`
-      : `$${poolLiquidity.estimatedTVL.toFixed(0)}`;
-    poolConfidence = poolLiquidity.confidence;
-  }
-  
-  if (isLiquidityCrisis) {
-    warnings.push(`LIQUIDITY CRISIS: WFOUNDER price inflated to $${neyxtPriceNum.toFixed(2)} (should be ~$0.01)`);
-    
-    if (poolTVLEstimate !== 'unknown') {
-      warnings.push(`Pool has insufficient liquidity (estimated ${poolTVLEstimate} TVL, ${poolConfidence} confidence) - Trade may not be executable`);
-    } else {
-      warnings.push('Pool has insufficient liquidity - Trade may not be executable');
-    }
-    
-    warnings.push(`Actual price impact likely >90% despite ${priceImpact}% calculation`);
-  }
-  
-  // Standard price impact warnings
-  if (priceImpactNum > 90) {
-    warnings.push(`CRITICAL PRICE IMPACT: ${priceImpact}% - Trade will destroy pool pricing`);
-  } else if (priceImpactNum > 50) {
-    warnings.push(`EXTREME PRICE IMPACT: ${priceImpact}% - Trade not recommended`);
-  } else if (priceImpactNum > 15) {
-    warnings.push(`HIGH PRICE IMPACT: ${priceImpact}% - Consider smaller amount`);
-  } else if (priceImpactNum > 5) {
-    warnings.push(`Moderate price impact: ${priceImpact}%`);
-  }
-  
-  // Trade size warnings for low liquidity pools
-  const tradeUsdValue = parseFloat(usdEquivalent);
-  if (tradeUsdValue > 0.5) {
-    warnings.push(`Large trade ($${tradeUsdValue.toFixed(2)}) for low liquidity pool - Consider multiple smaller trades`);
-  }
-  
-  if (source === 'ParaSwap' && (quote as ParaSwapQuoteResponse).error) {
-    warnings.push('Quote extracted from rejected high-impact trade');
-  }
-  
-  return {
-    routeId: `${source.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    amountOutEst,
-    price,
-    usdEquivalent,
-    wfounderPriceUsd: wfounderPriceUsd.toFixed(6),
-    fees: {
-      protocol: source === '1inch' ? '0.3' : '0.25',
-      gasInPolEst,
-    },
-    slippageBps: 100, // 1% default
-    estimatedTimeSec: 30,
-    ttlSec: 45,
-    warnings: warnings,
-    sources: [source],
-    priceImpact: `${priceImpact}%`,
-    gasEstimate,
-  };
 }
 
-// Simplified USD calculation
-async function calculateUsdEquivalent(payAsset: string, amountIn: string): Promise<string> {
-  const amountNum = parseFloat(amountIn);
-  
-  switch (payAsset.toUpperCase()) {
-    case 'USDC':
-      return amountNum.toFixed(2);
-    case 'WETH':
-    case 'ETH':
-      return (amountNum * 3000).toFixed(2); // Approximate WETH price
-    case 'POL':
-      return (amountNum * 0.5).toFixed(2); // Approximate POL price
-    default:
-      return '0.00';
-    }
-}
-
-// Simplified gas estimation in POL
-async function estimateGasInPol(gasEstimate: string): Promise<string> {
-  try {
-    const gas = parseInt(gasEstimate);
-    // Calculate gas cost in POL: gas units * gas price (30 gwei) / 1e18
-    const gasCostPol = (gas * 30e9) / 1e18;
-    return gasCostPol.toFixed(6);
-  } catch (error) {
-    console.error('Error estimating gas in POL:', error);
-    return '0.001'; // Default estimate (small amount of POL)
-  }
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -804,7 +461,7 @@ serve(async (req) => {
         );
       }
 
-      // Get quote using DEX aggregator APIs
+      // Get quote using direct AMM calculations
       const response = await getQuote(payAsset, amountIn, receiveAsset);
       
       // Add slippage from request if provided

@@ -29,42 +29,42 @@ interface NetworkConfig {
   web3AuthNetwork: 'sapphire_devnet' | 'sapphire_mainnet';
 }
 
-const POLYGON_AMOY_TESTNET: NetworkConfig = {
-  chainId: '80002',
-  chainIdHex: '0x13882',
-  name: 'polygon-amoy',
-  displayName: 'Polygon Amoy Testnet',
+const ETHEREUM_SEPOLIA_TESTNET: NetworkConfig = {
+  chainId: '11155111',
+  chainIdHex: '0xaa36a7',
+  name: 'ethereum-sepolia',
+  displayName: 'Ethereum Sepolia Testnet',
   nativeCurrency: {
-    name: 'Polygon',
-    symbol: 'POL',
+    name: 'Ethereum',
+    symbol: 'ETH',
     decimals: 18,
   },
   rpcUrls: {
-    default: ['https://rpc-amoy.polygon.technology'],
+    default: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
     public: [
-      'https://rpc-amoy.polygon.technology',
-      'https://polygon-amoy.drpc.org',
-      'https://rpc.ankr.com/polygon_amoy',
+      'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      'https://rpc.sepolia.org',
+      'https://rpc2.sepolia.org',
     ],
     backup: [
-      'https://polygon-amoy-bor-rpc.publicnode.com',
-      'https://polygon-amoy.gateway.tenderly.co',
-      'https://gateway.tenderly.co/public/polygon-amoy',
+      'https://sepolia.blockpi.network/v1/rpc/public',
+      'https://sepolia.gateway.tenderly.co',
+      'https://gateway.tenderly.co/public/sepolia',
     ],
   },
   blockExplorerUrls: [
-    'https://amoy.polygonscan.com',
-    'https://polygon-amoy.blockscout.com',
+    'https://sepolia.etherscan.io',
+    'https://sepolia.blockscout.com',
   ],
-  iconUrls: ['https://polygon.technology/favicon.ico'],
+  iconUrls: ['https://ethereum.org/favicon.ico'],
   contracts: {
-    wfounder: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS || '',
+    wfounder: import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   faucets: [
-    'https://faucet.polygon.technology',
-    'https://www.alchemy.com/faucets/polygon-amoy',
-    'https://faucet.quicknode.com/polygon/amoy',
+    'https://sepoliafaucet.com',
+    'https://www.alchemy.com/faucets/ethereum-sepolia',
+    'https://faucet.quicknode.com/ethereum/sepolia',
   ],
   features: {
     eip1559: true,
@@ -73,36 +73,36 @@ const POLYGON_AMOY_TESTNET: NetworkConfig = {
   web3AuthNetwork: 'sapphire_devnet',
 };
 
-const POLYGON_MAINNET: NetworkConfig = {
-  chainId: '137',
-  chainIdHex: '0x89',
-  name: 'polygon',
-  displayName: 'Polygon Mainnet',
+const ETHEREUM_MAINNET: NetworkConfig = {
+  chainId: '1',
+  chainIdHex: '0x1',
+  name: 'ethereum',
+  displayName: 'Ethereum Mainnet',
   nativeCurrency: {
-    name: 'Polygon',
-    symbol: 'POL',
+    name: 'Ethereum',
+    symbol: 'ETH',
     decimals: 18,
   },
   rpcUrls: {
-    default: ['https://polygon-rpc.com'],
+    default: ['https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
     public: [
-      'https://polygon-rpc.com',
-      'https://rpc.ankr.com/polygon',
-      'https://poly-rpc.gateway.pokt.network',
+      'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      'https://eth.llamarpc.com',
+      'https://rpc.ankr.com/eth',
     ],
     backup: [
-      'https://polygon-mainnet.public.blastapi.io',
-      'https://polygon-bor-rpc.publicnode.com',
-      'https://1rpc.io/matic',
+      'https://ethereum-mainnet.public.blastapi.io',
+      'https://ethereum-rpc.publicnode.com',
+      'https://1rpc.io/eth',
     ],
   },
   blockExplorerUrls: [
-    'https://polygonscan.com',
-    'https://polygon.blockscout.com',
+    'https://etherscan.io',
+    'https://ethereum.blockscout.com',
   ],
-  iconUrls: ['https://polygon.technology/favicon.ico'],
+  iconUrls: ['https://ethereum.org/favicon.ico'],
   contracts: {
-    wfounder: import.meta.env.VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS || '',
+    wfounder: import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS || '',
     multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
     ensRegistry: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
     ensUniversalResolver: '0xE4395e13d3c8f7F8895D4c3DA9a7e3c89e50AB95',
@@ -111,20 +111,20 @@ const POLYGON_MAINNET: NetworkConfig = {
     eip1559: true,
     isTestnet: false,
   },
-  web3AuthNetwork: 'sapphire_devnet',
+  web3AuthNetwork: 'sapphire_mainnet',
 };
 
 // Auto-detect current network based on environment
 const getCurrentNetwork = (): NetworkConfig => {
   const isDev = import.meta.env.DEV;
-  return isDev ? POLYGON_AMOY_TESTNET : POLYGON_MAINNET;
+  return isDev ? ETHEREUM_SEPOLIA_TESTNET : ETHEREUM_MAINNET;
 };
 
 export const currentNetwork = getCurrentNetwork();
 
 export const networks = {
-  testnet: POLYGON_AMOY_TESTNET,
-  mainnet: POLYGON_MAINNET,
+  testnet: ETHEREUM_SEPOLIA_TESTNET,
+  mainnet: ETHEREUM_MAINNET,
 };
 
 export type { NetworkConfig }; 
