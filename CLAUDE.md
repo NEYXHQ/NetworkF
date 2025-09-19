@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **WFounders**, a modern Web3 application built with React, TypeScript, and Vite that combines:
 - **Web3Auth** for social authentication with automatic wallet creation
 - **Supabase** for user management and database operations  
-- **Polygon blockchain** integration for WFOUNDER token transactions
+- **Ethereum blockchain** integration for WFOUNDER token transactions
 - **Admin dashboard** for user approval workflows
 - **AI-powered founder profiling** system
 
@@ -39,10 +39,10 @@ npm run secrets:prod # Direct sync to prod (no safety checks)
 
 ### Environment Auto-Switching
 The application uses a **hybrid environment approach**:
-- **Development** (`npm run dev`): Uses Polygon Amoy testnet + dev Supabase project + **production DeFi services**
-- **Production** (deployed): Uses Polygon mainnet + prod Supabase project + production DeFi services
+- **Development** (`npm run dev`): Uses Ethereum Sepolia testnet + dev Supabase project + **testnet DeFi services**
+- **Production** (deployed): Uses Ethereum mainnet + prod Supabase project + production DeFi services
 
-**Hybrid Reality**: Some services (QuickSwap) don't have development versions, so dev environment connects to production DeFi protocols with testnet tokens.
+**Architecture**: Uses Uniswap V2 for DEX functionality with proper testnet/mainnet separation for all services.
 
 Configuration is managed through:
 - `.env.development` - Local development settings
@@ -62,7 +62,7 @@ Configuration is managed through:
 - `useWeb3Auth.ts` - Web3Auth authentication state
 - `useSupabaseUser.ts` - User profile and database operations
 - `useTokenService.ts` - WFOUNDER token balance and transaction handling
-- `useBuyNeyxt.ts` - Token purchase flow with DEX integration
+- `useBuyNeyxt.ts` - Token purchase flow with direct AMM calculations
 
 **Services (`src/services/`)**
 - `adminService.ts` - User approval workflow management
@@ -72,7 +72,7 @@ Configuration is managed through:
 
 **Blockchain Integration (`src/config/`)**
 - `contracts.ts` - Smart contract addresses and ABI management
-- `networks.ts` - Polygon mainnet/testnet RPC configurations
+- `networks.ts` - Ethereum mainnet/testnet RPC configurations
 - Automatic network switching based on environment
 
 ### Database Schema (Supabase)
@@ -109,14 +109,14 @@ All environment variables use `VITE_` prefix for frontend access:
 - `VITE_SUPABASE_PROJECT_ID` - Supabase project identifier
 
 **Smart Contracts (Polygon):**
-- `VITE_POLYGON_WFOUNDER_CONTRACT_ADDRESS` - WFOUNDER token contract
-- `VITE_POLYGON_WETH_CONTRACT_ADDRESS` - Wrapped ETH contract  
-- `VITE_POLYGON_USDC_CONTRACT_ADDRESS` - USD Coin contract
-- `VITE_POLYGON_QUICKSWAP_FACTORY` - QuickSwap DEX factory
-- `VITE_POLYGON_QUICKSWAP_ROUTER` - QuickSwap DEX router
-- `VITE_POLYGON_REF_POOL_ADDRESS` - WETH/WFOUNDER liquidity pool
-- `VITE_POLYGON_BICONOMY_PAYMASTER` - Gasless transaction paymaster
-- `VITE_POLYGON_ALLOWED_ROUTERS` - Comma-separated DEX router addresses
+- `VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS` - WFOUNDER token contract
+- `VITE_ETHEREUM_WETH_CONTRACT_ADDRESS` - Wrapped ETH contract
+- `VITE_ETHEREUM_USDC_CONTRACT_ADDRESS` - USD Coin contract
+- `VITE_ETHEREUM_UNISWAP_FACTORY` - Uniswap V2 factory
+- `VITE_ETHEREUM_UNISWAP_ROUTER` - Uniswap V2 router for pool queries
+- `VITE_ETHEREUM_REF_POOL_ADDRESS` - WETH/WFOUNDER liquidity pool
+- `VITE_ETHEREUM_BICONOMY_PAYMASTER` - Gasless transaction paymaster
+- `VITE_ETHEREUM_ALLOWED_ROUTERS` - Comma-separated router addresses for pool access
 
 **Feature Flags (Optional):**
 - `VITE_FEATURE_ENABLE_FIAT=false` - Fiat onramp integration
@@ -125,14 +125,14 @@ All environment variables use `VITE_` prefix for frontend access:
 
 ### Server-Side Secrets (Supabase)
 These are stored as Supabase secrets and not exposed to frontend:
-- `SUPA_ZEROX_API_KEY` - 0x Protocol API for DEX aggregation - UNUSED 
+ 
 - `SUPA_BICONOMY_API_KEY` - Biconomy gasless transaction API
 - `SUPA_BICONOMY_PAYMASTER_ID` - Biconomy paymaster application ID
 - `SUPA_RESEND_API_KEY` - Email delivery service
 - `SUPA_OPENAI_API_KEY` - AI profiling service
 - `SUPA_TRANSAK_API_KEY` - Fiat onramp service
-- `SUPA_POLYGON_RPC_URL` - Server-side RPC endpoint
-- `SUPA_POLYGON_TREASURY_WALLET_PRIVATE_KEY` - Treasury wallet private key (CRITICAL - server only)
+- `SUPA_ETHEREUM_RPC_URL` - Server-side RPC endpoint
+- `SUPA_ETHEREUM_TREASURY_WALLET_PRIVATE_KEY` - Treasury wallet private key (CRITICAL - server only)
 - `SUPA_NETWORK_ENVIRONMENT` - Server-side environment detection
 - `SUPA_NODE_ENV` - Node environment variable
 - `SUPA_ENVIRONMENT` - Environment configuration
@@ -161,8 +161,8 @@ const { profile, updateProfile } = useSupabaseUser();
 ### Network Handling
 Automatic environment-based network switching:
 ```typescript
-// Development: Polygon Amoy Testnet (chainId: 80002)
-// Production: Polygon Mainnet (chainId: 137)
+// Development: Ethereum Sepolia Testnet (chainId: 11155111)
+// Production: Ethereum Mainnet (chainId: 1)
 const network = currentNetwork; // Auto-selected based on import.meta.env.DEV
 ```
 
@@ -214,3 +214,20 @@ The app is 100% static and can deploy to any static hosting service (Netlify, AW
 3. **Validate changes**: `npm run env:validate` 
 4. **Sync to Supabase**: `npm run env:sync dev` then `npm run env:sync prod`
 5. **Verify**: `npm run env:check`
+
+## Git Commit Security
+
+### Pre-Commit Security Validation
+**CRITICAL**: Before creating any commit, verify that no private keys or secrets are included in the committed files:
+
+1. **Check for sensitive data**: Scan all staged files for private keys, API keys, passwords, or other secrets
+2. **Review environment files**: Ensure `.env.*` files are properly gitignored and not committed
+3. **Validate against patterns**: Look for patterns like:
+   - Private keys (starts with `0x` followed by 64 hex characters)
+   - API keys and tokens
+   - Database credentials
+   - Wallet mnemonics or seed phrases
+4. **Use git diff**: Review `git diff --staged` to see exactly what will be committed
+5. **Abort if secrets found**: Never proceed with commit if any secrets are detected
+
+**Remember**: Once committed to git history, secrets are extremely difficult to remove completely.
