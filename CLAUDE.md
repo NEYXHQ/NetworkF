@@ -231,3 +231,22 @@ The app is 100% static and can deploy to any static hosting service (Netlify, AW
 5. **Abort if secrets found**: Never proceed with commit if any secrets are detected
 
 **Remember**: Once committed to git history, secrets are extremely difficult to remove completely.
+
+### Git Workflow and Remote Management
+**Repository Setup**: This project has two remotes configured:
+- **origin** (`AltoPal0/NetworkF2`): Development repository - stays in sync with local
+- **NEYXHQ** (`NEYXHQ/NetworkF`): Production repository - updated manually when ready for deployment
+
+**Commit and Push Workflow**:
+1. **Local commits**: Create commits locally as normal
+2. **Automatic push**: When asked to commit, always push to both local and origin
+3. **Production deployment**: NEYXHQ is updated manually - DO NOT auto-push to NEYXHQ
+4. **Commands used**:
+   ```bash
+   git add [files]
+   git commit -m "commit message"
+   git push origin main  # Push to development repo
+   # NEYXHQ push is done manually when ready for production
+   ```
+
+**IMPORTANT**: Claude should never automatically push to NEYXHQ remote. Production deployments are handled manually.
