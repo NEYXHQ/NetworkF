@@ -14,9 +14,8 @@ export interface UserInfo {
 
 export interface TokenBalance {
   wfounder: string;
-  native: string; // ETH or POL
+  native: string; // ETH
   usdc: string;
-  weth: string;
 }
 
 export interface Web3AuthContextType {
@@ -54,7 +53,7 @@ export const Web3AuthContext = createContext<Web3AuthContextType>({
   getAccounts: async () => [],
   // Token operations defaults
   getChainId: async () => '',
-  getTokenBalances: async () => ({ wfounder: '0', native: '0', usdc: '0', weth: '0' }),
+  getTokenBalances: async () => ({ wfounder: '0', native: '0', usdc: '0' }),
   getWFOUNDERBalance: async () => '0',
   getNativeBalance: async () => '0',
   sendWFOUNDER: async () => '',

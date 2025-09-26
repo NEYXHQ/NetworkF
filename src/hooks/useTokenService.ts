@@ -51,26 +51,16 @@ export const useTokenService = () => {
     }
   };
 
-  const getWETHBalance = async (): Promise<string> => {
-    checkConnection();
-    try {
-      return await ethersRPC.getWETHBalance(provider!);
-    } catch (error) {
-      console.error('Error getting wETH balance:', error);
-      throw new Error('Failed to get wETH token balance');
-    }
-  };
 
   const getTokenBalances = async (): Promise<TokenBalance> => {
     checkConnection();
     try {
-      const [wfounder, native, usdc, weth] = await Promise.all([
+      const [wfounder, native, usdc] = await Promise.all([
         getWFOUNDERBalance(),
         getNativeBalance(),
         getUSDCBalance(),
-        getWETHBalance(),
       ]);
-      return { wfounder, native, usdc, weth };
+      return { wfounder, native, usdc };
     } catch (error) {
       console.error('Error getting token balances:', error);
       throw new Error('Failed to get token balances');
@@ -149,7 +139,7 @@ export const useTokenService = () => {
   };
 
   const formatNativeBalance = (balance: string): string => {
-    return formatBalance(balance, 4); // Always 4 decimals for POL
+    return formatBalance(balance, 4); // Always 4 decimals for ETH
   };
 
   const isValidAddress = (address: string): boolean => {
@@ -167,7 +157,6 @@ export const useTokenService = () => {
     getWFOUNDERBalance,
     getNativeBalance,
     getUSDCBalance,
-    getWETHBalance,
     getTokenBalances,
     sendWFOUNDER,
     sendNative,

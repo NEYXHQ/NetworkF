@@ -6,17 +6,11 @@
 export interface ContractAddresses {
   // Core tokens
   WFOUNDER: string;
-  WETH: string;
   USDC: string;
-  // POL is the native token - no contract address needed
-  
+
   // DEX contracts
-  QUICKSWAP_FACTORY: string;
-  QUICKSWAP_ROUTER: string;
-  REF_POOL_ADDRESS: string; // WETH/WFOUNDER 50/50 pool
-  
-  // Paymaster
-  BICONOMY_PAYMASTER: string;
+  UNISWAP_ROUTER: string;
+  REF_POOL_ADDRESS: string; // USDC/WFOUNDER pool
 }
 
 export interface PricingPolicy {
@@ -24,23 +18,17 @@ export interface PricingPolicy {
   maxPriceImpactBps: number;
   quoteTtlSec: number;
   minPurchaseMultipleOfGas: number;
-  maxTradeNotionalBase: string; // in WETH
-  perWalletDailyCapBase: string; // in WETH
+  maxTradeNotionalBase: string; // in USDC
+  perWalletDailyCapBase: string; // in USDC
 }
 
 // Auto-select contract addresses based on environment (dev = testnet, prod = mainnet)
 export const CONTRACT_ADDRESSES: ContractAddresses = {
   WFOUNDER: import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS as string,
-  WETH: import.meta.env.VITE_ETHEREUM_WETH_CONTRACT_ADDRESS as string,
   USDC: import.meta.env.VITE_ETHEREUM_USDC_CONTRACT_ADDRESS as string,
 
-  QUICKSWAP_FACTORY: import.meta.env.VITE_ETHEREUM_UNISWAP_FACTORY as string,
-  QUICKSWAP_ROUTER: import.meta.env.VITE_ETHEREUM_UNISWAP_ROUTER as string,
-  REF_POOL_ADDRESS: import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS as string,
-
-  // Biconomy uses singleton paymaster contracts per chain
-  // Your instance is identified by API key + paymaster ID, not contract address
-  BICONOMY_PAYMASTER: import.meta.env.VITE_ETHEREUM_BICONOMY_PAYMASTER as string
+  UNISWAP_ROUTER: import.meta.env.VITE_ETHEREUM_UNISWAP_ALLOWED_ROUTERS as string,
+  REF_POOL_ADDRESS: import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS as string
 };
 
 // Helper function to get native token address (ETH)
@@ -54,8 +42,8 @@ export const PRICING_POLICY: PricingPolicy = {
   maxPriceImpactBps: 200, // 2%
   quoteTtlSec: 45,
   minPurchaseMultipleOfGas: 1.25,
-  maxTradeNotionalBase: '100', // 100 WETH
-  perWalletDailyCapBase: '10' // 10 WETH per wallet per day
+  maxTradeNotionalBase: '10000', // 10,000 USDC
+  perWalletDailyCapBase: '1000' // 1,000 USDC per wallet per day
 };
 
 export const SUPPORTED_CHAINS = {
@@ -95,14 +83,11 @@ export const validateEnvironmentVariables = (): { isValid: boolean; missing: str
   if (!import.meta.env.VITE_SUPABASE_ANON_KEY) missing.push('VITE_SUPABASE_ANON_KEY');
   if (!import.meta.env.VITE_SUPABASE_PROJECT_ID) missing.push('VITE_SUPABASE_PROJECT_ID');
 
-  // Contracts: generic
+  // Contracts: only check what we actually use
   if (!import.meta.env.VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS');
-  if (!import.meta.env.VITE_ETHEREUM_WETH_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_WETH_CONTRACT_ADDRESS');
   if (!import.meta.env.VITE_ETHEREUM_USDC_CONTRACT_ADDRESS) missing.push('VITE_ETHEREUM_USDC_CONTRACT_ADDRESS');
-  if (!import.meta.env.VITE_ETHEREUM_UNISWAP_FACTORY) missing.push('VITE_ETHEREUM_UNISWAP_FACTORY');
-  if (!import.meta.env.VITE_ETHEREUM_UNISWAP_ROUTER) missing.push('VITE_ETHEREUM_UNISWAP_ROUTER');
+  if (!import.meta.env.VITE_ETHEREUM_UNISWAP_ALLOWED_ROUTERS) missing.push('VITE_ETHEREUM_UNISWAP_ALLOWED_ROUTERS');
   if (!import.meta.env.VITE_ETHEREUM_REF_POOL_ADDRESS) missing.push('VITE_ETHEREUM_REF_POOL_ADDRESS');
-  if (!import.meta.env.VITE_ETHEREUM_BICONOMY_PAYMASTER) missing.push('VITE_ETHEREUM_BICONOMY_PAYMASTER');
 
   // Airdrop configuration (only required if airdrops are enabled)
   const airdropEnabled = import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false';
@@ -123,14 +108,9 @@ export const getAllContractAddresses = () => {
   return {
     // Auto-switching addresses
     wfounder: CONTRACT_ADDRESSES.WFOUNDER,
-    weth: CONTRACT_ADDRESSES.WETH,
     usdc: CONTRACT_ADDRESSES.USDC,
-    quickswapFactory: CONTRACT_ADDRESSES.QUICKSWAP_FACTORY,
-    quickswapRouter: CONTRACT_ADDRESSES.QUICKSWAP_ROUTER,
+    uniswapRouter: CONTRACT_ADDRESSES.UNISWAP_ROUTER,
     refPoolAddress: CONTRACT_ADDRESSES.REF_POOL_ADDRESS,
-    biconomyPaymaster: CONTRACT_ADDRESSES.BICONOMY_PAYMASTER,
-    // Native token (ETH)
-    nativeToken: getNativeTokenAddress(),
     // Environment info
     environment: import.meta.env.DEV ? 'testnet' : 'mainnet',
     chainId: import.meta.env.DEV ? '11155111' : '1',
@@ -142,7 +122,6 @@ export const getAirdropConfig = () => {
   return {
     airdropAmount: import.meta.env.VITE_WFOUNDER_AIRDROP_AMOUNT_FOR_SURVEY_COMPLETION || '10',
     treasuryWalletAddress: import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_ADDRESS as string,
-    treasuryWalletPrivateKey: import.meta.env.VITE_ETHEREUM_TREASURY_WALLET_PRIVATE_KEY as string,
     enableAirdrop: import.meta.env.VITE_FEATURE_ENABLE_AIRDROP !== 'false', // Default enabled
   };
 };

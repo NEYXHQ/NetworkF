@@ -30,16 +30,9 @@ const REQUIRED_VARIABLES = {
   // Smart contracts (different per environment)
   contracts: [
     'VITE_ETHEREUM_WFOUNDER_CONTRACT_ADDRESS',
-    'VITE_ETHEREUM_WETH_CONTRACT_ADDRESS',
     'VITE_ETHEREUM_USDC_CONTRACT_ADDRESS',
     'VITE_ETHEREUM_REF_POOL_ADDRESS',
-    'VITE_ETHEREUM_BICONOMY_PAYMASTER'
-  ],
-  
-  // Hybrid services (same addresses, but still environment-specific configuration)
-  hybrid: [
-    'VITE_ETHEREUM_UNISWAP_FACTORY',
-    'VITE_ETHEREUM_UNISWAP_ROUTER'
+    'VITE_ETHEREUM_UNISWAP_ALLOWED_ROUTERS'
   ],
   
   // Feature flags (optional but should be present)
@@ -57,14 +50,7 @@ const REQUIRED_VARIABLES = {
 
 // Known hybrid services that connect to production even in development
 const HYBRID_SERVICES = {
-  'VITE_ETHEREUM_UNISWAP_FACTORY': {
-    description: 'Uniswap Factory - Different addresses for mainnet vs testnet',
-    expectedSame: false
-  },
-  'VITE_ETHEREUM_UNISWAP_ROUTER': {
-    description: 'Uniswap Router - Different addresses for mainnet vs testnet',
-    expectedSame: false
-  }
+  // No hybrid services needed - using only direct contract addresses
 };
 
 function loadEnvFile(filepath) {
